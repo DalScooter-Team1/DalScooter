@@ -1,9 +1,12 @@
-import React from 'react'
+import React from 'react';
+import UsernameLogin from '../components/login/UsernameLogin';
 
-function login() {
-  return (
-    <div>login</div>
-  )
-}
+const Login: React.FC = () => {
+    return (
+        <div>
+            <UsernameLogin />
+        </div>
+    );
+};
 
-export default login
+export default Login;
