@@ -121,73 +121,118 @@ const UsernameLogin: React.FC = () => {
 
     if (currentStep === 'login') {
         return (
-            <div>
-                <h1>DALScooter Login - Step 1 of 3</h1>
-                <form onSubmit={handleLogin}>
-                    <div>
-                        <label>Email:</label>
-                        <input
-                            type="email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            required
-                            disabled={loading}
-                        />
+            <div className="flex min-h-[80vh] items-center justify-center">
+                <div className="w-full max-w-md p-8 space-y-8 bg-white rounded-lg shadow-md">
+                    <div className="text-center">
+                        <h1 className="text-3xl font-bold text-blue-600">DALScooter Login</h1>
+                        <p className="mt-2 text-sm text-gray-600">Step 1 of 3</p>
                     </div>
-                    <div>
-                        <label>Password:</label>
-                        <input
-                            type="password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            required
-                            disabled={loading}
-                        />
-                    </div>
-                    {error && <div style={{color: 'red'}}>{error}</div>}
-                    <button type="submit" disabled={loading}>
-                        {loading ? 'Authenticating...' : 'Continue'}
-                    </button>
-                </form>
+                    <form className="mt-8 space-y-6" onSubmit={handleLogin}>
+                        <div className="space-y-4">
+                            <div>
+                                <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                                    Email
+                                </label>
+                                <input
+                                    id="email"
+                                    type="email"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    required
+                                    disabled={loading}
+                                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100"
+                                />
+                            </div>
+                            <div>
+                                <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                                    Password
+                                </label>
+                                <input
+                                    id="password"
+                                    type="password"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    required
+                                    disabled={loading}
+                                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100"
+                                />
+                            </div>
+                        </div>
+                        {error && <div className="text-sm text-red-600 bg-red-50 p-3 rounded-md">{error}</div>}
+                        <div>
+                            <button
+                                type="submit"
+                                disabled={loading}
+                                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-300"
+                            >
+                                {loading ? 'Authenticating...' : 'Continue'}
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
         );
     }
 
     if (currentStep === 'factor2') {
         return (
-            <div>
-                <h1>DALScooter Login - Step 2 of 3</h1>
-                <QuestionAnswer
-                    question={challengeParams.question}
-                    onAnswer={handleChallengeResponse}
-                    loading={loading}
-                    error={error}
-                />
+            <div className="flex min-h-[80vh] items-center justify-center">
+                <div className="w-full max-w-md p-8 space-y-8 bg-white rounded-lg shadow-md">
+                    <div className="text-center">
+                        <h1 className="text-3xl font-bold text-blue-600">DALScooter Login</h1>
+                        <p className="mt-2 text-sm text-gray-600">Step 2 of 3</p>
+                    </div>
+                    <QuestionAnswer
+                        question={challengeParams.question}
+                        onAnswer={handleChallengeResponse}
+                        loading={loading}
+                        error={error}
+                    />
+                </div>
             </div>
         );
     }
 
     if (currentStep === 'factor3') {
         return (
-            <div>
-                <h1>DALScooter Login - Step 3 of 3</h1>
-                <CaeserCipher
-                    cipherText={challengeParams.cipherText}
-                    shift={challengeParams.shift}
-                    onSolve={handleChallengeResponse}
-                    loading={loading}
-                    error={error}
-                />
+            <div className="flex min-h-[80vh] items-center justify-center">
+                <div className="w-full max-w-md p-8 space-y-8 bg-white rounded-lg shadow-md">
+                    <div className="text-center">
+                        <h1 className="text-3xl font-bold text-blue-600">DALScooter Login</h1>
+                        <p className="mt-2 text-sm text-gray-600">Step 3 of 3</p>
+                    </div>
+                    <CaeserCipher
+                        cipherText={challengeParams.cipherText}
+                        shift={challengeParams.shift}
+                        onSolve={handleChallengeResponse}
+                        loading={loading}
+                        error={error}
+                    />
+                </div>
             </div>
         );
     }
 
     if (currentStep === 'success') {
         return (
-            <div>
-                <h1>Authentication Successful!</h1>
-                <p>Welcome to DALScooter!</p>
-                <button onClick={handleLogout}>Logout</button>
+            <div className="flex min-h-[80vh] items-center justify-center">
+                <div className="w-full max-w-md p-8 space-y-8 bg-white rounded-lg shadow-md text-center">
+                    <div className="text-center">
+                        <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100">
+                            <svg className="h-8 w-8 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                            </svg>
+                        </div>
+                        <h1 className="mt-3 text-3xl font-bold text-green-600">Authentication Successful!</h1>
+                        <p className="mt-4 text-lg text-gray-600">Welcome to DALScooter!</p>
+                    </div>
+                    <button 
+                        onClick={handleLogout}
+                        className="mt-8 w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    >
+                        Logout
+                    </button>
+                </div>
             </div>
         );
     }
