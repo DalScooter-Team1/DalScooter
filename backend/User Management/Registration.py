@@ -10,22 +10,15 @@ dynamodb = boto3.resource('dynamodb')
 def lambda_handler(event, context):
     print(f"Registration request: {json.dumps(event, indent=2)}")
     
-    # Define CORS headers - allow both localhost and your production domain
     headers = {
-        'Access-Control-Allow-Origin': event.get('headers', {}).get('origin', 'http://localhost:5173'),
-        'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,Origin,Accept',
-        'Access-Control-Allow-Methods': 'POST, OPTIONS, GET',
-        'Access-Control-Allow-Credentials': 'true',
-        'Access-Control-Max-Age': '86400'  # 24 hours
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Headers': 'Content-Type',
+        'Access-Control-Allow-Methods': 'POST, OPTIONS'
     }
     
     # Handle CORS preflight
     if event['httpMethod'] == 'OPTIONS':
-        return {
-            'statusCode': 200,
-            'headers': headers,
-            'body': ''
-        }
+        return {'statusCode': 200, 'headers': headers, 'body': ''}
     
     try:
         # Parse request body
