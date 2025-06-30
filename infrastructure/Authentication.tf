@@ -30,6 +30,12 @@ resource "aws_cognito_user_pool" "pool" {
   # Auto-verify email
   auto_verified_attributes = ["email"]
 
+  # Lambda triggers for custom authentication
+  lambda_config {
+    define_auth_challenge    = aws_lambda_function.define_auth_challenge.arn
+    create_auth_challenge    = aws_lambda_function.create_auth_challenge.arn
+    verify_auth_challenge_response = aws_lambda_function.verify_auth_challenge.arn
+  }
   account_recovery_setting {
     recovery_mechanism {
       name     = "verified_email"
@@ -37,7 +43,7 @@ resource "aws_cognito_user_pool" "pool" {
     }
   }
   
-  # Add this lifecycle block
+ 
   lifecycle {
     ignore_changes = [schema]
   }
@@ -323,4 +329,141 @@ resource "aws_api_gateway_deployment" "registration_deployment" {
 output "registration_endpoint" {
   description = "Registration API endpoint"
   value       = "${aws_api_gateway_deployment.registration_deployment.invoke_url}/register"
+}
+
+
+# Custom Lambda extensions for the custom 3-factor authentication flow
+# IAM Role for Auth Lambda Functions
+resource "aws_iam_role" "auth_lambda_role" {
+  name = "dalscooter-auth-lambda-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "lambda.amazonaws.com"
+        }
+      }
+    ]
+  })
+}
+
+# IAM Policy for Auth Lambda Functions
+resource "aws_iam_role_policy" "auth_lambda_policy" {
+  name = "dalscooter-auth-lambda-policy"
+  role = aws_iam_role.auth_lambda_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream", 
+          "logs:PutLogEvents"
+        ]
+        Resource = "arn:aws:logs:*:*:*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "dynamodb:GetItem",
+          "dynamodb:Query"
+        ]
+        Resource = aws_dynamodb_table.user_security_questions.arn
+      }
+    ]
+  })
+}
+
+# 1. Define Auth Challenge Lambda
+data "archive_file" "define_auth_challenge_zip" {
+  type        = "zip"
+  source_file = "${path.module}/../backend/User Management/define_auth_challenge.py"
+  output_path = "${path.module}/packages/define_auth_challenge.zip"
+  depends_on  = [local_file.create_packages_dir]
+}
+
+resource "aws_lambda_function" "define_auth_challenge" {
+  filename         = data.archive_file.define_auth_challenge_zip.output_path
+  function_name    = "dalscooter-define-auth-challenge"
+  role            = aws_iam_role.auth_lambda_role.arn
+  handler         = "define_auth_challenge.lambda_handler"
+  runtime         = "python3.9"
+  timeout         = 30
+  
+  source_code_hash = data.archive_file.define_auth_challenge_zip.output_base64sha256
+}
+
+# 2. Create Auth Challenge Lambda
+data "archive_file" "create_auth_challenge_zip" {
+  type        = "zip"
+  source_file = "${path.module}/../backend/User Management/create_auth_challenge.py"
+  output_path = "${path.module}/packages/create_auth_challenge.zip"
+  depends_on  = [local_file.create_packages_dir]
+}
+
+resource "aws_lambda_function" "create_auth_challenge" {
+  filename         = data.archive_file.create_auth_challenge_zip.output_path
+  function_name    = "dalscooter-create-auth-challenge"
+  role            = aws_iam_role.auth_lambda_role.arn
+  handler         = "create_auth_challenge.lambda_handler"
+  runtime         = "python3.9"
+  timeout         = 30
+  
+  source_code_hash = data.archive_file.create_auth_challenge_zip.output_base64sha256
+
+  environment {
+    variables = {
+      SECURITY_QUESTIONS_TABLE = aws_dynamodb_table.user_security_questions.name
+    }
+  }
+}
+
+# 3. Verify Auth Challenge Lambda
+data "archive_file" "verify_auth_challenge_zip" {
+  type        = "zip"
+  source_file = "${path.module}/../backend/User Management/verify_auth_challenge.py"
+  output_path = "${path.module}/packages/verify_auth_challenge.zip"
+  depends_on  = [local_file.create_packages_dir]
+}
+
+resource "aws_lambda_function" "verify_auth_challenge" {
+  filename         = data.archive_file.verify_auth_challenge_zip.output_path
+  function_name    = "dalscooter-verify-auth-challenge"
+  role            = aws_iam_role.auth_lambda_role.arn
+  handler         = "verify_auth_challenge.lambda_handler"
+  runtime         = "python3.9"
+  timeout         = 30
+  
+  source_code_hash = data.archive_file.verify_auth_challenge_zip.output_base64sha256
+}
+
+# Lambda Permissions for Cognito
+resource "aws_lambda_permission" "cognito_define_auth" {
+  statement_id  = "AllowCognitoDefineAuth"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.define_auth_challenge.function_name
+  principal     = "cognito-idp.amazonaws.com"
+  source_arn    = aws_cognito_user_pool.pool.arn
+}
+
+resource "aws_lambda_permission" "cognito_create_auth" {
+  statement_id  = "AllowCognitoCreateAuth"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.create_auth_challenge.function_name
+  principal     = "cognito-idp.amazonaws.com"
+  source_arn    = aws_cognito_user_pool.pool.arn
+}
+
+resource "aws_lambda_permission" "cognito_verify_auth" {
+  statement_id  = "AllowCognitoVerifyAuth"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.verify_auth_challenge.function_name
+  principal     = "cognito-idp.amazonaws.com"
+  source_arn    = aws_cognito_user_pool.pool.arn
 }
