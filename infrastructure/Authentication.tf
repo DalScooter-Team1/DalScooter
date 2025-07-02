@@ -328,7 +328,7 @@ resource "aws_api_gateway_deployment" "registration_deployment" {
 # Output
 output "registration_endpoint" {
   description = "Registration API endpoint"
-  value       = "${aws_api_gateway_deployment.registration_deployment.invoke_url}/register"
+  value       = "${aws_api_gateway_deployment.registration_deployment.invoke_url}"
 }
 
 
