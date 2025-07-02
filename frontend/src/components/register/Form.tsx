@@ -90,7 +90,7 @@ function Form() {
   return (
     <div className="w-full mx-auto">
       <div className="space-y-6">
-        <h2 className="text-3xl font-bold text-center text-gray-800 mb-6">Register</h2>
+        <h2 className="text-3xl font-bold text-center text-gray-800 mb-6">Open DalScooter account 🎉</h2>
         
         <div className={`perspective-1000 ${isFlipping ? 'pointer-events-none' : ''}`}>
           <div className={`relative transition-transform duration-300 ${isFlipping ? 'scale-95 opacity-90' : ''}`}>
