@@ -65,12 +65,15 @@ def create_security_question_challenge(user_id, response):
 def create_caesar_cipher_challenge(response):
     # Caesar cipher word list
     words = [
-        "DALSCOOTER", "BIKERENTAL", "FRANCHISE", "CUSTOMER", 
-        "SECURITY", "AUTHENTICATION", "SERVERLESS", "BOOKING"
+        "DALSCOOTER", "BIKERENTAL", "CUSTOMER", 
+        "SECURITY", "BOOKING", "SCOOTER",
+        "RENTAL", "VEHICLE", "TRIP", "PAYMENT",
+
+        "REGISTRATION", "USER", "PROFILE", "SERVICE",
     ]
     
     original_text = random.choice(words)
-    shift = random.randint(1, 25)
+    shift = random.randint(1, 5)
     cipher_text = caesar_cipher(original_text, shift)
     
     # Store correct answer privately

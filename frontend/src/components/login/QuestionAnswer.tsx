@@ -16,17 +16,25 @@ const QuestionAnswer: React.FC<QuestionAnswerProps> = ({ question, onAnswer, loa
     };
 
     return (
-        <div className="mt-4">
-            <h2 className="text-xl font-medium text-gray-800 mb-4">Security Question</h2>
-            <div className="bg-blue-50 p-4 rounded-md mb-6">
-                <p className="text-blue-800">
-                    <span className="font-semibold">Question:</span> {question}
+        <div className="space-y-4">
+            <div className="bg-amber-50 p-4 rounded-lg border border-amber-100">
+                <div className="flex items-center mb-2">
+                    <div className="bg-amber-100 p-1.5 rounded-full mr-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-amber-700" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
+                        </svg>
+                    </div>
+                    <h3 className="font-medium text-amber-800">Your Security Question</h3>
+                </div>
+                <p className="text-amber-800 ml-9">
+                    {question}
                 </p>
             </div>
-            <form onSubmit={handleSubmit} className="space-y-6">
-                <div>
+            
+            <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="space-y-2">
                     <label htmlFor="security-answer" className="block text-sm font-medium text-gray-700">
-                        Your Answer:
+                        Your Answer
                     </label>
                     <input
                         id="security-answer"
@@ -35,9 +43,11 @@ const QuestionAnswer: React.FC<QuestionAnswerProps> = ({ question, onAnswer, loa
                         onChange={(e) => setAnswer(e.target.value)}
                         required
                         disabled={loading}
-                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100"
+                        placeholder="Enter your answer exactly as registered"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-amber-500 focus:border-amber-500 disabled:bg-gray-100"
                     />
                 </div>
+                
                 {error && (
                     <div className="text-sm text-red-600 bg-red-50 p-3 rounded-md border border-red-200">
                         <div className="flex items-start">
@@ -51,12 +61,21 @@ const QuestionAnswer: React.FC<QuestionAnswerProps> = ({ question, onAnswer, loa
                         </div>
                     </div>
                 )}
+                
                 <button 
                     type="submit" 
                     disabled={loading || !answer}
-                    className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-300"
+                    className="w-full bg-[#ffd501] hover:bg-amber-500 text-black font-medium py-3 px-4 rounded-md transition duration-200 flex justify-center items-center disabled:bg-amber-300"
                 >
-                    {loading ? 'Verifying...' : 'Submit Answer'}
+                    {loading ? (
+                        <>
+                            <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Verifying...
+                        </>
+                    ) : 'Submit Answer'}
                 </button>
             </form>
         </div>
