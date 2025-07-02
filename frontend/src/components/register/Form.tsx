@@ -1,4 +1,6 @@
 import React, { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+
 
 function Form() {
   const [email, setEmail] = useState('');
@@ -8,6 +10,7 @@ function Form() {
   const [securityQuestions, setSecurityQuestions] = useState<string[]>(['', '', '']);
   const [securityAnswers, setSecurityAnswers] = useState<string[]>(['', '', '']);
 
+  const navigate = useNavigate();
   const availableQuestions = [
     "What was the name of your first teacher?",
     "What is the title of your favorite childhood book?",
@@ -54,6 +57,7 @@ function Form() {
       const data = await response.json();
       if (response.ok) {
         console.log('Registration successful:', data);
+        navigate("/login")
         // Handle successful registration (e.g., show success message, redirect)
       } else {
         console.error('Registration failed:', data);
