@@ -66,7 +66,13 @@ def lambda_handler(event, context):
         user_id = response['UserSub']
         print(f"User created: {user_id}")
         
-        # Step 2: Add to user group
+        # Step 2: Confirm user sign-up
+        cognito.admin_confirm_sign_up(
+            UserPoolId=os.environ['COGNITO_USER_POOL_ID'],
+            Username=email
+        )
+        
+        # Step 3: Add to user group
         group_name = 'franchise' if user_type == 'franchise' else 'customers'
         cognito.admin_add_user_to_group(
             UserPoolId=os.environ['COGNITO_USER_POOL_ID'],
@@ -76,7 +82,7 @@ def lambda_handler(event, context):
         
         print(f"User added to group: {group_name}")
         
-        # Step 3: Store security questions
+        # Step 4: Store security questions
         table = dynamodb.Table(os.environ['SECURITY_QUESTIONS_TABLE'])
         
         for i, sq in enumerate(security_questions):

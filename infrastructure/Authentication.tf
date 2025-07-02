@@ -27,8 +27,8 @@ resource "aws_cognito_user_pool" "pool" {
   # Email as username
   username_attributes = ["email"]
   
-  # Auto-verify email
-  auto_verified_attributes = ["email"]
+  # Remove the auto-verified attributes line or set it to an empty list
+  auto_verified_attributes = []
 
   # Lambda triggers for custom authentication
   lambda_config {
@@ -150,7 +150,8 @@ resource "aws_iam_role_policy" "registration_lambda_policy" {
         Effect = "Allow"
         Action = [
           "cognito-idp:AdminAddUserToGroup",
-          "cognito-idp:SignUp"
+          "cognito-idp:SignUp",
+          "cognito-idp:AdminConfirmSignUp"  # Added permission
         ]
         Resource = aws_cognito_user_pool.pool.arn
       },
