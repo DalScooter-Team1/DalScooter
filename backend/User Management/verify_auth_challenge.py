@@ -13,14 +13,45 @@ def lambda_handler(event, context):
     
     try:
         if challenge_type == 'SECURITY_QUESTION':
-            response['answerCorrect'] = verify_security_question(user_answer, private_params['answer'])
+            is_correct = verify_security_question(user_answer, private_params['answer'])
+            response['answerCorrect'] = is_correct
+            
+            if not is_correct:
+                # Add error code to publicChallengeParameters
+                if 'publicChallengeParameters' not in response:
+                    response['publicChallengeParameters'] = {}
+                    
+                response['publicChallengeParameters']['errorCode'] = 'SECURITY_QUESTION'
+                response['publicChallengeParameters']['errorMessage'] = 'The security question answer is incorrect'
+                
         elif challenge_type == 'CAESAR_CIPHER':
-            response['answerCorrect'] = verify_caesar_cipher(user_answer, private_params['answer'])
+            is_correct = verify_caesar_cipher(user_answer, private_params['answer'])
+            response['answerCorrect'] = is_correct
+            
+            if not is_correct:
+                # Add error code to publicChallengeParameters
+                if 'publicChallengeParameters' not in response:
+                    response['publicChallengeParameters'] = {}
+                    
+                response['publicChallengeParameters']['errorCode'] = 'CAESAR_CIPHER'
+                response['publicChallengeParameters']['errorMessage'] = 'The cipher solution is incorrect'
         else:
             response['answerCorrect'] = False
+            
+            if 'publicChallengeParameters' not in response:
+                response['publicChallengeParameters'] = {}
+                
+            response['publicChallengeParameters']['errorCode'] = 'UNKNOWN_CHALLENGE'
+            response['publicChallengeParameters']['errorMessage'] = f'Unknown challenge type: {challenge_type}'
     except Exception as e:
         print(f"Error verifying challenge: {str(e)}")
         response['answerCorrect'] = False
+        
+        if 'publicChallengeParameters' not in response:
+            response['publicChallengeParameters'] = {}
+            
+        response['publicChallengeParameters']['errorCode'] = 'VERIFICATION_ERROR'
+        response['publicChallengeParameters']['errorMessage'] = f'Challenge verification failed'
     
     print(f"Verify Auth Response: {json.dumps(response, indent=2)}")
     return event

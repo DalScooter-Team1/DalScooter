@@ -7,6 +7,7 @@ import {
 } from 'amazon-cognito-identity-js';
 import QuestionAnswer from './QuestionAnswer';
 import CaeserCipher from './CaeserCipher';
+import { formatAuthError } from '../../utils/errorHandler';
 
 const COGNITO_CONFIG = {
     UserPoolId: import.meta.env.VITE_COGNITO_USER_POOL_ID,
@@ -50,11 +51,17 @@ const UsernameLogin: React.FC = () => {
                     setLoading(false);
                 },
                 onFailure: (err: Error) => {
-                    setError(err.message);
+                    setError(formatAuthError(err.message, 'login'));
                     setLoading(false);
                 },
                 customChallenge: (params: any) => {
                     setChallengeParams(params);
+                    
+                    // Check if there's an error message from previous challenge
+                    if (params.errorCode) {
+                        setError(formatAuthError(params.errorMessage || params.errorCode, 
+                            params.errorCode === 'SECURITY_QUESTION' ? 'factor2' : 'factor3'));
+                    }
                     
                     if (params.challengeType === 'SECURITY_QUESTION') {
                         setCurrentStep('factor2');
@@ -67,7 +74,7 @@ const UsernameLogin: React.FC = () => {
             });
         } catch (err: unknown) {
             const error = err as Error;
-            setError(error.message);
+            setError(formatAuthError(error.message, 'login'));
             setLoading(false);
         }
     };
@@ -85,11 +92,19 @@ const UsernameLogin: React.FC = () => {
                 setLoading(false);
             },
             onFailure: (err: Error) => {
-                setError(err.message);
+                // Use the current step to determine which error message to show
+                const authStage = currentStep === 'factor2' ? 'factor2' : 'factor3';
+                setError(formatAuthError(err.message, authStage));
                 setLoading(false);
             },
             customChallenge: (params: any) => {
                 setChallengeParams(params);
+                
+                // Check if there's an error message from previous challenge
+                if (params.errorCode) {
+                    setError(formatAuthError(params.errorMessage || params.errorCode, 
+                        params.challengeType === 'SECURITY_QUESTION' ? 'factor2' : 'factor3'));
+                }
                 
                 if (params.challengeType === 'CAESAR_CIPHER') {
                     setCurrentStep('factor3');
@@ -158,7 +173,18 @@ const UsernameLogin: React.FC = () => {
                                 />
                             </div>
                         </div>
-                        {error && <div className="text-sm text-red-600 bg-red-50 p-3 rounded-md">{error}</div>}
+                        {error && (
+                            <div className="text-sm text-red-600 bg-red-50 p-3 rounded-md border border-red-200">
+                                <div className="flex items-start">
+                                    <svg className="h-5 w-5 text-red-500 mr-2 mt-0.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                                    </svg>
+                                    <div>
+                                        <p className="font-medium">{error}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                         <div>
                             <button
                                 type="submit"
