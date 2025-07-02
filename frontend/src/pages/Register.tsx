@@ -1,6 +1,7 @@
 import React from 'react'
 import Form from '../components/register/Form'
 import dalImage from '../assets/Dal image.jpg'
+import { Link } from 'react-router-dom'
  
 function register() {
   return (
@@ -52,9 +53,16 @@ function register() {
         </div>
         
         {/* Right side - Form */}
-        <div className="w-full md:w-1/2 p-6 relative z-10">
+        <div className="w-full md:w-1/2 p-6 relative z-10" style={{ justifyItems: 'center' }}>
           <Form />
+          <div className="mt-4 text-center text-sm text-gray-600">
+            Already have an account?{" "}
+            <Link to="/login" className="text-amber-600 hover:text-amber-800 font-medium">
+              Login
+            </Link>
+          </div>
         </div>
+
       </div>
     </div>
   )
