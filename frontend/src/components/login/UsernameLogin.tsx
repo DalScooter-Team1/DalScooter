@@ -8,6 +8,9 @@ import {
 import QuestionAnswer from './QuestionAnswer';
 import CaeserCipher from './CaeserCipher';
 import { formatAuthError } from '../../utils/errorHandler';
+ import { jwtDecode } from 'jwt-decode';
+
+
 
 const COGNITO_CONFIG = {
     UserPoolId: import.meta.env.VITE_COGNITO_USER_POOL_ID,
@@ -123,6 +126,28 @@ const UsernameLogin: React.FC = () => {
         localStorage.setItem('accessToken', accessToken);
         localStorage.setItem('idToken', idToken);
         localStorage.setItem('refreshToken', refreshToken);
+    };
+
+    const getUserRolesFromToken = (): string[] => {
+        const token = localStorage.getItem('idToken');
+        
+        if (token) {
+            try {
+                // Decode the ID token to get user information
+                const decodedToken: any = jwtDecode(token);
+                
+                // Extract roles from decoded token
+                const roles = decodedToken['cognito:groups'] || [];
+                console.log('Decoded Token:', decodedToken);
+                return roles as string[];
+            } catch (error) {
+                console.error('Error decoding token:', error);
+                return [];
+            }
+        } else {
+            console.warn('No token found in localStorage');
+            return [];
+        }
     };
 
     const handleLogout = () => {
@@ -272,6 +297,12 @@ const UsernameLogin: React.FC = () => {
     }
 
     if (currentStep === 'success') {
+        //TO DO: replace this with actual redirection pages.
+        
+        // Get user roles from token
+        const userRoles = getUserRolesFromToken();
+        const isAdmin = userRoles.includes('franchise');
+        
         return (
             <div className="space-y-6 text-center py-4">
                 <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-amber-100">
@@ -285,7 +316,34 @@ const UsernameLogin: React.FC = () => {
                 <div className="bg-gray-50 p-4 rounded-lg mb-6">
                     <p className="text-sm text-gray-500 mb-2">You are now logged in as</p>
                     <p className="text-lg font-medium">{email}</p>
+                    
+                    {userRoles.length > 0 && (
+                        <div className="mt-3">
+                            <p className="text-sm text-gray-500 mb-1">Your roles:</p>
+                            <div className="flex flex-wrap gap-2 justify-center">
+                                {userRoles.map((role, index) => (
+                                    <span 
+                                        key={index} 
+                                        className={`text-xs px-2 py-1 rounded-full ${
+                                            role === 'franchise' 
+                                                ? 'bg-amber-100 text-amber-800 border border-amber-300' 
+                                                : 'bg-gray-100 text-gray-800 border border-gray-300'
+                                        }`}
+                                    >
+                                        {role}
+                                    </span>
+                                ))}
+                            </div>
+                        </div>
+                    )}
                 </div>
+                
+                {isAdmin && (
+                    <div className="mb-6 bg-amber-50 p-3 rounded-lg border border-amber-200">
+                        <p className="text-amber-800 font-medium">Admin Access Granted</p>
+                        <p className="text-xs text-amber-700 mt-1">You have administrative privileges</p>
+                    </div>
+                )}
                 
                 <button 
                     onClick={handleLogout}
