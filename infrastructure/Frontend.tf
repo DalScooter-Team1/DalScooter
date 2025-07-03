@@ -19,7 +19,6 @@ resource "aws_amplify_app" "frontend" {
 
         build:
           commands:
-           
             - npm run build
       artifacts:
         baseDirectory: frontend/dist
