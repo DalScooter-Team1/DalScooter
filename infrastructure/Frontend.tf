@@ -16,8 +16,10 @@ resource "aws_amplify_app" "frontend" {
             - node --version
             - npm --version
             - cd frontend
+
         build:
           commands:
+           
             - npm run build
       artifacts:
         baseDirectory: frontend/dist
@@ -59,7 +61,7 @@ variable "github_access_token" {
   description = "GitHub Access Token for Amplify"
   type        = string
   sensitive   = true
-  default = "Write the token here"
+  default = "Your_GitHub_Access_Token_Here" # Replace with your actual token
 }
 
 # Output the Amplify app URL
