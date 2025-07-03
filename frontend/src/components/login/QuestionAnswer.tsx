@@ -65,7 +65,7 @@ const QuestionAnswer: React.FC<QuestionAnswerProps> = ({ question, onAnswer, loa
                 <button 
                     type="submit" 
                     disabled={loading || !answer}
-                    className="w-full bg-[#ffd501] hover:bg-amber-500 text-black font-medium py-3 px-4 rounded-md transition duration-200 flex justify-center items-center disabled:bg-amber-300"
+                    className="w-full bg-[#ffd501] hover:bg-amber-500 text-white font-medium py-3 px-4 rounded-md transition duration-200 flex justify-center items-center disabled:bg-amber-300"
                 >
                     {loading ? (
                         <>

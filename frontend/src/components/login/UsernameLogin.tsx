@@ -222,7 +222,7 @@ const UsernameLogin: React.FC = () => {
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full bg-[#ffd501] hover:bg-amber-500 text-black font-medium py-3 px-4 rounded-md transition duration-200 flex justify-center items-center disabled:bg-amber-300"
+                            className="w-full bg-[#ffd501] hover:bg-amber-500 text-white font-medium py-3 px-4 rounded-md transition duration-200 flex justify-center items-center disabled:bg-amber-300"
                         >
                             {loading ? (
                                 <>
@@ -348,7 +348,7 @@ const UsernameLogin: React.FC = () => {
                 
                 <button 
                     onClick={handleLogout}
-                    className="w-full bg-[#ffd501] hover:bg-amber-500 text-black font-medium py-3 px-4 rounded-md transition duration-200"
+                    className="w-full bg-[#ffd501] hover:bg-amber-500 text-white font-medium py-3 px-4 rounded-md transition duration-200"
                 >
                     Logout
                 </button>
