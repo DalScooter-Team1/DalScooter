@@ -16,9 +16,11 @@ resource "aws_amplify_app" "frontend" {
             - node --version
             - npm --version
             - cd frontend
+            - npm install
 
         build:
           commands:
+            - npm ci
             - npm run build
       artifacts:
         baseDirectory: frontend/dist
@@ -44,7 +46,18 @@ resource "aws_amplify_app" "frontend" {
   }
 }
 
-# Branch configuration
+# Branch configuration for dev release
+resource "aws_amplify_branch" "dev" {
+  app_id      = aws_amplify_app.frontend.id
+  branch_name = "dev"
+
+  framework = "React"
+  stage     = "PRODUCTION"
+
+  enable_auto_build = true
+}
+
+# Branch configuration for production release
 resource "aws_amplify_branch" "main" {
   app_id      = aws_amplify_app.frontend.id
   branch_name = "main"
