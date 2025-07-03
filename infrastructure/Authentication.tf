@@ -344,15 +344,7 @@ resource "aws_lambda_permission" "cognito_verify_auth" {
   source_arn    = aws_cognito_user_pool.pool.arn
 }
 
-output "cognito_user_pool_id" {
-  description = "Cognito User Pool ID"
-  value       = aws_cognito_user_pool.pool.id  
-}
-
-output "cognito_user_pool_client_id" {
-  description = "Cognito User Pool Client ID"
-  value       = aws_cognito_user_pool_client.client.id
-}
+ 
 
 # Admin Creation Lambda Function
 # IAM Role for Admin Creation Lambda

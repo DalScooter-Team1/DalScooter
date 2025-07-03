@@ -227,6 +227,7 @@ resource "aws_lambda_permission" "api_gateway_invoke_admin_creation" {
 # Deploy API Gateway with all endpoints in a single prod stage
 resource "aws_api_gateway_deployment" "registration_deployment" {
   depends_on = [
+    
     aws_api_gateway_method.register_post,
     aws_api_gateway_integration.register_integration,
     aws_api_gateway_method.admin_post,
@@ -243,13 +244,5 @@ resource "aws_api_gateway_deployment" "registration_deployment" {
   }
 }
 
-# Output endpoints
-output "registration_endpoint" {
-  description = "Registration API endpoint"
-  value       = "${aws_api_gateway_deployment.registration_deployment.invoke_url}"
-}
-
-output "admin_creation_endpoint" {
-  description = "Admin Creation API endpoint"
-  value       = "${aws_api_gateway_deployment.registration_deployment.invoke_url}/admin"
-}
+ 
+ 
