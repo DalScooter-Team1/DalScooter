@@ -138,6 +138,7 @@ const UsernameLogin: React.FC = () => {
                 
                 // Extract roles from decoded token
                 const roles = decodedToken['cognito:groups'] || [];
+                localStorage.setItem('userRoles', JSON.stringify(roles));
                 console.log('Decoded Token:', decodedToken);
                 return roles as string[];
             } catch (error) {
