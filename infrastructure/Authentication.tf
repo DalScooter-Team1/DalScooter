@@ -205,132 +205,7 @@ resource "aws_lambda_function" "user_registration" {
 }
 
 
-resource "aws_api_gateway_rest_api" "registration_api" {
-  name        = "dalscooter-registration-api"
-  description = "DALScooter User Registration API"
-}
 
-resource "aws_api_gateway_resource" "register" {
-  rest_api_id = aws_api_gateway_rest_api.registration_api.id
-  parent_id   = aws_api_gateway_rest_api.registration_api.root_resource_id
-  path_part   = "register"
-}
-
-resource "aws_api_gateway_method" "register_post" {
-  rest_api_id   = aws_api_gateway_rest_api.registration_api.id
-  resource_id   = aws_api_gateway_resource.register.id
-  http_method   = "POST"
-  authorization = "NONE"
-}
-
-# Add OPTIONS method for CORS preflight requests
-resource "aws_api_gateway_method" "register_options" {
-  rest_api_id   = aws_api_gateway_rest_api.registration_api.id
-  resource_id   = aws_api_gateway_resource.register.id
-  http_method   = "OPTIONS"
-  authorization = "NONE"
-}
-
-# Integration for OPTIONS method - mock integration
-resource "aws_api_gateway_integration" "register_options_integration" {
-  rest_api_id = aws_api_gateway_rest_api.registration_api.id
-  resource_id = aws_api_gateway_resource.register.id
-  http_method = aws_api_gateway_method.register_options.http_method
-  
-  type = "MOCK"
-  request_templates = {
-    "application/json" = "{\"statusCode\": 200}"
-  }
-}
-
-# Method response for OPTIONS
-resource "aws_api_gateway_method_response" "register_options_response" {
-  rest_api_id = aws_api_gateway_rest_api.registration_api.id
-  resource_id = aws_api_gateway_resource.register.id
-  http_method = aws_api_gateway_method.register_options.http_method
-  status_code = "200"
-  
-  response_parameters = {
-    "method.response.header.Access-Control-Allow-Headers" = true
-    "method.response.header.Access-Control-Allow-Methods" = true
-    "method.response.header.Access-Control-Allow-Origin"  = true
-  }
-}
-
-# Integration response for OPTIONS
-resource "aws_api_gateway_integration_response" "register_options_integration_response" {
-  rest_api_id = aws_api_gateway_rest_api.registration_api.id
-  resource_id = aws_api_gateway_resource.register.id
-  http_method = aws_api_gateway_method.register_options.http_method
-  status_code = aws_api_gateway_method_response.register_options_response.status_code
-  
-  response_parameters = {
-    "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
-    "method.response.header.Access-Control-Allow-Methods" = "'POST,OPTIONS'"
-    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
-  }
-}
-
-# Add CORS headers to POST method response
-resource "aws_api_gateway_method_response" "register_post_response" {
-  rest_api_id = aws_api_gateway_rest_api.registration_api.id
-  resource_id = aws_api_gateway_resource.register.id
-  http_method = aws_api_gateway_method.register_post.http_method
-  status_code = "200"
-  
-  response_parameters = {
-    "method.response.header.Access-Control-Allow-Origin" = true
-  }
-}
-
-# Update the POST integration response to include CORS headers
-resource "aws_api_gateway_integration_response" "register_post_integration_response" {
-  rest_api_id = aws_api_gateway_rest_api.registration_api.id
-  resource_id = aws_api_gateway_resource.register.id
-  http_method = aws_api_gateway_method.register_post.http_method
-  status_code = aws_api_gateway_method_response.register_post_response.status_code
-  
-  response_parameters = {
-    "method.response.header.Access-Control-Allow-Origin" = "'*'"
-  }
-
-  depends_on = [aws_api_gateway_integration.register_integration]
-}
-
-resource "aws_api_gateway_integration" "register_integration" {
-  rest_api_id = aws_api_gateway_rest_api.registration_api.id
-  resource_id = aws_api_gateway_resource.register.id
-  http_method = aws_api_gateway_method.register_post.http_method
-
-  integration_http_method = "POST"
-  type                   = "AWS_PROXY"
-  uri                    = aws_lambda_function.user_registration.invoke_arn
-}
-
-resource "aws_lambda_permission" "api_gateway_invoke_registration" {
-  statement_id  = "AllowAPIGatewayInvokeRegistration"
-  action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.user_registration.function_name
-  principal     = "apigateway.amazonaws.com"
-  source_arn    = "${aws_api_gateway_rest_api.registration_api.execution_arn}/*/*"
-}
-
-# Deploy API Gateway
-resource "aws_api_gateway_deployment" "registration_deployment" {
-  depends_on = [
-    aws_api_gateway_method.register_post,
-    aws_api_gateway_integration.register_integration
-  ]
-
-  rest_api_id = aws_api_gateway_rest_api.registration_api.id
-  stage_name  = "prod"
-}
-
-# Output
-output "registration_endpoint" {
-  description = "Registration API endpoint"
-  value       = "${aws_api_gateway_deployment.registration_deployment.invoke_url}"
-}
 
 
 # Custom Lambda extensions for the custom 3-factor authentication flow
@@ -477,5 +352,81 @@ output "cognito_user_pool_id" {
 output "cognito_user_pool_client_id" {
   description = "Cognito User Pool Client ID"
   value       = aws_cognito_user_pool_client.client.id
-  
 }
+
+# Admin Creation Lambda Function
+# IAM Role for Admin Creation Lambda
+resource "aws_iam_role" "admin_creation_lambda_role" {
+  name = "dalscooter-admin-creation-lambda-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "lambda.amazonaws.com"
+        }
+      }
+    ]
+  })
+}
+
+# IAM Policy for Admin Creation Lambda
+resource "aws_iam_role_policy" "admin_creation_lambda_policy" {
+  name = "dalscooter-admin-creation-lambda-policy"
+  role = aws_iam_role.admin_creation_lambda_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream", 
+          "logs:PutLogEvents"
+        ]
+        Resource = "arn:aws:logs:*:*:*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "cognito-idp:AdminAddUserToGroup",
+          "cognito-idp:AdminRemoveUserFromGroup"
+        ]
+        Resource = aws_cognito_user_pool.pool.arn
+      }
+    ]
+  })
+}
+
+# Create a zip file for the Admin Creation Lambda function
+data "archive_file" "admin_creation_zip" {
+  type        = "zip"
+  source_file = "${path.module}/../backend/User Management/admin_creation.py"
+  output_path = "${path.module}/packages/admin_creation.zip"
+  depends_on  = [local_file.create_packages_dir]
+}
+
+# Admin Creation Lambda Function
+resource "aws_lambda_function" "admin_creation" {
+  filename         = data.archive_file.admin_creation_zip.output_path
+  function_name    = "dalscooter-admin-creation"
+  role             = aws_iam_role.admin_creation_lambda_role.arn
+  handler          = "admin_creation.lambda_handler"
+  runtime          = "python3.9"
+  timeout          = 30
+  
+  # This ensures the function is updated when the zip file changes
+  source_code_hash = data.archive_file.admin_creation_zip.output_base64sha256
+
+  environment {
+    variables = {
+      COGNITO_USER_POOL_ID = aws_cognito_user_pool.pool.id
+      COGNITO_GROUP_NAME   = aws_cognito_user_group.franchise.name
+    }
+  }
+}
+
