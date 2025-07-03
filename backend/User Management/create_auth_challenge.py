@@ -64,12 +64,10 @@ def create_security_question_challenge(user_id, response):
 
 def create_caesar_cipher_challenge(response):
     # Caesar cipher word list
+    # TO DO: Add more words in the sprint release
     words = [
-        "DALSCOOTER", "BIKERENTAL", "CUSTOMER", 
-        "SECURITY", "BOOKING", "SCOOTER",
-        "RENTAL", "VEHICLE", "TRIP", "PAYMENT",
-
-        "REGISTRATION", "USER", "PROFILE", "SERVICE",
+        "DALSCOOTER"
+        
     ]
     
     original_text = random.choice(words)
