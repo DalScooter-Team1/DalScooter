@@ -224,10 +224,9 @@ resource "aws_lambda_permission" "api_gateway_invoke_admin_creation" {
   source_arn    = "${aws_api_gateway_rest_api.registration_api.execution_arn}/*/*"
 }
 
-# Deploy API Gateway with all endpoints in a single prod stage
+# Deploy API Gateway with all endpoints
 resource "aws_api_gateway_deployment" "registration_deployment" {
   depends_on = [
-    
     aws_api_gateway_method.register_post,
     aws_api_gateway_integration.register_integration,
     aws_api_gateway_method.admin_post,
@@ -237,7 +236,6 @@ resource "aws_api_gateway_deployment" "registration_deployment" {
   ]
 
   rest_api_id = aws_api_gateway_rest_api.registration_api.id
-  stage_name  = "prod"
   
   lifecycle {
     create_before_destroy = true
