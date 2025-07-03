@@ -9,6 +9,7 @@ import QuestionAnswer from './QuestionAnswer';
 import CaeserCipher from './CaeserCipher';
 import { formatAuthError } from '../../utils/errorHandler';
  import { jwtDecode } from 'jwt-decode';
+import LoaderAnimation from '../LoaderAnimation';
 
 
 
@@ -163,6 +164,7 @@ const UsernameLogin: React.FC = () => {
     if (currentStep === 'login') {
         return (
             <div className="space-y-6">
+                <LoaderAnimation isLoading={loading} />
                 <h2 className="text-xl font-medium text-gray-800 mb-6">Welcome Back 👋</h2>
                 <p className="text-sm text-gray-600 mb-4">Step 1 of 3: Enter your credentials</p>
                 <form className="space-y-4" onSubmit={handleLogin}>
@@ -243,6 +245,7 @@ const UsernameLogin: React.FC = () => {
     if (currentStep === 'factor2') {
         return (
             <div className="space-y-6">
+                <LoaderAnimation isLoading={loading} />
                 <div className="flex items-center mb-4">
                     <button 
                         type="button"
@@ -271,6 +274,7 @@ const UsernameLogin: React.FC = () => {
     if (currentStep === 'factor3') {
         return (
             <div className="space-y-6">
+                <LoaderAnimation isLoading={loading} />
                 <div className="flex items-center mb-4">
                     <button 
                         type="button"
@@ -306,6 +310,7 @@ const UsernameLogin: React.FC = () => {
         
         return (
             <div className="space-y-6 text-center py-4">
+                <LoaderAnimation isLoading={loading} />
                 <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-amber-100">
                     <svg className="h-10 w-10 text-amber-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
