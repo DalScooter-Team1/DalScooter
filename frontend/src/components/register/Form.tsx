@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import LoaderAnimation from '../LoaderAnimation'
 
 
 function Form() {
@@ -11,6 +12,8 @@ function Form() {
   const [securityAnswers, setSecurityAnswers] = useState<string[]>(['', '', '']);
   const [currentStep, setCurrentStep] = useState(1);
   const [isFlipping, setIsFlipping] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string>('');
 
   const navigate = useNavigate();
   const availableQuestions = [
@@ -50,6 +53,8 @@ function Form() {
   };
 
   const handleRegister = async () => {
+    setLoading(true);
+    setError('');
     try {
       // Format security questions and answers into required structure
       const formattedSecurityQuestions = securityQuestions.map((question, index) => ({
@@ -57,7 +62,7 @@ function Form() {
         answer: securityAnswers[index]
       }));
 
-      const response = await fetch(`${import.meta.env.VITE_SERVER}prod/register`, {
+      const response = await fetch(`${import.meta.env.VITE_SERVER}/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -79,18 +84,36 @@ function Form() {
         // Handle successful registration (e.g., show success message, redirect)
       } else {
         console.error('Registration failed:', data);
+        setError('Registration failed. Please try again.');
         // Handle registration failure (e.g., show error message)
       }
     } catch (error) {
       console.error('Error during registration:', error);
+      setError('An error occurred. Please check your network connection and try again.');
       // Handle network errors
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div className="w-full mx-auto">
+      <LoaderAnimation isLoading={loading} />
       <div className="space-y-6">
         <h2 className="text-3xl font-bold text-center text-gray-800 mb-6">Open DalScooter account 🎉</h2>
+        
+        {error && (
+          <div className="text-sm text-red-600 bg-red-50 p-3 rounded-md border border-red-200">
+            <div className="flex items-start">
+              <svg className="h-5 w-5 text-red-500 mr-2 mt-0.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+              <div>
+                <p className="font-medium">{error}</p>
+              </div>
+            </div>
+          </div>
+        )}
         
         <div className={`perspective-1000 ${isFlipping ? 'pointer-events-none' : ''}`}>
           <div className={`relative transition-transform duration-300 ${isFlipping ? 'scale-95 opacity-90' : ''}`}>
@@ -220,11 +243,27 @@ function Form() {
                     type="button" 
                     className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-md transition duration-200"
                     onClick={handleRegister}
-                    disabled={securityQuestions.some(q => !q) || securityAnswers.some(a => !a)}
+                    disabled={securityQuestions.some(q => !q) || securityAnswers.some(a => !a) || loading}
                   >
-                    Register
+                    {loading ? (
+                      <span className="flex items-center justify-center">
+                        <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Registering...
+                      </span>
+                    ) : (
+                      'Register'
+                    )}
                   </button>
                 </div>
+
+                {error && (
+                  <div className="mt-4 text-red-600 text-sm text-center">
+                    {error}
+                  </div>
+                )}
               </div>
             )}
           </div>
