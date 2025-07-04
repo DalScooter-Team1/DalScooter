@@ -161,6 +161,13 @@ resource "aws_iam_role_policy" "registration_lambda_policy" {
           "dynamodb:PutItem"
         ]
         Resource = aws_dynamodb_table.user_security_questions.arn
+      },
+      {
+        Effect   = "Allow"
+        Action   = [
+          "sns:Publish"
+        ]
+        Resource = aws_sns_topic.user_signup_login.arn
       }
     ]
   })
@@ -200,6 +207,7 @@ resource "aws_lambda_function" "user_registration" {
       COGNITO_USER_POOL_ID = aws_cognito_user_pool.pool.id
       COGNITO_CLIENT_ID    = aws_cognito_user_pool_client.client.id
       SECURITY_QUESTIONS_TABLE = aws_dynamodb_table.user_security_questions.name
+      SIGNUP_LOGIN_TOPIC_ARN     = aws_sns_topic.user_signup_login.arn
     }
   }
 }
@@ -251,6 +259,20 @@ resource "aws_iam_role_policy" "auth_lambda_policy" {
           "dynamodb:Query"
         ]
         Resource = aws_dynamodb_table.user_security_questions.arn
+      },
+      {
+        Effect   = "Allow"
+        Action   = [
+          "sns:Publish"
+        ]
+        Resource = aws_sns_topic.user_signup_login.arn
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "cognito-idp:AdminGetUser"
+        ]
+        Resource = aws_cognito_user_pool.pool.arn
       }
     ]
   })
@@ -317,6 +339,12 @@ resource "aws_lambda_function" "verify_auth_challenge" {
   timeout         = 30
   
   source_code_hash = data.archive_file.verify_auth_challenge_zip.output_base64sha256
+  
+  environment {
+    variables = {
+      SIGNUP_LOGIN_TOPIC_ARN = aws_sns_topic.user_signup_login.arn
+    }
+  }
 }
 
 # Lambda Permissions for Cognito
@@ -419,6 +447,20 @@ resource "aws_lambda_function" "admin_creation" {
       COGNITO_USER_POOL_ID = aws_cognito_user_pool.pool.id
       COGNITO_GROUP_NAME   = aws_cognito_user_group.franchise.name
     }
+  }
+}
+
+# Break the circular dependency by using a null_resource to update the Lambda environment variables
+resource "null_resource" "update_verify_auth_challenge_env" {
+  depends_on = [aws_cognito_user_pool.pool, aws_lambda_function.verify_auth_challenge]
+
+  # Use local-exec to update the Lambda environment variables after both resources are created
+  provisioner "local-exec" {
+    command = <<EOT
+      aws lambda update-function-configuration \
+        --function-name ${aws_lambda_function.verify_auth_challenge.function_name} \
+        --environment "Variables={SIGNUP_LOGIN_TOPIC_ARN=${aws_sns_topic.user_signup_login.arn},COGNITO_USER_POOL_ID=${aws_cognito_user_pool.pool.id}}"
+    EOT
   }
 }
 

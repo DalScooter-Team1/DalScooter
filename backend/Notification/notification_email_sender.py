@@ -16,7 +16,8 @@ ses = boto3.client("ses", region_name=SES_REGION)
 def lambda_handler(event, context):
     """
     Supports:
-      • Direct invoke:     event={"toEmail":..., "subject":..., "bodyText":..., "bodyHtml":...}
+      • Direct invoke:     event={"toEmail":..., "subject":..., "bodyText":...}
+      • Direct invoke:     event={"toEmail":..., "subject":..., "bodyText":...}
       • SQS:               event["Records"] = [ { body: JSON(email spec) }, … ]
       • EventBridge:       event["detail"] = {…email spec…}
 
@@ -30,7 +31,14 @@ def lambda_handler(event, context):
     """
     #Aggregate incoming messages
     messages = []
-    if "Records" in event:
+    if "Records" in event and event["Records"] and event["Records"][0].get("Sns"):
+        for record in event["Records"]:
+            try:
+                payload = json.loads(record["Sns"]["Message"])
+                messages.append(payload)
+            except json.JSONDecodeError:
+                logger.error("Invalid JSON in SNS Message: %s", record["Sns"]["Message"])
+    elif "Records" in event and event["Records"] and event["Records"][0].get("body"):
         for r in event["Records"]:
             try:
                 messages.append(json.loads(r["body"]))
