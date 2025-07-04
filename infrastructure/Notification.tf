@@ -58,7 +58,7 @@ resource "aws_lambda_function" "notification" {
   environment {
     variables = {
       SES_REGION       = "us-east-1"
-      SES_FROM_ADDRESS = "test@example.com" # Remove this and add your email, this will be used as a DalScooter's notification sender email
+      SES_FROM_ADDRESS = "vb677883@dal.ca" # Remove this and add your email, this will be used as a DalScooter's notification sender email
     }
   }
 }
