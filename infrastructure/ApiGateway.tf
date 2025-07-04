@@ -237,6 +237,7 @@ resource "aws_api_gateway_deployment" "registration_deployment" {
 
   rest_api_id = aws_api_gateway_rest_api.registration_api.id
   
+  stage_name  = "prod"
   lifecycle {
     create_before_destroy = true
   }
