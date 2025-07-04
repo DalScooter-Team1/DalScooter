@@ -161,6 +161,13 @@ resource "aws_iam_role_policy" "registration_lambda_policy" {
           "dynamodb:PutItem"
         ]
         Resource = aws_dynamodb_table.user_security_questions.arn
+      },
+      {
+        Effect   = "Allow"
+        Action   = [
+          "sns:Publish"
+        ]
+        Resource = aws_sns_topic.user_signup_login.arn
       }
     ]
   })
@@ -200,6 +207,7 @@ resource "aws_lambda_function" "user_registration" {
       COGNITO_USER_POOL_ID = aws_cognito_user_pool.pool.id
       COGNITO_CLIENT_ID    = aws_cognito_user_pool_client.client.id
       SECURITY_QUESTIONS_TABLE = aws_dynamodb_table.user_security_questions.name
+      SIGNUP_LOGIN_TOPIC_ARN     = aws_sns_topic.user_signup_login.arn
     }
   }
 }
@@ -251,6 +259,13 @@ resource "aws_iam_role_policy" "auth_lambda_policy" {
           "dynamodb:Query"
         ]
         Resource = aws_dynamodb_table.user_security_questions.arn
+      },
+      {
+        Effect   = "Allow"
+        Action   = [
+          "sns:Publish"
+        ]
+        Resource = aws_sns_topic.user_signup_login.arn
       }
     ]
   })
