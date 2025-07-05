@@ -2,8 +2,15 @@ import json
 import hashlib
 import os
 import boto3
+import re
 
 sns = boto3.client('sns')
+
+# Add a function to validate email format
+def is_valid_email(email):
+    """Check if the string is a valid email address format"""
+    email_pattern = re.compile(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
+    return bool(email_pattern.match(email))
 
 def lambda_handler(event, context):
     print(f"Verify Auth Challenge: {json.dumps(event, indent=2)}")
@@ -91,7 +98,8 @@ def get_user_attributes(username):
         user_pool_id = os.environ.get('COGNITO_USER_POOL_ID')
         if not user_pool_id:
             print("COGNITO_USER_POOL_ID environment variable not set")
-            return {'given_name': 'User', 'email': username}
+            # Do not return username as email if it's not a valid email format
+            return {'given_name': 'User', 'email': ''}
             
         cognito = boto3.client('cognito-idp')
         response = cognito.admin_get_user(
@@ -104,24 +112,36 @@ def get_user_attributes(username):
         if 'UserAttributes' in response:
             for attr in response['UserAttributes']:
                 attributes[attr['Name']] = attr['Value']
+        print(f"Retrieved user attributes: {attributes}")
         return attributes
     except Exception as e:
         print(f"Error fetching user attributes: {str(e)}")
-        return {'given_name': 'User', 'email': username}
+        # Do not return username as email if it's not a valid email format
+        return {'given_name': 'User', 'email': ''}
 
 def send_login_notification(username, user_attributes):
     """Sends login notification via SNS"""
     try:
+        print(f"Starting login notification process for user: {username}")
         # Check if we have the SNS topic ARN
         topic_arn = os.environ.get('SIGNUP_LOGIN_TOPIC_ARN')
         if not topic_arn:
             print("SIGNUP_LOGIN_TOPIC_ARN environment variable not set")
             return
+        print(f"Retrieved SNS topic ARN: {topic_arn}")
             
         # Extract user's name from attributes
         first_name = user_attributes.get('given_name', 'User')
-        email = user_attributes.get('email', username)
+        print(f"User first name: {first_name}")
         
+        # Get the email and validate it
+        email = user_attributes.get('email', '')
+        print(f"Retrieved email from user attributes: {email}")
+        
+        if not email or not is_valid_email(email):
+            print(f"No valid email found for user {username}. Skipping login notification.")
+            return
+            
         # Send notification
         sns.publish(
             TopicArn=topic_arn,
@@ -132,5 +152,6 @@ def send_login_notification(username, user_attributes):
             })
         )
         print(f"Login notification sent to {email}")
+        print("Login notification process completed")
     except Exception as e:
         print(f"Error sending login notification: {str(e)}")

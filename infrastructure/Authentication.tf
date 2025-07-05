@@ -270,9 +270,10 @@ resource "aws_iam_role_policy" "auth_lambda_policy" {
       {
         Effect = "Allow"
         Action = [
-          "cognito-idp:AdminGetUser"
+          "cognito-idp:AdminGetUser",
+          "cognito-idp:ListUsers"
         ]
-        Resource = aws_cognito_user_pool.pool.arn
+        Resource = "*"  # Using * to avoid cyclic dependency; in production, you should restrict this
       }
     ]
   })
@@ -461,6 +462,29 @@ resource "null_resource" "update_verify_auth_challenge_env" {
         --function-name ${aws_lambda_function.verify_auth_challenge.function_name} \
         --environment "Variables={SIGNUP_LOGIN_TOPIC_ARN=${aws_sns_topic.user_signup_login.arn},COGNITO_USER_POOL_ID=${aws_cognito_user_pool.pool.id}}"
     EOT
+  }
+}
+
+# This null_resource updates the Lambda function with Cognito User Pool ID
+# after both resources are created, avoiding cyclic dependency
+resource "null_resource" "update_verify_lambda_environment" {
+  depends_on = [
+    aws_lambda_function.verify_auth_challenge,
+    aws_cognito_user_pool.pool
+  ]
+
+  triggers = {
+    lambda_function = aws_lambda_function.verify_auth_challenge.id
+    user_pool = aws_cognito_user_pool.pool.id
+  }
+
+  # Use local-exec to update the Lambda function's environment variables
+  provisioner "local-exec" {
+    command = <<EOF
+      aws lambda update-function-configuration \
+      --function-name ${aws_lambda_function.verify_auth_challenge.function_name} \
+      --environment "Variables={SIGNUP_LOGIN_TOPIC_ARN=${aws_sns_topic.user_signup_login.arn},COGNITO_USER_POOL_ID=${aws_cognito_user_pool.pool.id}}"
+EOF
   }
 }
 
