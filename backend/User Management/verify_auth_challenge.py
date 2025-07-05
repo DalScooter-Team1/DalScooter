@@ -2,8 +2,15 @@ import json
 import hashlib
 import os
 import boto3
+import re
 
 sns = boto3.client('sns')
+
+# Add a function to validate email format
+def is_valid_email(email):
+    """Check if the string is a valid email address format"""
+    email_pattern = re.compile(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
+    return bool(email_pattern.match(email))
 
 def lambda_handler(event, context):
     print(f"Verify Auth Challenge: {json.dumps(event, indent=2)}")
@@ -91,7 +98,8 @@ def get_user_attributes(username):
         user_pool_id = os.environ.get('COGNITO_USER_POOL_ID')
         if not user_pool_id:
             print("COGNITO_USER_POOL_ID environment variable not set")
-            return {'given_name': 'User', 'email': username}
+            # Do not return username as email if it's not a valid email format
+            return {'given_name': 'User', 'email': ''}
             
         cognito = boto3.client('cognito-idp')
         response = cognito.admin_get_user(
@@ -104,58 +112,37 @@ def get_user_attributes(username):
         if 'UserAttributes' in response:
             for attr in response['UserAttributes']:
                 attributes[attr['Name']] = attr['Value']
+        print(f"Retrieved user attributes: {attributes}")
         return attributes
     except Exception as e:
         print(f"Error fetching user attributes: {str(e)}")
-        return {'given_name': 'User', 'email': username}
+        # Do not return username as email if it's not a valid email format
+        return {'given_name': 'User', 'email': ''}
 
 def send_login_notification(username, user_attributes):
     """Sends login notification via SNS"""
     try:
+        print(f"Starting login notification process for user: {username}")
         # Check if we have the SNS topic ARN
         topic_arn = os.environ.get('SIGNUP_LOGIN_TOPIC_ARN')
         if not topic_arn:
             print("SIGNUP_LOGIN_TOPIC_ARN environment variable not set")
             return
+        print(f"Retrieved SNS topic ARN: {topic_arn}")
             
         # Extract user's name from attributes
         first_name = user_attributes.get('given_name', 'User')
+
+        print(f"User first name: {first_name}")
         
-        # Ensure we have a valid email (must contain @ symbol)
-        email = user_attributes.get('email')
-        if not email or '@' not in email:
+        # Get the email and validate it
+        email = user_attributes.get('email', '')
+        print(f"Retrieved email from user attributes: {email}")
+        
+        if not email or not is_valid_email(email):
             print(f"No valid email found for user {username}. Skipping login notification.")
             return
-        
-        # Get current date and time
-        from datetime import datetime
-        current_time = datetime.now()
-        login_date = current_time.strftime("%B %d, %Y")
-        login_time = current_time.strftime("%I:%M %p")
-        
-        # Read HTML template
-        template_path = os.path.join(os.path.dirname(__file__), "login_notification_template.html")
-        try:
-            with open(template_path, 'r') as file:
-                html_template = file.read()
-                
-            # Replace placeholders with actual values
-            html_content = html_template.replace("{{firstName}}", first_name)
-            html_content = html_content.replace("{{loginDate}}", login_date)
-            html_content = html_content.replace("{{loginTime}}", login_time)
-            html_content = html_content.replace("{{device}}", "Web Browser")
-            
-            # Prepare text fallback for email clients that don't support HTML
-            text_content = f"Hi {first_name}, we noticed a new login to your DalScooter account on {login_date} at {login_time}. If this was you, no action is needed. If you didn't login recently, please contact support immediately."
-        except Exception as template_error:
-            print(f"Error processing email template: {str(template_error)}")
-            # Fallback to plain text if template processing fails
-            html_content = None
-            text_content = f"Hi {first_name}, we noticed a new login to your DalScooter account. If this was you, no action is needed. If you didn't login recently, please contact support."
-        
-     
-         
-            
+
         # Send notification
         sns.publish(
             TopicArn=topic_arn,
@@ -166,5 +153,6 @@ def send_login_notification(username, user_attributes):
             })
         )
         print(f"Login notification sent to {email}")
+        print("Login notification process completed")
     except Exception as e:
         print(f"Error sending login notification: {str(e)}")
