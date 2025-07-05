@@ -6,6 +6,7 @@ from datetime import datetime
 
 cognito = boto3.client('cognito-idp')
 dynamodb = boto3.resource('dynamodb')
+sns = boto3.client("sns")
 
 def lambda_handler(event, context):
     print(f"Registration request: {json.dumps(event, indent=2)}")
@@ -102,7 +103,17 @@ def lambda_handler(event, context):
             )
         
         print("Security questions stored")
-        
+
+        sns.publish(
+            TopicArn = os.environ['SIGNUP_LOGIN_TOPIC_ARN'],
+            Message  = json.dumps({
+                "toEmail":  email,
+                "subject":  "Sign-up Successful",
+                "bodyText": f"Hi {first_name}, thanks for signing up."
+            })
+        )
+        print(f"Email notification sent to: {first_name}")
+
         return {
             'statusCode': 200,
             'headers': headers,

@@ -1,5 +1,17 @@
 import json
 import hashlib
+import os
+import boto3
+import re
+import datetime
+
+sns = boto3.client('sns')
+
+# Add a function to validate email format
+def is_valid_email(email):
+    """Check if the string is a valid email address format"""
+    email_pattern = re.compile(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
+    return bool(email_pattern.match(email))
 
 def lambda_handler(event, context):
     print(f"Verify Auth Challenge: {json.dumps(event, indent=2)}")
@@ -27,6 +39,19 @@ def lambda_handler(event, context):
         elif challenge_type == 'CAESAR_CIPHER':
             is_correct = verify_caesar_cipher(user_answer, private_params['answer'])
             response['answerCorrect'] = is_correct
+            
+            # If answer is correct, this is a successful login, send notification
+            if is_correct:
+                try:
+                    # Extract user information
+                    username = event['userName']
+                    user_attributes = get_user_attributes(username)
+                    
+                    # Send login notification
+                    send_login_notification(username, user_attributes)
+                except Exception as e:
+                    print(f"Error in login notification flow: {str(e)}")
+                    # Continue with the login process even if notification fails
             
             if not is_correct:
                 # Add error code to publicChallengeParameters
@@ -66,3 +91,82 @@ def verify_security_question(user_answer, correct_answer_hash):
 
 def verify_caesar_cipher(user_answer, correct_answer):
     return user_answer.upper().strip() == correct_answer
+
+def get_user_attributes(username):
+    """Fetches user attributes from Cognito"""
+    try:
+        # Check if we have the Cognito User Pool ID
+        user_pool_id = os.environ.get('COGNITO_USER_POOL_ID')
+        if not user_pool_id:
+            print("COGNITO_USER_POOL_ID environment variable not set")
+            # Do not return username as email if it's not a valid email format
+            return {'given_name': 'User', 'email': ''}
+            
+        cognito = boto3.client('cognito-idp')
+        response = cognito.admin_get_user(
+            UserPoolId=user_pool_id,
+            Username=username
+        )
+        
+        # Convert the user attributes to a dictionary
+        attributes = {}
+        if 'UserAttributes' in response:
+            for attr in response['UserAttributes']:
+                attributes[attr['Name']] = attr['Value']
+        print(f"Retrieved user attributes: {attributes}")
+        return attributes
+    except Exception as e:
+        print(f"Error fetching user attributes: {str(e)}")
+        # Do not return username as email if it's not a valid email format
+        return {'given_name': 'User', 'email': ''}
+
+def send_login_notification(username, user_attributes):
+    """Sends login notification via SNS"""
+    try:
+        print(f"Starting login notification process for user: {username}")
+        # Check if we have the SNS topic ARN
+        topic_arn = os.environ.get('SIGNUP_LOGIN_TOPIC_ARN')
+        if not topic_arn:
+            print("SIGNUP_LOGIN_TOPIC_ARN environment variable not set")
+            return
+        print(f"Retrieved SNS topic ARN: {topic_arn}")
+            
+        # Extract user's name from attributes
+        first_name = user_attributes.get('given_name', 'User')
+
+        print(f"User first name: {first_name}")
+        
+        # Get the email and validate it
+        email = user_attributes.get('email', '')
+        print(f"Retrieved email from user attributes: {email}")
+        
+        if not email or not is_valid_email(email):
+            print(f"No valid email found for user {username}. Skipping login notification.")
+            return
+            
+        # Define email content
+        current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        text_content = f"""
+Hello {first_name},
+
+We detected a new login to your DalScooter account on {current_time}.
+
+If this was you, no action is needed. If you did not initiate this login, please contact support immediately.
+
+Thank you,
+DalScooter Team
+        """
+
+        # Send notification
+        sns.publish(
+            TopicArn=topic_arn,
+            Message=json.dumps({
+                "toEmail": email,
+                "subject": "DalScooter - Login Notification",
+                "bodyText": text_content
+            })
+        )
+        print(f"Login notification sent to {email}")
+        print("Login notification process completed")
+    except Exception as e:
+        print(f"Error sending login notification: {str(e)}")
