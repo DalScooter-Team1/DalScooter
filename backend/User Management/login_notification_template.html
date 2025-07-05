@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DalScooter - Login Notification</title>
+  <style>
+    /* Base styles */
+    body {
+      font-family: 'Inter', 'Helvetica', Arial, sans-serif;
+      line-height: 1.5;
+      color: #213547;
+      background-color: #f3f4f6;
+      margin: 0;
+      padding: 0;
+    }
+    
+    /* Container */
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #ffffff;
+    }
+    
+    /* Header */
+    .header {
+      text-align: center;
+      padding: 20px 0;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    
+    .logo {
+      font-size: 24px;
+      font-weight: bold;
+      color: #d97706; /* Amber-600 */
+    }
+    
+    /* Content */
+    .content {
+      padding: 30px 20px;
+      background-color: #ffffff;
+    }
+    
+    h1 {
+      font-size: 20px;
+      color: #1f2937;
+      margin-top: 0;
+      margin-bottom: 20px;
+    }
+    
+    p {
+      margin-bottom: 16px;
+      color: #4b5563;
+    }
+    
+    /* Alert Box */
+    .alert-box {
+      background-color: #fef3c7; /* Amber-100 */
+      border-left: 4px solid #d97706; /* Amber-600 */
+      padding: 16px;
+      margin-bottom: 24px;
+      border-radius: 4px;
+    }
+    
+    /* Button */
+    .button {
+      display: inline-block;
+      background-color: #d97706; /* Amber-600 */
+      color: #ffffff !important;
+      text-decoration: none;
+      padding: 12px 24px;
+      border-radius: 6px;
+      font-weight: 500;
+      margin-top: 16px;
+      text-align: center;
+    }
+    
+    /* Footer */
+    .footer {
+      margin-top: 30px;
+      padding-top: 20px;
+      border-top: 1px solid #e5e7eb;
+      font-size: 12px;
+      color: #6b7280;
+      text-align: center;
+    }
+
+    /* Info section */
+    .info-section {
+      background-color: #f9fafb;
+      border-radius: 4px;
+      padding: 16px;
+      margin: 24px 0;
+    }
+    
+    .info-item {
+      display: flex;
+      margin-bottom: 8px;
+    }
+    
+    .info-label {
+      font-weight: 500;
+      width: 100px;
+      color: #4b5563;
+    }
+    
+    /* Responsive */
+    @media (max-width: 480px) {
+      .container {
+        width: 100%;
+        padding: 10px;
+      }
+      
+      .content {
+        padding: 20px 15px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="logo">DALScooter</div>
+      <div style="color: #6b7280; font-size: 14px;">Sustainable Campus Mobility</div>
+    </div>
+    
+    <div class="content">
+      <h1>Login Detected</h1>
+      
+      <p>Hi {{firstName}},</p>
+      
+      <p>We detected a new login to your DalScooter account.</p>
+      
+      <div class="alert-box">
+        <strong>If this was you, no action is needed.</strong><br>
+        If you didn't login recently, please secure your account by changing your password immediately.
+      </div>
+      
+      <div class="info-section">
+        <div class="info-item">
+          <div class="info-label">Date:</div>
+          <div>{{loginDate}}</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">Time:</div>
+          <div>{{loginTime}}</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">Device:</div>
+          <div>{{device}}</div>
+        </div>
+      </div>
+      
+      <p>If you didn't perform this login, please contact our support team immediately.</p>
+      
+      <a href="https://main.d1zyam9rwojck8.amplifyapp.com/account/security" class="button">Manage Account Security</a>
+      
+    </div>
+    
+    <div class="footer">
+      <p>
+        &copy; 2025 DalScooter - All rights reserved<br>
+        Dalhousie University's Eco-friendly Campus Mobility Solution
+      </p>
+      <p>
+        If you have any questions, contact us at:<br>
+        <a href="mailto:support@dalscooter.ca" style="color: #d97706;">support@dalscooter.ca</a>
+      </p>
+    </div>
+  </div>
+</body>
+</html>

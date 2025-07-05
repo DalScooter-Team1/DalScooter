@@ -132,6 +132,7 @@ def send_login_notification(username, user_attributes):
             
         # Extract user's name from attributes
         first_name = user_attributes.get('given_name', 'User')
+
         print(f"User first name: {first_name}")
         
         # Get the email and validate it
@@ -141,14 +142,14 @@ def send_login_notification(username, user_attributes):
         if not email or not is_valid_email(email):
             print(f"No valid email found for user {username}. Skipping login notification.")
             return
-            
+
         # Send notification
         sns.publish(
             TopicArn=topic_arn,
             Message=json.dumps({
                 "toEmail": email,
                 "subject": "DalScooter - Login Notification",
-                "bodyText": f"Hi {first_name}, we noticed a new login to your DalScooter account. If this was you, no action is needed. If you didn't login recently, please contact support."
+                "bodyText": text_content
             })
         )
         print(f"Login notification sent to {email}")
