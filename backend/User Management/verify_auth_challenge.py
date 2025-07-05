@@ -3,6 +3,7 @@ import hashlib
 import os
 import boto3
 import re
+import datetime
 
 sns = boto3.client('sns')
 
@@ -142,6 +143,19 @@ def send_login_notification(username, user_attributes):
         if not email or not is_valid_email(email):
             print(f"No valid email found for user {username}. Skipping login notification.")
             return
+            
+        # Define email content
+        current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        text_content = f"""
+Hello {first_name},
+
+We detected a new login to your DalScooter account on {current_time}.
+
+If this was you, no action is needed. If you did not initiate this login, please contact support immediately.
+
+Thank you,
+DalScooter Team
+        """
 
         # Send notification
         sns.publish(
