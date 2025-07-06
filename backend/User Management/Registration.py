@@ -8,6 +8,94 @@ cognito = boto3.client('cognito-idp')
 dynamodb = boto3.resource('dynamodb')
 sns = boto3.client("sns")
 
+# Define welcome email template as a string directly in the code
+WELCOME_EMAIL_TEMPLATE = """<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to DalScooter</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background-color: #002D72; /* Dalhousie blue */
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-radius: 5px 5px 0 0;
+        }
+        .content {
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-left: 1px solid #ddd;
+            border-right: 1px solid #ddd;
+        }
+        .footer {
+            background-color: #002D72; /* Dalhousie blue */
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-size: 12px;
+            border-radius: 0 0 5px 5px;
+        }
+        .button {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #FFCC00; /* Dalhousie gold */
+            color: #002D72;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Welcome to DalScooter!</h1>
+    </div>
+    <div class="content">
+        <h2>Hi {first_name},</h2>
+        <p>Thank you for registering with DalScooter - the most convenient way to get around Dalhousie University campus!</p>
+        <p>Your account has been successfully created and is now ready to use. You can start booking scooters right away.</p>
+        <p>Here's what you can do with your new account:</p>
+        <ul>
+            <li>Book scooters for campus travel</li>
+            <li>Track your rides and history</li>
+            <li>Manage your profile and payment methods</li>
+        </ul>
+        <div style="text-align: center;">
+            <a href="#" class="button">Get Started Now</a>
+        </div>
+        <p>If you have any questions or need assistance, please don't hesitate to contact our support team.</p>
+        <p>Happy scooting!</p>
+        <p>Best regards,<br>The DalScooter Team</p>
+    </div>
+    <div class="footer">
+        &copy; 2025 DalScooter. All rights reserved.
+    </div>
+</body>
+</html>"""
+
+def get_email_template(**kwargs):
+    """
+    Return the email template with placeholders replaced with provided values
+    """
+    template = WELCOME_EMAIL_TEMPLATE
+    
+    # Replace placeholders with actual values
+    for key, value in kwargs.items():
+        template = template.replace(f"{{{key}}}", value)
+        
+    return template
+
 def lambda_handler(event, context):
     print(f"Registration request: {json.dumps(event, indent=2)}")
     
@@ -104,12 +192,16 @@ def lambda_handler(event, context):
         
         print("Security questions stored")
 
+        # Use the HTML email template
+        email_body = get_email_template(first_name=first_name)
+        
         sns.publish(
             TopicArn = os.environ['SIGNUP_LOGIN_TOPIC_ARN'],
             Message  = json.dumps({
                 "toEmail":  email,
-                "subject":  "Sign-up Successful",
-                "bodyText": f"Hi {first_name}, thanks for signing up."
+                "subject":  "Welcome to DalScooter!",
+                "bodyText": f"Hi {first_name}, thanks for signing up with DalScooter!",
+                "bodyHtml": email_body
             })
         )
         print(f"Email notification sent to: {first_name}")
