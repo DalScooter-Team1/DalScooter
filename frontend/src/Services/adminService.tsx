@@ -13,7 +13,9 @@ const adminAPI = axios.create({
 // Add request interceptor to include auth token
 adminAPI.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('accessToken');
+    // Use ID token for all endpoints as it contains all necessary claims
+    const token = localStorage.getItem('accessToken') || localStorage.getItem('idToken');
+    
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
