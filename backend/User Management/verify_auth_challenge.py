@@ -7,6 +7,99 @@ import datetime
 
 sns = boto3.client('sns')
 
+# Login notification HTML template
+LOGIN_NOTIFICATION_TEMPLATE = """<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Notification - DalScooter</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background-color: #002D72; /* Dalhousie blue */
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-radius: 5px 5px 0 0;
+        }
+        .content {
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-left: 1px solid #ddd;
+            border-right: 1px solid #ddd;
+        }
+        .footer {
+            background-color: #002D72; /* Dalhousie blue */
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-size: 12px;
+            border-radius: 0 0 5px 5px;
+        }
+        .alert {
+            background-color: #ffeeee;
+            border-left: 4px solid #ff5555;
+            padding: 10px 15px;
+            margin: 15px 0;
+        }
+        .button {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #FFCC00; /* Dalhousie gold */
+            color: #002D72;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Login Notification</h1>
+    </div>
+    <div class="content">
+        <h2>Hello {first_name},</h2>
+        <p>We detected a new login to your DalScooter account on <strong>{login_time}</strong>.</p>
+        
+        <div class="alert">
+            <p>If this was you, no action is needed.</p>
+            <p>If you did not initiate this login, please contact support immediately.</p>
+        </div>
+        
+        <div style="text-align: center;">
+            <a href="#" class="button">Account Security</a>
+        </div>
+        
+        <p>Thank you for using DalScooter!</p>
+        <p>Best regards,<br>The DalScooter Team</p>
+    </div>
+    <div class="footer">
+        &copy; 2025 DalScooter. All rights reserved.
+    </div>
+</body>
+</html>"""
+
+def get_login_email_template(**kwargs):
+    """
+    Return the login notification email template with placeholders replaced with provided values
+    """
+    template = LOGIN_NOTIFICATION_TEMPLATE
+    
+    # Replace placeholders with actual values
+    for key, value in kwargs.items():
+        template = template.replace(f"{{{key}}}", value)
+        
+    return template
+
 # Add a function to validate email format
 def is_valid_email(email):
     """Check if the string is a valid email address format"""
@@ -157,13 +250,16 @@ Thank you,
 DalScooter Team
         """
 
+        html_content = get_login_email_template(first_name=first_name, login_time=current_time)
+
         # Send notification
         sns.publish(
             TopicArn=topic_arn,
             Message=json.dumps({
                 "toEmail": email,
                 "subject": "DalScooter - Login Notification",
-                "bodyText": text_content
+                "bodyText": text_content,
+                "bodyHtml": html_content
             })
         )
         print(f"Login notification sent to {email}")
