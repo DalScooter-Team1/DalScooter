@@ -39,6 +39,9 @@ module "apis" {
   admin_creation_lambda_arn                  = module.lambda.admin_creation_lambda_arn
   admin_creation_lambda_invoke_arn           = module.lambda.admin_creation_lambda_invoke_arn
   admin_creation_lambda_function_name        = module.lambda.admin_creation_lambda_function_name
+  get_customers_lambda_arn                   = module.lambda.get_customers_lambda_arn
+  get_customers_lambda_invoke_arn            = module.lambda.get_customers_lambda_invoke_arn
+  get_customers_lambda_function_name         = module.lambda.get_customers_lambda_function_name
 }
 
 # ================================

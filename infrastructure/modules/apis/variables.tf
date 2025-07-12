@@ -51,3 +51,18 @@ variable "admin_creation_lambda_function_name" {
   description = "Function name of the admin creation Lambda"
   type        = string
 }
+
+variable "get_customers_lambda_arn" {
+  description = "ARN of the get customers Lambda function"
+  type        = string
+}
+
+variable "get_customers_lambda_invoke_arn" {
+  description = "Invoke ARN of the get customers Lambda function"
+  type        = string
+}
+
+variable "get_customers_lambda_function_name" {
+  description = "Function name of the get customers Lambda"
+  type        = string
+}
