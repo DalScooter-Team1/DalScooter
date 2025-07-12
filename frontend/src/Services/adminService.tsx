@@ -13,11 +13,15 @@ const adminAPI = axios.create({
 // Add request interceptor to include auth token
 adminAPI.interceptors.request.use(
   (config) => {
-    // Use ID token for all endpoints as it contains all necessary claims
-    const token = localStorage.getItem('accessToken') || localStorage.getItem('idToken');
+    // Always use ID token for admin endpoints as it contains cognito:groups claim
+    const token = localStorage.getItem('idToken');
     
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+    } else {
+      console.error('No ID token found for admin request');
+      // Redirect to login if no token
+      window.location.href = '/login';
     }
     return config;
   },

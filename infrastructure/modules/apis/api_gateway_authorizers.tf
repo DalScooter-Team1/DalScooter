@@ -10,6 +10,7 @@ resource "aws_api_gateway_authorizer" "customer_authorizer" {
   authorizer_credentials = aws_iam_role.authorizer_invocation_role.arn
   type                  = "TOKEN"
   identity_source       = "method.request.header.Authorization"
+  authorizer_result_ttl_in_seconds = 0  # Disable caching for debugging
 }
 
 # Franchise Authorizer
@@ -20,6 +21,7 @@ resource "aws_api_gateway_authorizer" "franchise_authorizer" {
   authorizer_credentials = aws_iam_role.authorizer_invocation_role.arn
   type                  = "TOKEN"
   identity_source       = "method.request.header.Authorization"
+  authorizer_result_ttl_in_seconds = 0  # Disable caching for debugging
 }
 
 # ================================

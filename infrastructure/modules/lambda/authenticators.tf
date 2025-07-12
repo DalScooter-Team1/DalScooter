@@ -25,6 +25,7 @@ resource "aws_lambda_function" "customer_authenticator" {
   environment {
     variables = {
       COGNITO_USER_POOL_ID = var.cognito_user_pool_id
+      COGNITO_CLIENT_ID    = var.cognito_client_id
     }
   }
 }
@@ -52,6 +53,7 @@ resource "aws_lambda_function" "admin_authenticator" {
   environment {
     variables = {
       COGNITO_USER_POOL_ID = var.cognito_user_pool_id
+      COGNITO_CLIENT_ID    = var.cognito_client_id
     }
   }
 }
