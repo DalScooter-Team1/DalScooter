@@ -138,7 +138,7 @@ def lambda_handler(event, context):
                 try:
                     # Extract user information
                     username = event['userName']
-                    user_attributes = get_user_attributes(username)
+                    user_attributes = get_user_attributes(username, event)
                     
                     # Send login notification
                     send_login_notification(username, user_attributes)
@@ -185,13 +185,13 @@ def verify_security_question(user_answer, correct_answer_hash):
 def verify_caesar_cipher(user_answer, correct_answer):
     return user_answer.upper().strip() == correct_answer
 
-def get_user_attributes(username):
+def get_user_attributes(username, event):
     """Fetches user attributes from Cognito"""
     try:
-        # Check if we have the Cognito User Pool ID
-        user_pool_id = os.environ.get('COGNITO_USER_POOL_ID')
+        # Get the Cognito User Pool ID from the event
+        user_pool_id = event.get('userPoolId')
         if not user_pool_id:
-            print("COGNITO_USER_POOL_ID environment variable not set")
+            print("userPoolId not found in event")
             # Do not return username as email if it's not a valid email format
             return {'given_name': 'User', 'email': ''}
             

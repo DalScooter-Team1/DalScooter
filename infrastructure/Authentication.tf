@@ -1,3 +1,8 @@
+####################################################################################################
+# This resource file prepares the infrastructure for custom authentication challenges in AWS Cognito.
+# It includes Lambda functions for defining, creating, and verifying authentication challenges.
+####################################################################################################
+
 # Factor 1: Username/Password Authentication
 resource "aws_cognito_user_pool" "pool" {
   name = "DalScooterUserPool"
@@ -32,9 +37,9 @@ resource "aws_cognito_user_pool" "pool" {
 
   # Lambda triggers for custom authentication
   lambda_config {
-    define_auth_challenge    = aws_lambda_function.define_auth_challenge.arn
-    create_auth_challenge    = aws_lambda_function.create_auth_challenge.arn
-    verify_auth_challenge_response = aws_lambda_function.verify_auth_challenge.arn
+    define_auth_challenge    = module.lambda.define_auth_challenge_lambda_arn
+    create_auth_challenge    = module.lambda.create_auth_challenge_lambda_arn
+    verify_auth_challenge_response = module.lambda.verify_auth_challenge_lambda_arn
   }
   account_recovery_setting {
     recovery_mechanism {
@@ -110,249 +115,11 @@ resource "aws_dynamodb_table" "user_security_questions" {
   }
 }
 
-
-# Registration
-
-resource "aws_iam_role" "registration_lambda_role" {
-  name = "dalscooter-registration-lambda-role"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "sts:AssumeRole"
-        Effect = "Allow"
-        Principal = {
-          Service = "lambda.amazonaws.com"
-        }
-      }
-    ]
-  })
-}
-
-resource "aws_iam_role_policy" "registration_lambda_policy" {
-  name = "dalscooter-registration-lambda-policy"
-  role = aws_iam_role.registration_lambda_role.id
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Action = [
-          "logs:CreateLogGroup",
-          "logs:CreateLogStream", 
-          "logs:PutLogEvents"
-        ]
-        Resource = "arn:aws:logs:*:*:*"
-      },
-      {
-        Effect = "Allow"
-        Action = [
-          "cognito-idp:AdminAddUserToGroup",
-          "cognito-idp:SignUp",
-          "cognito-idp:AdminConfirmSignUp"  # Added permission
-        ]
-        Resource = aws_cognito_user_pool.pool.arn
-      },
-      {
-        Effect = "Allow"
-        Action = [
-          "dynamodb:PutItem"
-        ]
-        Resource = aws_dynamodb_table.user_security_questions.arn
-      },
-      {
-        Effect   = "Allow"
-        Action   = [
-          "sns:Publish"
-        ]
-        Resource = aws_sns_topic.user_signup_login.arn
-      }
-    ]
-  })
-}
-
-# Create a directory for the package if it doesn't exist
-resource "local_file" "create_packages_dir" {
-  content     = ""
-  filename    = "${path.module}/packages/.keep"
-  
-  provisioner "local-exec" {
-    command = "mkdir -p ${path.module}/packages"
-  }
-}
-
-# Create a zip file for the Lambda function from the Registration.py file
-data "archive_file" "user_registration_zip" {
-  type        = "zip"
-  source_file = "${path.module}/../backend/User Management/Registration.py"
-  output_path = "${path.module}/packages/user_registration.zip"
-  depends_on  = [local_file.create_packages_dir]
-}
-
-resource "aws_lambda_function" "user_registration" {
-  filename         = data.archive_file.user_registration_zip.output_path
-  function_name    = "dalscooter-user-registration"
-  role            = aws_iam_role.registration_lambda_role.arn
-  handler         = "Registration.lambda_handler"  # Corrected handler name
-  runtime         = "python3.9"
-  timeout         = 30
-  
-  # This ensures the function is updated when the zip file changes
-  source_code_hash = data.archive_file.user_registration_zip.output_base64sha256
-
-  environment {
-    variables = {
-      COGNITO_USER_POOL_ID = aws_cognito_user_pool.pool.id
-      COGNITO_CLIENT_ID    = aws_cognito_user_pool_client.client.id
-      SECURITY_QUESTIONS_TABLE = aws_dynamodb_table.user_security_questions.name
-      SIGNUP_LOGIN_TOPIC_ARN     = aws_sns_topic.user_signup_login.arn
-    }
-  }
-}
-
-
-
-
-
-# Custom Lambda extensions for the custom 3-factor authentication flow
-# IAM Role for Auth Lambda Functions
-resource "aws_iam_role" "auth_lambda_role" {
-  name = "dalscooter-auth-lambda-role"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "sts:AssumeRole"
-        Effect = "Allow"
-        Principal = {
-          Service = "lambda.amazonaws.com"
-        }
-      }
-    ]
-  })
-}
-
-# IAM Policy for Auth Lambda Functions
-resource "aws_iam_role_policy" "auth_lambda_policy" {
-  name = "dalscooter-auth-lambda-policy"
-  role = aws_iam_role.auth_lambda_role.id
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Action = [
-          "logs:CreateLogGroup",
-          "logs:CreateLogStream", 
-          "logs:PutLogEvents"
-        ]
-        Resource = "arn:aws:logs:*:*:*"
-      },
-      {
-        Effect = "Allow"
-        Action = [
-          "dynamodb:GetItem",
-          "dynamodb:Query"
-        ]
-        Resource = aws_dynamodb_table.user_security_questions.arn
-      },
-      {
-        Effect   = "Allow"
-        Action   = [
-          "sns:Publish"
-        ]
-        Resource = aws_sns_topic.user_signup_login.arn
-      },
-      {
-        Effect = "Allow"
-        Action = [
-          "cognito-idp:AdminGetUser",
-          "cognito-idp:ListUsers"
-        ]
-        Resource = "*"  # Using * to avoid cyclic dependency; in production, you should restrict this
-      }
-    ]
-  })
-}
-
-# 1. Define Auth Challenge Lambda
-data "archive_file" "define_auth_challenge_zip" {
-  type        = "zip"
-  source_file = "${path.module}/../backend/User Management/define_auth_challenge.py"
-  output_path = "${path.module}/packages/define_auth_challenge.zip"
-  depends_on  = [local_file.create_packages_dir]
-}
-
-resource "aws_lambda_function" "define_auth_challenge" {
-  filename         = data.archive_file.define_auth_challenge_zip.output_path
-  function_name    = "dalscooter-define-auth-challenge"
-  role            = aws_iam_role.auth_lambda_role.arn
-  handler         = "define_auth_challenge.lambda_handler"
-  runtime         = "python3.9"
-  timeout         = 30
-  
-  source_code_hash = data.archive_file.define_auth_challenge_zip.output_base64sha256
-}
-
-# 2. Create Auth Challenge Lambda
-data "archive_file" "create_auth_challenge_zip" {
-  type        = "zip"
-  source_file = "${path.module}/../backend/User Management/create_auth_challenge.py"
-  output_path = "${path.module}/packages/create_auth_challenge.zip"
-  depends_on  = [local_file.create_packages_dir]
-}
-
-resource "aws_lambda_function" "create_auth_challenge" {
-  filename         = data.archive_file.create_auth_challenge_zip.output_path
-  function_name    = "dalscooter-create-auth-challenge"
-  role            = aws_iam_role.auth_lambda_role.arn
-  handler         = "create_auth_challenge.lambda_handler"
-  runtime         = "python3.9"
-  timeout         = 30
-  
-  source_code_hash = data.archive_file.create_auth_challenge_zip.output_base64sha256
-
-  environment {
-    variables = {
-      SECURITY_QUESTIONS_TABLE = aws_dynamodb_table.user_security_questions.name
-    }
-  }
-}
-
-# 3. Verify Auth Challenge Lambda
-data "archive_file" "verify_auth_challenge_zip" {
-  type        = "zip"
-  source_file = "${path.module}/../backend/User Management/verify_auth_challenge.py"
-  output_path = "${path.module}/packages/verify_auth_challenge.zip"
-  depends_on  = [local_file.create_packages_dir]
-}
-
-resource "aws_lambda_function" "verify_auth_challenge" {
-  filename         = data.archive_file.verify_auth_challenge_zip.output_path
-  function_name    = "dalscooter-verify-auth-challenge"
-  role            = aws_iam_role.auth_lambda_role.arn
-  handler         = "verify_auth_challenge.lambda_handler"
-  runtime         = "python3.9"
-  timeout         = 30
-  
-  source_code_hash = data.archive_file.verify_auth_challenge_zip.output_base64sha256
-  
-  environment {
-    variables = {
-      SIGNUP_LOGIN_TOPIC_ARN = aws_sns_topic.user_signup_login.arn
-    }
-  }
-}
-
 # Lambda Permissions for Cognito
 resource "aws_lambda_permission" "cognito_define_auth" {
   statement_id  = "AllowCognitoDefineAuth"
   action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.define_auth_challenge.function_name
+  function_name = module.lambda.define_auth_challenge_lambda_function_name
   principal     = "cognito-idp.amazonaws.com"
   source_arn    = aws_cognito_user_pool.pool.arn
 }
@@ -360,7 +127,7 @@ resource "aws_lambda_permission" "cognito_define_auth" {
 resource "aws_lambda_permission" "cognito_create_auth" {
   statement_id  = "AllowCognitoCreateAuth"
   action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.create_auth_challenge.function_name
+  function_name = module.lambda.create_auth_challenge_lambda_function_name
   principal     = "cognito-idp.amazonaws.com"
   source_arn    = aws_cognito_user_pool.pool.arn
 }
@@ -368,123 +135,9 @@ resource "aws_lambda_permission" "cognito_create_auth" {
 resource "aws_lambda_permission" "cognito_verify_auth" {
   statement_id  = "AllowCognitoVerifyAuth"
   action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.verify_auth_challenge.function_name
+  function_name = module.lambda.verify_auth_challenge_lambda_function_name
   principal     = "cognito-idp.amazonaws.com"
   source_arn    = aws_cognito_user_pool.pool.arn
 }
 
  
-
-# Admin Creation Lambda Function
-# IAM Role for Admin Creation Lambda
-resource "aws_iam_role" "admin_creation_lambda_role" {
-  name = "dalscooter-admin-creation-lambda-role"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "sts:AssumeRole"
-        Effect = "Allow"
-        Principal = {
-          Service = "lambda.amazonaws.com"
-        }
-      }
-    ]
-  })
-}
-
-# IAM Policy for Admin Creation Lambda
-resource "aws_iam_role_policy" "admin_creation_lambda_policy" {
-  name = "dalscooter-admin-creation-lambda-policy"
-  role = aws_iam_role.admin_creation_lambda_role.id
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Action = [
-          "logs:CreateLogGroup",
-          "logs:CreateLogStream", 
-          "logs:PutLogEvents"
-        ]
-        Resource = "arn:aws:logs:*:*:*"
-      },
-      {
-        Effect = "Allow"
-        Action = [
-          "cognito-idp:AdminAddUserToGroup",
-          "cognito-idp:AdminRemoveUserFromGroup"
-        ]
-        Resource = aws_cognito_user_pool.pool.arn
-      }
-    ]
-  })
-}
-
-# Create a zip file for the Admin Creation Lambda function
-data "archive_file" "admin_creation_zip" {
-  type        = "zip"
-  source_file = "${path.module}/../backend/User Management/admin_creation.py"
-  output_path = "${path.module}/packages/admin_creation.zip"
-  depends_on  = [local_file.create_packages_dir]
-}
-
-# Admin Creation Lambda Function
-resource "aws_lambda_function" "admin_creation" {
-  filename         = data.archive_file.admin_creation_zip.output_path
-  function_name    = "dalscooter-admin-creation"
-  role             = aws_iam_role.admin_creation_lambda_role.arn
-  handler          = "admin_creation.lambda_handler"
-  runtime          = "python3.9"
-  timeout          = 30
-  
-  # This ensures the function is updated when the zip file changes
-  source_code_hash = data.archive_file.admin_creation_zip.output_base64sha256
-
-  environment {
-    variables = {
-      COGNITO_USER_POOL_ID = aws_cognito_user_pool.pool.id
-      COGNITO_GROUP_NAME   = aws_cognito_user_group.franchise.name
-    }
-  }
-}
-
-# Break the circular dependency by using a null_resource to update the Lambda environment variables
-resource "null_resource" "update_verify_auth_challenge_env" {
-  depends_on = [aws_cognito_user_pool.pool, aws_lambda_function.verify_auth_challenge]
-
-  # Use local-exec to update the Lambda environment variables after both resources are created
-  provisioner "local-exec" {
-    command = <<EOT
-      aws lambda update-function-configuration \
-        --function-name ${aws_lambda_function.verify_auth_challenge.function_name} \
-        --environment "Variables={SIGNUP_LOGIN_TOPIC_ARN=${aws_sns_topic.user_signup_login.arn},COGNITO_USER_POOL_ID=${aws_cognito_user_pool.pool.id}}"
-    EOT
-  }
-}
-
-# This null_resource updates the Lambda function with Cognito User Pool ID
-# after both resources are created, avoiding cyclic dependency
-resource "null_resource" "update_verify_lambda_environment" {
-  depends_on = [
-    aws_lambda_function.verify_auth_challenge,
-    aws_cognito_user_pool.pool
-  ]
-
-  triggers = {
-    lambda_function = aws_lambda_function.verify_auth_challenge.id
-    user_pool = aws_cognito_user_pool.pool.id
-  }
-
-  # Use local-exec to update the Lambda function's environment variables
-  provisioner "local-exec" {
-    command = <<EOF
-      aws lambda update-function-configuration \
-      --function-name ${aws_lambda_function.verify_auth_challenge.function_name} \
-      --environment "Variables={SIGNUP_LOGIN_TOPIC_ARN=${aws_sns_topic.user_signup_login.arn},COGNITO_USER_POOL_ID=${aws_cognito_user_pool.pool.id}}"
-EOF
-  }
-}
-
