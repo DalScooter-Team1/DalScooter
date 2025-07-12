@@ -93,13 +93,13 @@ resource "aws_api_gateway_integration" "register_integration" {
 
   integration_http_method = "POST"
   type                   = "AWS_PROXY"
-  uri                    = aws_lambda_function.user_registration.invoke_arn
+  uri                    = var.user_registration_lambda_invoke_arn
 }
 
 resource "aws_lambda_permission" "api_gateway_invoke_registration" {
   statement_id  = "AllowAPIGatewayInvokeRegistration"
   action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.user_registration.function_name
+  function_name = var.user_registration_lambda_function_name
   principal     = "apigateway.amazonaws.com"
   source_arn    = "${aws_api_gateway_rest_api.dalscooter_apis.execution_arn}/*/*"
 }

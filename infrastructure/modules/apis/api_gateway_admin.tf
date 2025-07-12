@@ -23,7 +23,7 @@ resource "aws_api_gateway_integration" "admin_integration" {
 
   integration_http_method = "POST"
   type                   = "AWS_PROXY"
-  uri                    = aws_lambda_function.admin_creation.invoke_arn
+  uri                    = var.admin_creation_lambda_invoke_arn
 }
 
 # Method response for POST with CORS headers
@@ -108,7 +108,7 @@ resource "aws_api_gateway_integration_response" "admin_options_integration_respo
 resource "aws_lambda_permission" "api_gateway_invoke_admin_creation" {
   statement_id  = "AllowAPIGatewayInvokeAdminCreation"
   action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.admin_creation.function_name
+  function_name = var.admin_creation_lambda_function_name
   principal     = "apigateway.amazonaws.com"
   source_arn    = "${aws_api_gateway_rest_api.dalscooter_apis.execution_arn}/*/*"
 }
