@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   CognitoUser,
   CognitoUserPool,
@@ -19,6 +20,7 @@ const COGNITO_CONFIG = {
 };
 
 const UsernameLogin: React.FC = () => {
+    const navigate = useNavigate();
     const [currentStep, setCurrentStep] = useState<string>('login');
     const [cognitoUser, setCognitoUser] = useState<CognitoUser | null>(null);
     const [challengeParams, setChallengeParams] = useState<any>({});
@@ -127,6 +129,22 @@ const UsernameLogin: React.FC = () => {
         localStorage.setItem('accessToken', accessToken);
         localStorage.setItem('idToken', idToken);
         localStorage.setItem('refreshToken', refreshToken);
+        
+        // Check if user is admin and navigate automatically
+        try {
+            const decodedToken: any = jwtDecode(idToken);
+            const roles = decodedToken['cognito:groups'] || [];
+            localStorage.setItem('userRoles', JSON.stringify(roles));
+            
+            // If user is an admin (franchise role), navigate to admin dashboard after a short delay
+            if (roles.includes('franchise')) {
+                setTimeout(() => {
+                    navigate('/admin-dashboard');
+                }, 2000); // 2 second delay to show success message
+            }
+        } catch (error) {
+            console.error('Error checking user roles:', error);
+        }
     };
 
     const getUserRolesFromToken = (): string[] => {
@@ -348,15 +366,30 @@ const UsernameLogin: React.FC = () => {
                     <div className="mb-6 bg-amber-50 p-3 rounded-lg border border-amber-200">
                         <p className="text-amber-800 font-medium">Admin Access Granted</p>
                         <p className="text-xs text-amber-700 mt-1">You have administrative privileges</p>
+                        <p className="text-xs text-amber-600 mt-2">Redirecting to Admin Dashboard...</p>
                     </div>
                 )}
                 
-                <button 
-                    onClick={handleLogout}
-                    className="w-full bg-[#ffd501] hover:bg-amber-500 text-white font-medium py-3 px-4 rounded-md transition duration-200"
-                >
-                    Logout
-                </button>
+                <div className="space-y-3">
+                    {isAdmin && (
+                        <button 
+                            onClick={() => navigate('/admin-dashboard')}
+                            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-md transition duration-200 flex items-center justify-center"
+                        >
+                            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                            </svg>
+                            Go to Admin Dashboard
+                        </button>
+                    )}
+                    
+                    <button 
+                        onClick={handleLogout}
+                        className="w-full bg-[#ffd501] hover:bg-amber-500 text-white font-medium py-3 px-4 rounded-md transition duration-200"
+                    >
+                        Logout
+                    </button>
+                </div>
             </div>
         );
     }

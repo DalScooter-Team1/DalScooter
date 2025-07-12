@@ -9,11 +9,10 @@ function App() {
   return (
      <BrowserRouter>
       <Routes>
-
-        {/* <Route path='/' element={<Register />} /> */}
+        <Route path='/' element={<Login/>}/>
+        <Route path='/register' element={<Register />} />
         <Route path='/login' element= {<Login/>}/>
-        {/* <Route path='/admin-dashboard' element={<AdminDashboard/>}/> */}
-        <Route path='/' element={<AdminDashboard />} />
+        <Route path='/admin-dashboard' element={<AdminDashboard/>}/>
       </Routes>
       </BrowserRouter>
      

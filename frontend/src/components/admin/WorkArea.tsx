@@ -1,5 +1,6 @@
 import React from 'react';
 import StatCard from './StatCard';
+import Header from './Header';
 
 interface WorkAreaProps {
   activeSection: string;
@@ -243,33 +244,19 @@ const WorkArea: React.FC<WorkAreaProps> = ({ activeSection }) => {
   };
 
   return (
-    <div className="flex-1 bg-gray-50 p-6 overflow-auto">
+    <div className="flex-1 flex flex-col bg-gray-50 overflow-hidden">
       {/* Header */}
-      <div className="mb-6">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 capitalize">{activeSection}</h1>
-            <p className="text-gray-500 mt-1">Manage your DalScooter operations</p>
-          </div>
-          <div className="flex items-center space-x-4">
-            <button className="p-2 bg-white rounded-lg shadow-sm border border-gray-200 hover:bg-gray-50 transition-colors">
-              <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-5 5v-5z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 19h16a2 2 0 002-2V7a2 2 0 00-2-2H4a2 2 0 00-2 2v10a2 2 0 002 2z" />
-              </svg>
-            </button>
-            <button className="p-2 bg-white rounded-lg shadow-sm border border-gray-200 hover:bg-gray-50 transition-colors">
-              <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-5 5v-5z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 19h16a2 2 0 002-2V7a2 2 0 00-2-2H4a2 2 0 00-2 2v10a2 2 0 002 2z" />
-              </svg>
-            </button>
-          </div>
+      <Header 
+        title={activeSection.charAt(0).toUpperCase() + activeSection.slice(1)}
+        subtitle="Manage your DalScooter operations efficiently"
+      />
+      
+      {/* Main Content */}
+      <div className="flex-1 overflow-auto">
+        <div className="p-6">
+          {renderContent()}
         </div>
       </div>
-
-      {/* Content */}
-      {renderContent()}
     </div>
   );
 };

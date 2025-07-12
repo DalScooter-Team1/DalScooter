@@ -68,21 +68,24 @@ const LeftBar: React.FC<LeftBarProps> = ({ activeSection, onSectionChange }) => 
   ];
 
   return (
-    <div className={`bg-gray-900 text-white transition-all duration-300 h-screen ${isCollapsed ? 'w-16' : 'w-64'}`}>
+    <div className={`bg-gray-900 text-white transition-all duration-300 h-screen flex flex-col shadow-xl ${isCollapsed ? 'w-16' : 'w-64'}`}>
       {/* Header */}
       <div className="p-4 border-b border-gray-700">
         <div className="flex items-center justify-between">
           {!isCollapsed && (
-            <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                <span className="text-sm font-bold">DS</span>
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg">
+                <span className="text-lg font-bold text-white">DS</span>
               </div>
-              <span className="text-lg font-semibold">DalScooter</span>
+              <div>
+                <span className="text-xl font-bold text-white">DalScooter</span>
+                <p className="text-xs text-gray-400">Admin Portal</p>
+              </div>
             </div>
           )}
           <button
             onClick={() => setIsCollapsed(!isCollapsed)}
-            className="p-1 rounded-md hover:bg-gray-700 transition-colors"
+            className="p-2 rounded-lg hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-900"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
@@ -92,20 +95,28 @@ const LeftBar: React.FC<LeftBarProps> = ({ activeSection, onSectionChange }) => 
       </div>
 
       {/* Navigation Menu */}
-      <nav className="p-4">
-        <div className="space-y-2">
+      <nav className="flex-1 p-4">
+        <div className="space-y-1">
           {menuItems.map((item) => (
             <button
               key={item.id}
               onClick={() => onSectionChange(item.id)}
-              className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors ${
+              className={`w-full flex items-center px-3 py-3 rounded-lg transition-all duration-200 group ${
                 activeSection === item.id
-                  ? 'bg-blue-600 text-white'
-                  : 'text-gray-300 hover:bg-gray-700 hover:text-white'
-              }`}
+                  ? 'bg-blue-600 text-white shadow-lg'
+                  : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+              } ${isCollapsed ? 'justify-center' : 'space-x-3'}`}
+              title={isCollapsed ? item.name : undefined}
             >
-              {item.icon}
-              {!isCollapsed && <span className="text-sm font-medium">{item.name}</span>}
+              <div className={`${activeSection === item.id ? 'text-white' : 'text-gray-400 group-hover:text-white'} transition-colors`}>
+                {item.icon}
+              </div>
+              {!isCollapsed && (
+                <span className="text-sm font-medium">{item.name}</span>
+              )}
+              {!isCollapsed && activeSection === item.id && (
+                <div className="ml-auto w-2 h-2 bg-white rounded-full"></div>
+              )}
             </button>
           ))}
         </div>
@@ -113,16 +124,21 @@ const LeftBar: React.FC<LeftBarProps> = ({ activeSection, onSectionChange }) => 
 
       {/* Footer */}
       {!isCollapsed && (
-        <div className="absolute bottom-4 left-4 right-4">
-          <div className="bg-gray-800 rounded-lg p-3">
+        <div className="p-4 border-t border-gray-700">
+          <div className="bg-gray-800 rounded-xl p-4 transition-all hover:bg-gray-750">
             <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center">
-                <span className="text-xs font-medium">AD</span>
+              <div className="h-10 w-10 bg-gradient-to-r from-blue-600 to-blue-700 rounded-full flex items-center justify-center shadow-sm">
+                <span className="text-sm font-medium text-white">AU</span>
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-white truncate">Admin User</p>
                 <p className="text-xs text-gray-400 truncate">admin@dalscooter.com</p>
               </div>
+              <button className="text-gray-400 hover:text-white transition-colors">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+              </button>
             </div>
           </div>
         </div>
