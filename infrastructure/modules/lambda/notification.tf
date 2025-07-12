@@ -46,7 +46,7 @@ resource "aws_iam_role_policy" "notification_lambda_policy" {
 # Lambda Function Package
 data "archive_file" "notification_zip" {
   type        = "zip"
-  source_file = "${path.module}/../../backend/Notification/notification_email_sender.py"
+  source_file = "${path.module}/../../../backend/Notification/notification_email_sender.py"
   output_path = "${path.module}/../../packages/notification_email_sender.zip"
   depends_on  = [local_file.create_packages_dir]
 }

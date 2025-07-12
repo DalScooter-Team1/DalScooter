@@ -64,7 +64,7 @@ resource "aws_iam_role_policy" "admin_creation_lambda_policy" {
 # Create a zip file for the Admin Creation Lambda function
 data "archive_file" "admin_creation_zip" {
   type        = "zip"
-  source_file = "${path.module}/../../backend/User Management/admin_creation.py"
+  source_file = "${path.module}/../../../backend/User Management/admin_creation.py"
   output_path = "${path.module}/../../packages/admin_creation.zip"
   depends_on  = [local_file.create_packages_dir]
 }

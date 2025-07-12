@@ -8,7 +8,7 @@
 
 data "archive_file" "customer_authenticator_zip" {
   type        = "zip"
-  source_file = "${path.module}/../../backend/User Management/customer_authenticator_simple.py"
+  source_file = "${path.module}/../../../backend/User Management/customer_authenticator_simple.py"
   output_path = "${path.module}/../../packages/customer_authenticator.zip"
   depends_on  = [local_file.create_packages_dir]
 }
@@ -35,7 +35,7 @@ resource "aws_lambda_function" "customer_authenticator" {
 
 data "archive_file" "admin_authenticator_zip" {
   type        = "zip"
-  source_file = "${path.module}/../../backend/User Management/admin_authenticator_simple.py"
+  source_file = "${path.module}/../../../backend/User Management/admin_authenticator_simple.py"
   output_path = "${path.module}/../../packages/admin_authenticator.zip"
   depends_on  = [local_file.create_packages_dir]
 }

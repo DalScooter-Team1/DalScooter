@@ -68,7 +68,7 @@ resource "aws_iam_role_policy" "registration_lambda_policy" {
 # Create a zip file for the Lambda function from the Registration.py file
 data "archive_file" "user_registration_zip" {
   type        = "zip"
-  source_file = "${path.module}/../../backend/User Management/Registration.py"
+  source_file = "${path.module}/../../../backend/User Management/Registration.py"
   output_path = "${path.module}/../../packages/user_registration.zip"
   depends_on  = [local_file.create_packages_dir]
 }

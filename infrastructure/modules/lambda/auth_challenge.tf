@@ -56,7 +56,7 @@ resource "aws_iam_role_policy" "auth_lambda_policy" {
 
 data "archive_file" "define_auth_challenge_zip" {
   type        = "zip"
-  source_file = "${path.module}/../../backend/User Management/define_auth_challenge.py"
+  source_file = "${path.module}/../../../backend/User Management/define_auth_challenge.py"
   output_path = "${path.module}/../../packages/define_auth_challenge.zip"
   depends_on  = [local_file.create_packages_dir]
 }
@@ -77,7 +77,7 @@ resource "aws_lambda_function" "define_auth_challenge" {
 
 data "archive_file" "create_auth_challenge_zip" {
   type        = "zip"
-  source_file = "${path.module}/../../backend/User Management/create_auth_challenge.py"
+  source_file = "${path.module}/../../../backend/User Management/create_auth_challenge.py"
   output_path = "${path.module}/../../packages/create_auth_challenge.zip"
   depends_on  = [local_file.create_packages_dir]
 }
@@ -104,7 +104,7 @@ resource "aws_lambda_function" "create_auth_challenge" {
 
 data "archive_file" "verify_auth_challenge_zip" {
   type        = "zip"
-  source_file = "${path.module}/../../backend/User Management/verify_auth_challenge.py"
+  source_file = "${path.module}/../../../backend/User Management/verify_auth_challenge.py"
   output_path = "${path.module}/../../packages/verify_auth_challenge.zip"
   depends_on  = [local_file.create_packages_dir]
 }
