@@ -326,72 +326,7 @@ const UsernameLogin: React.FC = () => {
         const userRoles = getUserRolesFromToken();
         const isAdmin = userRoles.includes('franchise');
         navigate('/admin-dashboard');
-        return (
-            <div className="space-y-6 text-center py-4">
-                <LoaderAnimation isLoading={loading} />
-                <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-amber-100">
-                    <svg className="h-10 w-10 text-amber-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                    </svg>
-                </div>
-                <h2 className="text-2xl font-bold text-amber-600 mt-4">Login Successful!</h2>
-                <p className="text-gray-600 mb-6">Welcome to DALScooter! You're all set to ride.</p>
-                
-                <div className="bg-gray-50 p-4 rounded-lg mb-6">
-                    <p className="text-sm text-gray-500 mb-2">You are now logged in as</p>
-                    <p className="text-lg font-medium">{email}</p>
-                    
-                    {userRoles.length > 0 && (
-                        <div className="mt-3">
-                            <p className="text-sm text-gray-500 mb-1">Your roles:</p>
-                            <div className="flex flex-wrap gap-2 justify-center">
-                                {userRoles.map((role, index) => (
-                                    <span 
-                                        key={index} 
-                                        className={`text-xs px-2 py-1 rounded-full ${
-                                            role === 'franchise' 
-                                                ? 'bg-amber-100 text-amber-800 border border-amber-300' 
-                                                : 'bg-gray-100 text-gray-800 border border-gray-300'
-                                        }`}
-                                    >
-                                        {role}
-                                    </span>
-                                ))}
-                            </div>
-                        </div>
-                    )}
-                </div>
-                
-                {isAdmin && (
-                    <div className="mb-6 bg-amber-50 p-3 rounded-lg border border-amber-200">
-                        <p className="text-amber-800 font-medium">Admin Access Granted</p>
-                        <p className="text-xs text-amber-700 mt-1">You have administrative privileges</p>
-                        <p className="text-xs text-amber-600 mt-2">Redirecting to Admin Dashboard...</p>
-                    </div>
-                )}
-                
-                <div className="space-y-3">
-                    {isAdmin && (
-                        <button 
-                            onClick={() => navigate('/admin-dashboard')}
-                            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-md transition duration-200 flex items-center justify-center"
-                        >
-                            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                            </svg>
-                            Go to Admin Dashboard
-                        </button>
-                    )}
-                    
-                    <button 
-                        onClick={handleLogout}
-                        className="w-full bg-[#ffd501] hover:bg-amber-500 text-white font-medium py-3 px-4 rounded-md transition duration-200"
-                    >
-                        Logout
-                    </button>
-                </div>
-            </div>
-        );
+        
     }
 
     return <div>Unknown step</div>;
