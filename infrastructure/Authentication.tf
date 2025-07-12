@@ -341,10 +341,9 @@ resource "aws_lambda_function" "verify_auth_challenge" {
   
   source_code_hash = data.archive_file.verify_auth_challenge_zip.output_base64sha256
   
-  environment {
-    variables = {
-      SIGNUP_LOGIN_TOPIC_ARN = aws_sns_topic.user_signup_login.arn
-    }
+  # Environment variables will be set by null_resource to avoid circular dependency
+  lifecycle {
+    ignore_changes = [environment]
   }
 }
 
@@ -451,31 +450,19 @@ resource "aws_lambda_function" "admin_creation" {
   }
 }
 
-# Break the circular dependency by using a null_resource to update the Lambda environment variables
-resource "null_resource" "update_verify_auth_challenge_env" {
-  depends_on = [aws_cognito_user_pool.pool, aws_lambda_function.verify_auth_challenge]
-
-  # Use local-exec to update the Lambda environment variables after both resources are created
-  provisioner "local-exec" {
-    command = <<EOT
-      aws lambda update-function-configuration \
-        --function-name ${aws_lambda_function.verify_auth_challenge.function_name} \
-        --environment "Variables={SIGNUP_LOGIN_TOPIC_ARN=${aws_sns_topic.user_signup_login.arn},COGNITO_USER_POOL_ID=${aws_cognito_user_pool.pool.id}}"
-    EOT
-  }
-}
-
-# This null_resource updates the Lambda function with Cognito User Pool ID
-# after both resources are created, avoiding cyclic dependency
+# Update the Lambda function with environment variables after resources are created
+# This avoids circular dependency between Lambda and Cognito User Pool
 resource "null_resource" "update_verify_lambda_environment" {
   depends_on = [
     aws_lambda_function.verify_auth_challenge,
-    aws_cognito_user_pool.pool
+    aws_cognito_user_pool.pool,
+    aws_sns_topic.user_signup_login
   ]
 
   triggers = {
     lambda_function = aws_lambda_function.verify_auth_challenge.id
     user_pool = aws_cognito_user_pool.pool.id
+    sns_topic = aws_sns_topic.user_signup_login.arn
   }
 
   # Use local-exec to update the Lambda function's environment variables
