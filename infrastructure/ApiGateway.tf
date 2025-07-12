@@ -1,18 +1,18 @@
 # API Gateway for DALScooter application
-resource "aws_api_gateway_rest_api" "registration_api" {
-  name        = "dalscooter-registration-api"
-  description = "DALScooter User Registration API"
+resource "aws_api_gateway_rest_api" "dalscooter_apis" {
+  name        = "dalscooter-api"
+  description = "DALScooter APIs"
 }
 
 # Registration endpoint
 resource "aws_api_gateway_resource" "register" {
-  rest_api_id = aws_api_gateway_rest_api.registration_api.id
-  parent_id   = aws_api_gateway_rest_api.registration_api.root_resource_id
+  rest_api_id = aws_api_gateway_rest_api.dalscooter_apis.id
+  parent_id   = aws_api_gateway_rest_api.dalscooter_apis.root_resource_id
   path_part   = "register"
 }
 
 resource "aws_api_gateway_method" "register_post" {
-  rest_api_id   = aws_api_gateway_rest_api.registration_api.id
+  rest_api_id   = aws_api_gateway_rest_api.dalscooter_apis.id
   resource_id   = aws_api_gateway_resource.register.id
   http_method   = "POST"
   authorization = "NONE"
@@ -20,7 +20,7 @@ resource "aws_api_gateway_method" "register_post" {
 
 # Add OPTIONS method for CORS preflight requests
 resource "aws_api_gateway_method" "register_options" {
-  rest_api_id   = aws_api_gateway_rest_api.registration_api.id
+  rest_api_id   = aws_api_gateway_rest_api.dalscooter_apis.id
   resource_id   = aws_api_gateway_resource.register.id
   http_method   = "OPTIONS"
   authorization = "NONE"
@@ -28,7 +28,7 @@ resource "aws_api_gateway_method" "register_options" {
 
 # Integration for OPTIONS method - mock integration
 resource "aws_api_gateway_integration" "register_options_integration" {
-  rest_api_id = aws_api_gateway_rest_api.registration_api.id
+  rest_api_id = aws_api_gateway_rest_api.dalscooter_apis.id
   resource_id = aws_api_gateway_resource.register.id
   http_method = aws_api_gateway_method.register_options.http_method
   
@@ -40,7 +40,7 @@ resource "aws_api_gateway_integration" "register_options_integration" {
 
 # Method response for OPTIONS
 resource "aws_api_gateway_method_response" "register_options_response" {
-  rest_api_id = aws_api_gateway_rest_api.registration_api.id
+  rest_api_id = aws_api_gateway_rest_api.dalscooter_apis.id
   resource_id = aws_api_gateway_resource.register.id
   http_method = aws_api_gateway_method.register_options.http_method
   status_code = "200"
@@ -54,7 +54,7 @@ resource "aws_api_gateway_method_response" "register_options_response" {
 
 # Integration response for OPTIONS
 resource "aws_api_gateway_integration_response" "register_options_integration_response" {
-  rest_api_id = aws_api_gateway_rest_api.registration_api.id
+  rest_api_id = aws_api_gateway_rest_api.dalscooter_apis.id
   resource_id = aws_api_gateway_resource.register.id
   http_method = aws_api_gateway_method.register_options.http_method
   status_code = aws_api_gateway_method_response.register_options_response.status_code
@@ -68,7 +68,7 @@ resource "aws_api_gateway_integration_response" "register_options_integration_re
 
 # Add CORS headers to POST method response
 resource "aws_api_gateway_method_response" "register_post_response" {
-  rest_api_id = aws_api_gateway_rest_api.registration_api.id
+  rest_api_id = aws_api_gateway_rest_api.dalscooter_apis.id
   resource_id = aws_api_gateway_resource.register.id
   http_method = aws_api_gateway_method.register_post.http_method
   status_code = "200"
@@ -80,7 +80,7 @@ resource "aws_api_gateway_method_response" "register_post_response" {
 
 # Update the POST integration response to include CORS headers
 resource "aws_api_gateway_integration_response" "register_post_integration_response" {
-  rest_api_id = aws_api_gateway_rest_api.registration_api.id
+  rest_api_id = aws_api_gateway_rest_api.dalscooter_apis.id
   resource_id = aws_api_gateway_resource.register.id
   http_method = aws_api_gateway_method.register_post.http_method
   status_code = aws_api_gateway_method_response.register_post_response.status_code
@@ -93,7 +93,7 @@ resource "aws_api_gateway_integration_response" "register_post_integration_respo
 }
 
 resource "aws_api_gateway_integration" "register_integration" {
-  rest_api_id = aws_api_gateway_rest_api.registration_api.id
+  rest_api_id = aws_api_gateway_rest_api.dalscooter_apis.id
   resource_id = aws_api_gateway_resource.register.id
   http_method = aws_api_gateway_method.register_post.http_method
 
@@ -107,20 +107,20 @@ resource "aws_lambda_permission" "api_gateway_invoke_registration" {
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.user_registration.function_name
   principal     = "apigateway.amazonaws.com"
-  source_arn    = "${aws_api_gateway_rest_api.registration_api.execution_arn}/*/*"
+  source_arn    = "${aws_api_gateway_rest_api.dalscooter_apis.execution_arn}/*/*"
 }
 
 # Admin endpoint
 # API Gateway Resource for Admin Creation
 resource "aws_api_gateway_resource" "admin" {
-  rest_api_id = aws_api_gateway_rest_api.registration_api.id
-  parent_id   = aws_api_gateway_rest_api.registration_api.root_resource_id
+  rest_api_id = aws_api_gateway_rest_api.dalscooter_apis.id
+  parent_id   = aws_api_gateway_rest_api.dalscooter_apis.root_resource_id
   path_part   = "admin"
 }
 
 # API Gateway Method for Admin Creation (POST)
 resource "aws_api_gateway_method" "admin_post" {
-  rest_api_id   = aws_api_gateway_rest_api.registration_api.id
+  rest_api_id   = aws_api_gateway_rest_api.dalscooter_apis.id
   resource_id   = aws_api_gateway_resource.admin.id
   http_method   = "POST"
   authorization = "CUSTOM"
@@ -129,7 +129,7 @@ resource "aws_api_gateway_method" "admin_post" {
 
 # API Gateway Integration for Admin Creation
 resource "aws_api_gateway_integration" "admin_integration" {
-  rest_api_id = aws_api_gateway_rest_api.registration_api.id
+  rest_api_id = aws_api_gateway_rest_api.dalscooter_apis.id
   resource_id = aws_api_gateway_resource.admin.id
   http_method = aws_api_gateway_method.admin_post.http_method
 
@@ -140,7 +140,7 @@ resource "aws_api_gateway_integration" "admin_integration" {
 
 # Method response for POST with CORS headers
 resource "aws_api_gateway_method_response" "admin_post_response" {
-  rest_api_id = aws_api_gateway_rest_api.registration_api.id
+  rest_api_id = aws_api_gateway_rest_api.dalscooter_apis.id
   resource_id = aws_api_gateway_resource.admin.id
   http_method = aws_api_gateway_method.admin_post.http_method
   status_code = "200"
@@ -154,7 +154,7 @@ resource "aws_api_gateway_method_response" "admin_post_response" {
 
 # Integration response for POST with CORS headers
 resource "aws_api_gateway_integration_response" "admin_post_integration_response" {
-  rest_api_id = aws_api_gateway_rest_api.registration_api.id
+  rest_api_id = aws_api_gateway_rest_api.dalscooter_apis.id
   resource_id = aws_api_gateway_resource.admin.id
   http_method = aws_api_gateway_method.admin_post.http_method
   status_code = aws_api_gateway_method_response.admin_post_response.status_code
@@ -170,7 +170,7 @@ resource "aws_api_gateway_integration_response" "admin_post_integration_response
 
 # OPTIONS method for CORS preflight requests
 resource "aws_api_gateway_method" "admin_options" {
-  rest_api_id   = aws_api_gateway_rest_api.registration_api.id
+  rest_api_id   = aws_api_gateway_rest_api.dalscooter_apis.id
   resource_id   = aws_api_gateway_resource.admin.id
   http_method   = "OPTIONS"
   authorization = "NONE"
@@ -178,7 +178,7 @@ resource "aws_api_gateway_method" "admin_options" {
 
 # Integration for OPTIONS method - mock integration
 resource "aws_api_gateway_integration" "admin_options_integration" {
-  rest_api_id = aws_api_gateway_rest_api.registration_api.id
+  rest_api_id = aws_api_gateway_rest_api.dalscooter_apis.id
   resource_id = aws_api_gateway_resource.admin.id
   http_method = aws_api_gateway_method.admin_options.http_method
   
@@ -190,7 +190,7 @@ resource "aws_api_gateway_integration" "admin_options_integration" {
 
 # Method response for OPTIONS with CORS headers
 resource "aws_api_gateway_method_response" "admin_options_response" {
-  rest_api_id = aws_api_gateway_rest_api.registration_api.id
+  rest_api_id = aws_api_gateway_rest_api.dalscooter_apis.id
   resource_id = aws_api_gateway_resource.admin.id
   http_method = aws_api_gateway_method.admin_options.http_method
   status_code = "200"
@@ -204,7 +204,7 @@ resource "aws_api_gateway_method_response" "admin_options_response" {
 
 # Integration response for OPTIONS with CORS headers
 resource "aws_api_gateway_integration_response" "admin_options_integration_response" {
-  rest_api_id = aws_api_gateway_rest_api.registration_api.id
+  rest_api_id = aws_api_gateway_rest_api.dalscooter_apis.id
   resource_id = aws_api_gateway_resource.admin.id
   http_method = aws_api_gateway_method.admin_options.http_method
   status_code = aws_api_gateway_method_response.admin_options_response.status_code
@@ -222,7 +222,7 @@ resource "aws_lambda_permission" "api_gateway_invoke_admin_creation" {
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.admin_creation.function_name
   principal     = "apigateway.amazonaws.com"
-  source_arn    = "${aws_api_gateway_rest_api.registration_api.execution_arn}/*/*"
+  source_arn    = "${aws_api_gateway_rest_api.dalscooter_apis.execution_arn}/*/*"
 }
 
 # Deploy API Gateway with all endpoints
@@ -236,7 +236,7 @@ resource "aws_api_gateway_deployment" "registration_deployment" {
     aws_api_gateway_integration.admin_options_integration
   ]
 
-  rest_api_id = aws_api_gateway_rest_api.registration_api.id
+  rest_api_id = aws_api_gateway_rest_api.dalscooter_apis.id
   
   stage_name  = "prod"
   lifecycle {
@@ -251,7 +251,7 @@ resource "aws_api_gateway_deployment" "registration_deployment" {
 # Customer Authorizer
 resource "aws_api_gateway_authorizer" "customer_authorizer" {
   name                   = "customer-authorizer"
-  rest_api_id           = aws_api_gateway_rest_api.registration_api.id
+  rest_api_id           = aws_api_gateway_rest_api.dalscooter_apis.id
   authorizer_uri        = aws_lambda_function.customer_authenticator.invoke_arn
   authorizer_credentials = aws_iam_role.authorizer_invocation_role.arn
   type                  = "TOKEN"
@@ -261,7 +261,7 @@ resource "aws_api_gateway_authorizer" "customer_authorizer" {
 # Franchise Authorizer
 resource "aws_api_gateway_authorizer" "franchise_authorizer" {
   name                   = "franchise-authorizer"
-  rest_api_id           = aws_api_gateway_rest_api.registration_api.id
+  rest_api_id           = aws_api_gateway_rest_api.dalscooter_apis.id
   authorizer_uri        = aws_lambda_function.admin_authenticator.invoke_arn
   authorizer_credentials = aws_iam_role.authorizer_invocation_role.arn
   type                  = "TOKEN"
