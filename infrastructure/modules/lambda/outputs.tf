@@ -101,3 +101,19 @@ output "notification_lambda_function_name" {
   description = "Function name of the notification Lambda"
   value       = aws_lambda_function.notification.function_name
 }
+
+# Get Customers Lambda
+output "get_customers_lambda_arn" {
+  description = "ARN of the get customers Lambda function"
+  value       = aws_lambda_function.get_customers.arn
+}
+
+output "get_customers_lambda_invoke_arn" {
+  description = "Invoke ARN of the get customers Lambda function"
+  value       = aws_lambda_function.get_customers.invoke_arn
+}
+
+output "get_customers_lambda_function_name" {
+  description = "Function name of the get customers Lambda"
+  value       = aws_lambda_function.get_customers.function_name
+}
