@@ -1,22 +1,44 @@
 # ================================
+# LAMBDA MODULE
+# ================================
+# This module contains all Lambda functions for the application
+
+module "lambda" {
+  source = "./modules/lambda"
+  
+  # Cognito references
+  cognito_user_pool_id                = aws_cognito_user_pool.pool.id
+  cognito_user_pool_arn               = aws_cognito_user_pool.pool.arn
+  cognito_client_id                   = aws_cognito_user_pool_client.client.id
+  
+  # DynamoDB references
+  security_questions_table_name       = aws_dynamodb_table.user_security_questions.name
+  security_questions_table_arn        = aws_dynamodb_table.user_security_questions.arn
+  
+  # SNS references
+  signup_login_topic_arn              = aws_sns_topic.user_signup_login.arn
+}
+
+# ================================
 # APIS MODULE
 # ================================
 # This module contains all API Gateway related resources
 # including endpoints, authorizers, and integrations
+
 module "apis" {
   source = "./modules/apis"
   
-  # Lambda function references from Authentication.tf
-  customer_lambda_arn                         = aws_lambda_function.customer_authenticator.arn
-  customer_lambda_invoke_arn                  = aws_lambda_function.customer_authenticator.invoke_arn
-  admin_lambda_arn                           = aws_lambda_function.admin_authenticator.arn
-  admin_lambda_invoke_arn                    = aws_lambda_function.admin_authenticator.invoke_arn
-  user_registration_lambda_arn               = aws_lambda_function.user_registration.arn
-  user_registration_lambda_invoke_arn        = aws_lambda_function.user_registration.invoke_arn
-  user_registration_lambda_function_name     = aws_lambda_function.user_registration.function_name
-  admin_creation_lambda_arn                  = aws_lambda_function.admin_creation.arn
-  admin_creation_lambda_invoke_arn           = aws_lambda_function.admin_creation.invoke_arn
-  admin_creation_lambda_function_name        = aws_lambda_function.admin_creation.function_name
+  # Lambda function references from Lambda module
+  customer_lambda_arn                         = module.lambda.customer_authenticator_lambda_arn
+  customer_lambda_invoke_arn                  = module.lambda.customer_authenticator_lambda_invoke_arn
+  admin_lambda_arn                           = module.lambda.admin_authenticator_lambda_arn
+  admin_lambda_invoke_arn                    = module.lambda.admin_authenticator_lambda_invoke_arn
+  user_registration_lambda_arn               = module.lambda.user_registration_lambda_arn
+  user_registration_lambda_invoke_arn        = module.lambda.user_registration_lambda_invoke_arn
+  user_registration_lambda_function_name     = module.lambda.user_registration_lambda_function_name
+  admin_creation_lambda_arn                  = module.lambda.admin_creation_lambda_arn
+  admin_creation_lambda_invoke_arn           = module.lambda.admin_creation_lambda_invoke_arn
+  admin_creation_lambda_function_name        = module.lambda.admin_creation_lambda_function_name
 }
 
 # ================================
