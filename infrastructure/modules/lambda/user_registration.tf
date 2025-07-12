@@ -42,7 +42,9 @@ resource "aws_iam_role_policy" "registration_lambda_policy" {
           "cognito-idp:AdminCreateUser",
           "cognito-idp:AdminSetUserPassword",
           "cognito-idp:AdminUpdateUserAttributes",
-          "cognito-idp:AdminAddUserToGroup"
+          "cognito-idp:AdminAddUserToGroup",
+          "cognito-idp:AdminConfirmSignUp",
+          "cognito-idp:SignUp"
         ]
         Resource = var.cognito_user_pool_arn
       },
