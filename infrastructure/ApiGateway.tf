@@ -123,7 +123,8 @@ resource "aws_api_gateway_method" "admin_post" {
   rest_api_id   = aws_api_gateway_rest_api.registration_api.id
   resource_id   = aws_api_gateway_resource.admin.id
   http_method   = "POST"
-  authorization = "NONE"
+  authorization = "CUSTOM"
+  authorizer_id = aws_api_gateway_authorizer.franchise_authorizer.id
 }
 
 # API Gateway Integration for Admin Creation
@@ -232,11 +233,7 @@ resource "aws_api_gateway_deployment" "registration_deployment" {
     aws_api_gateway_method.admin_post,
     aws_api_gateway_integration.admin_integration,
     aws_api_gateway_method.admin_options,
-    aws_api_gateway_integration.admin_options_integration,
-    aws_api_gateway_method.customer_test_get,
-    aws_api_gateway_integration.customer_test_integration,
-    aws_api_gateway_method.franchise_test_get,
-    aws_api_gateway_integration.franchise_test_integration
+    aws_api_gateway_integration.admin_options_integration
   ]
 
   rest_api_id = aws_api_gateway_rest_api.registration_api.id
@@ -269,108 +266,6 @@ resource "aws_api_gateway_authorizer" "franchise_authorizer" {
   authorizer_credentials = aws_iam_role.authorizer_invocation_role.arn
   type                  = "TOKEN"
   identity_source       = "method.request.header.Authorization"
-}
-
-# ================================
-# TEST ENDPOINTS
-# ================================
-
-# Customer Test Endpoint
-resource "aws_api_gateway_resource" "customer_test" {
-  rest_api_id = aws_api_gateway_rest_api.registration_api.id
-  parent_id   = aws_api_gateway_rest_api.registration_api.root_resource_id
-  path_part   = "customer-test"
-}
-
-resource "aws_api_gateway_method" "customer_test_get" {
-  rest_api_id   = aws_api_gateway_rest_api.registration_api.id
-  resource_id   = aws_api_gateway_resource.customer_test.id
-  http_method   = "GET"
-  authorization = "CUSTOM"
-  authorizer_id = aws_api_gateway_authorizer.customer_authorizer.id
-}
-
-resource "aws_api_gateway_integration" "customer_test_integration" {
-  rest_api_id = aws_api_gateway_rest_api.registration_api.id
-  resource_id = aws_api_gateway_resource.customer_test.id
-  http_method = aws_api_gateway_method.customer_test_get.http_method
-
-  integration_http_method = "POST"
-  type                   = "AWS_PROXY"
-  uri                    = aws_lambda_function.customer_test.invoke_arn
-}
-
-resource "aws_api_gateway_method_response" "customer_test_response" {
-  rest_api_id = aws_api_gateway_rest_api.registration_api.id
-  resource_id = aws_api_gateway_resource.customer_test.id
-  http_method = aws_api_gateway_method.customer_test_get.http_method
-  status_code = "200"
-  
-  response_parameters = {
-    "method.response.header.Access-Control-Allow-Origin" = true
-  }
-}
-
-resource "aws_api_gateway_integration_response" "customer_test_integration_response" {
-  rest_api_id = aws_api_gateway_rest_api.registration_api.id
-  resource_id = aws_api_gateway_resource.customer_test.id
-  http_method = aws_api_gateway_method.customer_test_get.http_method
-  status_code = aws_api_gateway_method_response.customer_test_response.status_code
-  
-  response_parameters = {
-    "method.response.header.Access-Control-Allow-Origin" = "'*'"
-  }
-
-  depends_on = [aws_api_gateway_integration.customer_test_integration]
-}
-
-# Franchise Test Endpoint
-resource "aws_api_gateway_resource" "franchise_test" {
-  rest_api_id = aws_api_gateway_rest_api.registration_api.id
-  parent_id   = aws_api_gateway_rest_api.registration_api.root_resource_id
-  path_part   = "franchise-test"
-}
-
-resource "aws_api_gateway_method" "franchise_test_get" {
-  rest_api_id   = aws_api_gateway_rest_api.registration_api.id
-  resource_id   = aws_api_gateway_resource.franchise_test.id
-  http_method   = "GET"
-  authorization = "CUSTOM"
-  authorizer_id = aws_api_gateway_authorizer.franchise_authorizer.id
-}
-
-resource "aws_api_gateway_integration" "franchise_test_integration" {
-  rest_api_id = aws_api_gateway_rest_api.registration_api.id
-  resource_id = aws_api_gateway_resource.franchise_test.id
-  http_method = aws_api_gateway_method.franchise_test_get.http_method
-
-  integration_http_method = "POST"
-  type                   = "AWS_PROXY"
-  uri                    = aws_lambda_function.franchise_test.invoke_arn
-}
-
-resource "aws_api_gateway_method_response" "franchise_test_response" {
-  rest_api_id = aws_api_gateway_rest_api.registration_api.id
-  resource_id = aws_api_gateway_resource.franchise_test.id
-  http_method = aws_api_gateway_method.franchise_test_get.http_method
-  status_code = "200"
-  
-  response_parameters = {
-    "method.response.header.Access-Control-Allow-Origin" = true
-  }
-}
-
-resource "aws_api_gateway_integration_response" "franchise_test_integration_response" {
-  rest_api_id = aws_api_gateway_rest_api.registration_api.id
-  resource_id = aws_api_gateway_resource.franchise_test.id
-  http_method = aws_api_gateway_method.franchise_test_get.http_method
-  status_code = aws_api_gateway_method_response.franchise_test_response.status_code
-  
-  response_parameters = {
-    "method.response.header.Access-Control-Allow-Origin" = "'*'"
-  }
-
-  depends_on = [aws_api_gateway_integration.franchise_test_integration]
 }
 
 # ================================
@@ -412,25 +307,4 @@ resource "aws_iam_role_policy" "authorizer_invocation_policy" {
     ]
   })
 }
-
-# ================================
-# LAMBDA PERMISSIONS
-# ================================
-
-resource "aws_lambda_permission" "api_gateway_invoke_customer_test" {
-  statement_id  = "AllowAPIGatewayInvokeCustomerTest"
-  action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.customer_test.function_name
-  principal     = "apigateway.amazonaws.com"
-  source_arn    = "${aws_api_gateway_rest_api.registration_api.execution_arn}/*/*"
-}
-
-resource "aws_lambda_permission" "api_gateway_invoke_franchise_test" {
-  statement_id  = "AllowAPIGatewayInvokeFranchiseTest"
-  action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.franchise_test.function_name
-  principal     = "apigateway.amazonaws.com"
-  source_arn    = "${aws_api_gateway_rest_api.registration_api.execution_arn}/*/*"
-}
-
 
