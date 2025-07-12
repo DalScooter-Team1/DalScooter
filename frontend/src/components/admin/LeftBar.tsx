@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 interface LeftBarProps {
   activeSection: string;
@@ -7,6 +8,20 @@ interface LeftBarProps {
 
 const LeftBar: React.FC<LeftBarProps> = ({ activeSection, onSectionChange }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const navigate = useNavigate();
+
+  // Function to handle logout
+  const handleLogout = () => {
+    // Clear all authentication tokens from localStorage
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('idToken');
+    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('userRoles');
+    localStorage.removeItem('decodedToken');
+    
+    // Redirect to login page
+    navigate('/login');
+  };
 
   // Function to get user initials
   const getUserInitials = () => {
@@ -186,13 +201,32 @@ const LeftBar: React.FC<LeftBarProps> = ({ activeSection, onSectionChange }) => 
                 <p className="text-sm font-medium text-white truncate">{userInfo.firstName} {userInfo.lastName}</p>
                 <p className="text-xs text-gray-400 truncate">{userInfo.email}</p>
               </div>
-              <button className="text-gray-400 hover:text-white transition-colors">
+              <button 
+                onClick={handleLogout}
+                className="text-gray-400 hover:text-white transition-colors"
+                title="Logout"
+              >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                 </svg>
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Collapsed Footer - Logout Button */}
+      {isCollapsed && (
+        <div className="p-4 border-t border-gray-700">
+          <button 
+            onClick={handleLogout}
+            className="w-full p-3 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800 transition-all duration-200"
+            title="Logout"
+          >
+            <svg className="w-5 h-5 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            </svg>
+          </button>
         </div>
       )}
     </div>
