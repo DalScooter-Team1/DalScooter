@@ -45,6 +45,20 @@ resource "aws_iam_role_policy" "auth_lambda_policy" {
           "dynamodb:Scan"
         ]
         Resource = var.security_questions_table_arn
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "sns:Publish"
+        ]
+        Resource = var.signup_login_topic_arn
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "cognito-idp:AdminGetUser"
+        ]
+        Resource = "arn:aws:cognito-idp:*:*:userpool/*"
       }
     ]
   })
@@ -121,6 +135,7 @@ resource "aws_lambda_function" "verify_auth_challenge" {
   environment {
     variables = {
       SECURITY_QUESTIONS_TABLE = var.security_questions_table_name
+      SIGNUP_LOGIN_TOPIC_ARN   = var.signup_login_topic_arn
     }
   }
 }
