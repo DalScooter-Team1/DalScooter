@@ -1,7 +1,7 @@
 # ================================
 # GET CUSTOMERS LAMBDA
 # ================================
-
+# This lambda should be accessed by the admin only
 # IAM Role for Get Customers Lambda
 resource "aws_iam_role" "get_customers_lambda_role" {
   name = "dalscooter-get-customers-lambda-role"
