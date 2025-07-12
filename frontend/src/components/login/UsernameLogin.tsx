@@ -11,6 +11,7 @@ import CaeserCipher from './CaeserCipher';
 import { formatAuthError } from '../../utils/errorHandler';
  import { jwtDecode } from 'jwt-decode';
 import LoaderAnimation from '../LoaderAnimation';
+import AdminDashboard from '../../pages/AdminDashboard';
 
 
 
@@ -159,6 +160,7 @@ const UsernameLogin: React.FC = () => {
                 const roles = decodedToken['cognito:groups'] || [];
                 localStorage.setItem('userRoles', JSON.stringify(roles));
                 console.log('Decoded Token:', decodedToken);
+                localStorage.setItem('decodedToken', JSON.stringify(decodedToken));
                 return roles as string[];
             } catch (error) {
                 console.error('Error decoding token:', error);
@@ -325,8 +327,9 @@ const UsernameLogin: React.FC = () => {
         // Get user roles from token
         const userRoles = getUserRolesFromToken();
         const isAdmin = userRoles.includes('franchise');
-        navigate('/admin-dashboard');
-        
+        if (isAdmin) {
+       navigate('/admin-dashboard');
+        }
     }
 
     return <div>Unknown step</div>;

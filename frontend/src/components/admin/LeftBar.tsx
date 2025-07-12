@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 interface LeftBarProps {
   activeSection: string;
@@ -7,6 +7,55 @@ interface LeftBarProps {
 
 const LeftBar: React.FC<LeftBarProps> = ({ activeSection, onSectionChange }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
+
+  // Function to get user initials
+  const getUserInitials = () => {
+    const decodedTokenString = localStorage.getItem('decodedToken');
+    if (decodedTokenString) {
+      try {
+        const decodedToken = JSON.parse(decodedTokenString);
+        const firstName = decodedToken.given_name || 'Admin';
+        const lastName = decodedToken.family_name || 'User';
+        
+        // Extract first letter of each name
+        const firstInitial = firstName.charAt(0).toUpperCase();
+        const lastInitial = lastName.charAt(0).toUpperCase();
+        
+        return `${firstInitial}${lastInitial}`;
+      } catch (error) {
+        console.error('Error parsing decoded token:', error);
+        return 'AU'; // Default initials
+      }
+    }
+    return 'AU'; // Default initials
+  };
+
+  // Function to get user info
+  const getUserInfo = () => {
+    const decodedTokenString = localStorage.getItem('decodedToken');
+    if (decodedTokenString) {
+      try {
+        const decodedToken = JSON.parse(decodedTokenString);
+        return {
+          firstName: decodedToken.given_name || 'Admin',
+          lastName: decodedToken.family_name || 'User',
+          email: decodedToken.email || 'admin@dalscooter.com'
+        };
+      } catch (error) {
+        console.error('Error parsing decoded token:', error);
+        return {
+          firstName: 'Admin',
+          lastName: 'User',
+          email: 'admin@dalscooter.com'
+        };
+      }
+    }
+    return {
+      firstName: 'Admin',
+      lastName: 'User',
+      email: 'admin@dalscooter.com'
+    };
+  };
 
   const menuItems = [
     {
@@ -66,6 +115,9 @@ const LeftBar: React.FC<LeftBarProps> = ({ activeSection, onSectionChange }) => 
       )
     }
   ];
+
+  const userInfo = getUserInfo();
+  const userInitials = getUserInitials();
 
   return (
     <div className={`bg-gray-900 text-white transition-all duration-300 h-screen flex flex-col shadow-xl ${isCollapsed ? 'w-16' : 'w-64'}`}>
@@ -128,11 +180,11 @@ const LeftBar: React.FC<LeftBarProps> = ({ activeSection, onSectionChange }) => 
           <div className="bg-gray-800 rounded-xl p-4 transition-all hover:bg-gray-750">
             <div className="flex items-center space-x-3">
               <div className="h-10 w-10 bg-gradient-to-r from-blue-600 to-blue-700 rounded-full flex items-center justify-center shadow-sm">
-                <span className="text-sm font-medium text-white">AU</span>
+                <span className="text-sm font-medium text-white">{userInitials}</span>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-white truncate">Admin User</p>
-                <p className="text-xs text-gray-400 truncate">admin@dalscooter.com</p>
+                <p className="text-sm font-medium text-white truncate">{userInfo.firstName} {userInfo.lastName}</p>
+                <p className="text-xs text-gray-400 truncate">{userInfo.email}</p>
               </div>
               <button className="text-gray-400 hover:text-white transition-colors">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
