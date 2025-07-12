@@ -475,3 +475,103 @@ EOF
   }
 }
 
+# ================================
+# AUTHORIZER LAMBDA FUNCTIONS
+# ================================
+
+# Customer Authenticator Lambda Function
+data "archive_file" "customer_authenticator_zip" {
+  type        = "zip"
+  source_file = "${path.module}/../backend/User Management/customer_authenticator_simple.py"
+  output_path = "${path.module}/packages/customer_authenticator.zip"
+  depends_on  = [local_file.create_packages_dir]
+}
+
+resource "aws_lambda_function" "customer_authenticator" {
+  filename         = data.archive_file.customer_authenticator_zip.output_path
+  function_name    = "dalscooter-customer-authenticator"
+  role            = aws_iam_role.auth_lambda_role.arn
+  handler         = "customer_authenticator_simple.lambda_handler"
+  runtime         = "python3.9"
+  timeout         = 30
+  
+  source_code_hash = data.archive_file.customer_authenticator_zip.output_base64sha256
+
+  environment {
+    variables = {
+      COGNITO_USER_POOL_ID = aws_cognito_user_pool.pool.id
+      COGNITO_CLIENT_ID    = aws_cognito_user_pool_client.client.id
+      REGION              = "us-east-1"
+    }
+  }
+}
+
+# Admin Authenticator Lambda Function  
+data "archive_file" "admin_authenticator_zip" {
+  type        = "zip"
+  source_file = "${path.module}/../backend/User Management/admin_authenticator_simple.py"
+  output_path = "${path.module}/packages/admin_authenticator.zip"
+  depends_on  = [local_file.create_packages_dir]
+}
+
+resource "aws_lambda_function" "admin_authenticator" {
+  filename         = data.archive_file.admin_authenticator_zip.output_path
+  function_name    = "dalscooter-admin-authenticator"
+  role            = aws_iam_role.auth_lambda_role.arn
+  handler         = "admin_authenticator_simple.lambda_handler"
+  runtime         = "python3.9"
+  timeout         = 30
+  
+  source_code_hash = data.archive_file.admin_authenticator_zip.output_base64sha256
+
+  environment {
+    variables = {
+      COGNITO_USER_POOL_ID = aws_cognito_user_pool.pool.id
+      COGNITO_CLIENT_ID    = aws_cognito_user_pool_client.client.id
+      REGION              = "us-east-1"
+    }
+  }
+}
+
+# ================================
+# TEST LAMBDA FUNCTIONS
+# ================================
+
+# Customer Test Lambda Function
+data "archive_file" "customer_test_zip" {
+  type        = "zip"
+  source_file = "${path.module}/../backend/Testing/customer_test.py"
+  output_path = "${path.module}/packages/customer_test.zip"
+  depends_on  = [local_file.create_packages_dir]
+}
+
+resource "aws_lambda_function" "customer_test" {
+  filename         = data.archive_file.customer_test_zip.output_path
+  function_name    = "dalscooter-customer-test"
+  role            = aws_iam_role.registration_lambda_role.arn
+  handler         = "customer_test.lambda_handler"
+  runtime         = "python3.9"
+  timeout         = 30
+  
+  source_code_hash = data.archive_file.customer_test_zip.output_base64sha256
+}
+
+# Franchise Test Lambda Function
+data "archive_file" "franchise_test_zip" {
+  type        = "zip"
+  source_file = "${path.module}/../backend/Testing/franchise_test.py"
+  output_path = "${path.module}/packages/franchise_test.zip"
+  depends_on  = [local_file.create_packages_dir]
+}
+
+resource "aws_lambda_function" "franchise_test" {
+  filename         = data.archive_file.franchise_test_zip.output_path
+  function_name    = "dalscooter-franchise-test"
+  role            = aws_iam_role.registration_lambda_role.arn
+  handler         = "franchise_test.lambda_handler"
+  runtime         = "python3.9"
+  timeout         = 30
+  
+  source_code_hash = data.archive_file.franchise_test_zip.output_base64sha256
+}
+
