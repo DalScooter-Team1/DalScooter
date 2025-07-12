@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   CognitoUser,
   CognitoUserPool,
@@ -10,6 +11,7 @@ import CaeserCipher from './CaeserCipher';
 import { formatAuthError } from '../../utils/errorHandler';
  import { jwtDecode } from 'jwt-decode';
 import LoaderAnimation from '../LoaderAnimation';
+import AdminDashboard from '../../pages/AdminDashboard';
 
 
 
@@ -19,6 +21,7 @@ const COGNITO_CONFIG = {
 };
 
 const UsernameLogin: React.FC = () => {
+    const navigate = useNavigate();
     const [currentStep, setCurrentStep] = useState<string>('login');
     const [cognitoUser, setCognitoUser] = useState<CognitoUser | null>(null);
     const [challengeParams, setChallengeParams] = useState<any>({});
@@ -127,6 +130,22 @@ const UsernameLogin: React.FC = () => {
         localStorage.setItem('accessToken', accessToken);
         localStorage.setItem('idToken', idToken);
         localStorage.setItem('refreshToken', refreshToken);
+        
+        // Check if user is admin and navigate automatically
+        try {
+            const decodedToken: any = jwtDecode(idToken);
+            const roles = decodedToken['cognito:groups'] || [];
+            localStorage.setItem('userRoles', JSON.stringify(roles));
+            
+            // If user is an admin (franchise role), navigate to admin dashboard after a short delay
+            if (roles.includes('franchise')) {
+                setTimeout(() => {
+                    navigate('/admin-dashboard');
+                }, 2000); // 2 second delay to show success message
+            }
+        } catch (error) {
+            console.error('Error checking user roles:', error);
+        }
     };
 
     const getUserRolesFromToken = (): string[] => {
@@ -141,6 +160,7 @@ const UsernameLogin: React.FC = () => {
                 const roles = decodedToken['cognito:groups'] || [];
                 localStorage.setItem('userRoles', JSON.stringify(roles));
                 console.log('Decoded Token:', decodedToken);
+                localStorage.setItem('decodedToken', JSON.stringify(decodedToken));
                 return roles as string[];
             } catch (error) {
                 console.error('Error decoding token:', error);
@@ -307,58 +327,9 @@ const UsernameLogin: React.FC = () => {
         // Get user roles from token
         const userRoles = getUserRolesFromToken();
         const isAdmin = userRoles.includes('franchise');
-        
-        return (
-            <div className="space-y-6 text-center py-4">
-                <LoaderAnimation isLoading={loading} />
-                <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-amber-100">
-                    <svg className="h-10 w-10 text-amber-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                    </svg>
-                </div>
-                <h2 className="text-2xl font-bold text-amber-600 mt-4">Login Successful!</h2>
-                <p className="text-gray-600 mb-6">Welcome to DALScooter! You're all set to ride.</p>
-                
-                <div className="bg-gray-50 p-4 rounded-lg mb-6">
-                    <p className="text-sm text-gray-500 mb-2">You are now logged in as</p>
-                    <p className="text-lg font-medium">{email}</p>
-                    
-                    {userRoles.length > 0 && (
-                        <div className="mt-3">
-                            <p className="text-sm text-gray-500 mb-1">Your roles:</p>
-                            <div className="flex flex-wrap gap-2 justify-center">
-                                {userRoles.map((role, index) => (
-                                    <span 
-                                        key={index} 
-                                        className={`text-xs px-2 py-1 rounded-full ${
-                                            role === 'franchise' 
-                                                ? 'bg-amber-100 text-amber-800 border border-amber-300' 
-                                                : 'bg-gray-100 text-gray-800 border border-gray-300'
-                                        }`}
-                                    >
-                                        {role}
-                                    </span>
-                                ))}
-                            </div>
-                        </div>
-                    )}
-                </div>
-                
-                {isAdmin && (
-                    <div className="mb-6 bg-amber-50 p-3 rounded-lg border border-amber-200">
-                        <p className="text-amber-800 font-medium">Admin Access Granted</p>
-                        <p className="text-xs text-amber-700 mt-1">You have administrative privileges</p>
-                    </div>
-                )}
-                
-                <button 
-                    onClick={handleLogout}
-                    className="w-full bg-[#ffd501] hover:bg-amber-500 text-white font-medium py-3 px-4 rounded-md transition duration-200"
-                >
-                    Logout
-                </button>
-            </div>
-        );
+        if (isAdmin) {
+       navigate('/admin-dashboard');
+        }
     }
 
     return <div>Unknown step</div>;

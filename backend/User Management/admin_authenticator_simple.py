@@ -79,18 +79,26 @@ def lambda_handler(event, context):
             print("Token is expired")
             return generate_policy('user', 'Deny', event['methodArn'])
             
-        # Verify audience (client ID)
-        if 'client_id' in claims and claims['client_id'] != APP_CLIENT_ID:
-            if 'aud' in claims and claims['aud'] != APP_CLIENT_ID:
-                print("Token was not issued for this audience")
-                return generate_policy('user', 'Deny', event['methodArn'])
+        # Verify audience (client ID) - Check aud field for ID tokens, client_id for access tokens
+        if 'aud' in claims and claims['aud'] != APP_CLIENT_ID:
+            print(f"Token audience mismatch. Expected: {APP_CLIENT_ID}, Got: {claims.get('aud')}")
+            return generate_policy('user', 'Deny', event['methodArn'])
+        elif 'client_id' in claims and claims['client_id'] != APP_CLIENT_ID:
+            print(f"Token client_id mismatch. Expected: {APP_CLIENT_ID}, Got: {claims.get('client_id')}")
+            return generate_policy('user', 'Deny', event['methodArn'])
         
         # Check for the 'cognito:groups' claim which contains user groups
         cognito_groups = claims.get('cognito:groups', [])
         
+        # Debug logging
+        print(f"Token claims: {json.dumps(claims, indent=2)}")
+        print(f"User groups found: {cognito_groups}")
+        print(f"Looking for 'franchise' group")
+        
         # Verify admin role (franchise group)
         if 'franchise' not in cognito_groups:
             print("User is not in the franchise group")
+            print(f"Available groups: {cognito_groups}")
             return generate_policy(claims.get('sub', 'user'), 'Deny', event['methodArn'])
             
         # Admin role verified, allow access with context
