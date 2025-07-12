@@ -325,7 +325,7 @@ const UsernameLogin: React.FC = () => {
         // Get user roles from token
         const userRoles = getUserRolesFromToken();
         const isAdmin = userRoles.includes('franchise');
-        
+        navigate('/admin-dashboard');
         return (
             <div className="space-y-6 text-center py-4">
                 <LoaderAnimation isLoading={loading} />
