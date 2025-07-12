@@ -1,3 +1,8 @@
+####################################################################################################
+# This resource file prepares the infrastructure for custom authentication challenges in AWS Cognito.
+# It includes Lambda functions for defining, creating, and verifying authentication challenges.
+####################################################################################################
+
 # Factor 1: Username/Password Authentication
 resource "aws_cognito_user_pool" "pool" {
   name = "DalScooterUserPool"
