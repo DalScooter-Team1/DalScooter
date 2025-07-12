@@ -16,6 +16,7 @@ adminAPI.interceptors.request.use(
     // Always use ID token for admin endpoints as it contains cognito:groups claim
     const token = localStorage.getItem('idToken');
     
+    
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     } else {
