@@ -29,6 +29,16 @@ variable "security_questions_table_arn" {
   type        = string
 }
 
+variable "logged_in_user_directory_table_name" {
+  description = "Name of the logged-in user directory DynamoDB table"
+  type        = string
+}
+
+variable "logged_in_user_directory_table_arn" {
+  description = "ARN of the logged-in user directory DynamoDB table"
+  type        = string
+}
+
 # SNS Variables
 variable "signup_login_topic_arn" {
   description = "ARN of the signup/login SNS topic"

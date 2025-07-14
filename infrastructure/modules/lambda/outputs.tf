@@ -117,3 +117,19 @@ output "get_customers_lambda_function_name" {
   description = "Function name of the get customers Lambda"
   value       = aws_lambda_function.get_customers.function_name
 }
+
+# Get Logged In Users Lambda
+output "get_logged_in_users_lambda_arn" {
+  description = "ARN of the get logged in users Lambda function"
+  value       = aws_lambda_function.get_logged_in_users.arn
+}
+
+output "get_logged_in_users_lambda_invoke_arn" {
+  description = "Invoke ARN of the get logged in users Lambda function"
+  value       = aws_lambda_function.get_logged_in_users.invoke_arn
+}
+
+output "get_logged_in_users_lambda_function_name" {
+  description = "Function name of the get logged in users Lambda"
+  value       = aws_lambda_function.get_logged_in_users.function_name
+}

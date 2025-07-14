@@ -16,7 +16,11 @@ resource "aws_api_gateway_deployment" "registration_deployment" {
     aws_api_gateway_method.customers_get,
     aws_api_gateway_integration.customers_integration,
     aws_api_gateway_method.customers_options,
-    aws_api_gateway_integration.customers_options_integration
+    aws_api_gateway_integration.customers_options_integration,
+    aws_api_gateway_method.heartbeat_post,
+    aws_api_gateway_integration.heartbeat_integration,
+    aws_api_gateway_method.heartbeat_options,
+    aws_api_gateway_integration.heartbeat_options_integration
   ]
 
   rest_api_id = aws_api_gateway_rest_api.dalscooter_apis.id

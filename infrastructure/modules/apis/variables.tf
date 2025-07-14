@@ -66,3 +66,18 @@ variable "get_customers_lambda_function_name" {
   description = "Function name of the get customers Lambda"
   type        = string
 }
+
+variable "get_logged_in_users_lambda_arn" {
+  description = "ARN of the get logged in users Lambda function"
+  type        = string
+}
+
+variable "get_logged_in_users_lambda_invoke_arn" {
+  description = "Invoke ARN of the get logged in users Lambda function"
+  type        = string
+}
+
+variable "get_logged_in_users_lambda_function_name" {
+  description = "Function name of the get logged in users Lambda"
+  type        = string
+}

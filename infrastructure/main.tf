@@ -14,6 +14,8 @@ module "lambda" {
   # DynamoDB references
   security_questions_table_name       = aws_dynamodb_table.user_security_questions.name
   security_questions_table_arn        = aws_dynamodb_table.user_security_questions.arn
+  logged_in_user_directory_table_name = aws_dynamodb_table.logged_in_user_directory.name
+  logged_in_user_directory_table_arn  = aws_dynamodb_table.logged_in_user_directory.arn
   
   # SNS references
   signup_login_topic_arn              = aws_sns_topic.user_signup_login.arn
@@ -42,6 +44,9 @@ module "apis" {
   get_customers_lambda_arn                   = module.lambda.get_customers_lambda_arn
   get_customers_lambda_invoke_arn            = module.lambda.get_customers_lambda_invoke_arn
   get_customers_lambda_function_name         = module.lambda.get_customers_lambda_function_name
+  get_logged_in_users_lambda_arn             = module.lambda.get_logged_in_users_lambda_arn
+  get_logged_in_users_lambda_invoke_arn      = module.lambda.get_logged_in_users_lambda_invoke_arn
+  get_logged_in_users_lambda_function_name   = module.lambda.get_logged_in_users_lambda_function_name
 }
 
 # ================================
