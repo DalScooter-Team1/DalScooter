@@ -47,6 +47,9 @@ module "apis" {
   get_logged_in_users_lambda_arn             = module.lambda.get_logged_in_users_lambda_arn
   get_logged_in_users_lambda_invoke_arn      = module.lambda.get_logged_in_users_lambda_invoke_arn
   get_logged_in_users_lambda_function_name   = module.lambda.get_logged_in_users_lambda_function_name
+  get_active_users_lambda_arn                = module.lambda.get_active_users_lambda_arn
+  get_active_users_lambda_invoke_arn         = module.lambda.get_active_users_lambda_invoke_arn
+  get_active_users_lambda_function_name      = module.lambda.get_active_users_lambda_function_name
 }
 
 # ================================
