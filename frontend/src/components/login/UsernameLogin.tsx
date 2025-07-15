@@ -12,6 +12,7 @@ import { formatAuthError } from '../../utils/errorHandler';
  import { jwtDecode } from 'jwt-decode';
 import LoaderAnimation from '../LoaderAnimation';
 import AdminDashboard from '../../pages/AdminDashboard';
+import { heartbeatService } from '../../Services/heartbeatService';
 
 
 
@@ -136,11 +137,23 @@ const UsernameLogin: React.FC = () => {
             const decodedToken: any = jwtDecode(idToken);
             const roles = decodedToken['cognito:groups'] || [];
             localStorage.setItem('userRoles', JSON.stringify(roles));
+            localStorage.setItem('decodedToken', JSON.stringify(decodedToken));
             
-            // If user is an admin (franchise role), navigate to admin dashboard after a short delay
+            // Start heartbeat for customers
+            setTimeout(() => {
+                heartbeatService.startHeartbeatIfCustomer();
+            }, 1000); // Start heartbeat after 1 second to ensure tokens are saved
+            
+            // Navigation logic based on user role
             if (roles.includes('franchise')) {
+                // Admin users go to admin dashboard
                 setTimeout(() => {
                     navigate('/admin-dashboard');
+                }, 2000); // 2 second delay to show success message
+            } else if (roles.includes('customers')) {
+                // Customer users go to customer dashboard
+                setTimeout(() => {
+                    navigate('/customer-dashboard');
                 }, 2000); // 2 second delay to show success message
             }
         } catch (error) {
@@ -173,9 +186,14 @@ const UsernameLogin: React.FC = () => {
     };
 
     const handleLogout = () => {
+        // Stop heartbeat service when logging out
+        heartbeatService.stopHeartbeat();
+        
         localStorage.removeItem('accessToken');
         localStorage.removeItem('idToken');
         localStorage.removeItem('refreshToken');
+        localStorage.removeItem('userRoles');
+        localStorage.removeItem('decodedToken');
         setCurrentStep('login');
         setEmail('');
         setPassword('');

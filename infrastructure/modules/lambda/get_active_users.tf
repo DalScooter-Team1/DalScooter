@@ -47,6 +47,14 @@ resource "aws_iam_role_policy" "get_active_users_lambda_policy" {
           "dynamodb:GetItem"
         ]
         Resource = var.logged_in_user_directory_table_arn
+      },
+      {
+        Effect   = "Allow"
+        Action   = [
+          "cognito-idp:AdminGetUser",
+          "cognito-idp:AdminListGroupsForUser"
+        ]
+        Resource = var.cognito_user_pool_arn
       }
     ]
   })
@@ -73,6 +81,7 @@ resource "aws_lambda_function" "get_active_users" {
   environment {
     variables = {
       DYNAMODB_TABLE = var.logged_in_user_directory_table_name
+      COGNITO_USER_POOL_ID = var.cognito_user_pool_id
     }
   }
 
