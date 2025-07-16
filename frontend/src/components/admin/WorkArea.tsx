@@ -248,7 +248,9 @@ const WorkArea: React.FC<WorkAreaProps> = ({ activeSection }) => {
               </div>
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Active Scooters</p>
+              <p style={{background:'yellow'}}>To do</p>
+              <p className="text-sm font-medium text-gray-500">Active Scooters </p>
+
               <p className="text-2xl font-bold text-gray-900">89</p>
             </div>
           </div>
@@ -264,6 +266,7 @@ const WorkArea: React.FC<WorkAreaProps> = ({ activeSection }) => {
               </div>
             </div>
             <div className="ml-4">
+              <p style={{background:'yellow'}}>To do</p>
               <p className="text-sm font-medium text-gray-500">Today's Bookings</p>
               <p className="text-2xl font-bold text-gray-900">56</p>
             </div>
@@ -280,6 +283,7 @@ const WorkArea: React.FC<WorkAreaProps> = ({ activeSection }) => {
               </div>
             </div>
             <div className="ml-4">
+              <p style={{background:'yellow'}}>To do</p>
               <p className="text-sm font-medium text-gray-500">Revenue Today</p>
               <p className="text-2xl font-bold text-gray-900">$2,847</p>
             </div>
@@ -292,6 +296,7 @@ const WorkArea: React.FC<WorkAreaProps> = ({ activeSection }) => {
         <div className="lg:col-span-2">
           <div className="bg-white rounded-lg shadow-sm border border-gray-200">
             <div className="p-6 border-b border-gray-200">
+              <p style={{background:'yellow'}}>To do</p>
               <h3 className="text-lg font-medium text-gray-900">Recent Bookings</h3>
             </div>
             <div className="p-6">
@@ -387,6 +392,7 @@ const WorkArea: React.FC<WorkAreaProps> = ({ activeSection }) => {
 
         <div className="bg-white rounded-lg shadow-sm border border-gray-200">
           <div className="p-6 border-b border-gray-200">
+            <p style={{background:'yellow'}}>To do</p>
             <h3 className="text-lg font-medium text-gray-900">Scooter Status</h3>
           </div>
           <div className="p-6">
