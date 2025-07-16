@@ -455,15 +455,10 @@ const WorkArea: React.FC<WorkAreaProps> = ({ activeSection }) => {
             </div>
           </div>
         );
-      case 'settings':
+      case 'tickets':
         return (
-          <div className="space-y-6">
-            <h2 className="text-2xl font-bold text-gray-900">System Settings</h2>
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <p className="text-gray-500">Settings panel coming soon...</p>
-            </div>
-          </div>
-        );
+          <div>To do: issues and their details templates.</div>
+        )
       default:
         return renderDashboard();
     }
