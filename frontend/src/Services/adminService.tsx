@@ -77,6 +77,26 @@ export interface AdminCreationResponse {
   message: string;
 }
 
+export interface ActiveUser {
+  email: string;
+  firstName: string;
+  lastName: string;
+  userType: 'customer' | 'franchise';
+  userId: string;
+  status: 'online' | 'away';
+  last_seen: string;
+  lastSeen: string;
+  expires_at: number;
+}
+
+export interface ActiveUsersResponse {
+  success: boolean;
+  users: ActiveUser[];
+  totalCount: number;
+  timestamp?: number;
+  message?: string;
+}
+
 // Admin Service functions
 export const adminService = {
   // Get all customers
@@ -110,6 +130,12 @@ export const adminService = {
   // Delete/Suspend user
   suspendUser: async (userId: string): Promise<{ success: boolean; message: string }> => {
     const response = await adminAPI.patch(`/users/${userId}/suspend`);
+    return response.data;
+  },
+
+  // Get active/online users (admin only)
+  getActiveUsers: async (): Promise<ActiveUsersResponse> => {
+    const response = await adminAPI.get('/active-users');
     return response.data;
   },
 };

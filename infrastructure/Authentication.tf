@@ -115,6 +115,30 @@ resource "aws_dynamodb_table" "user_security_questions" {
   }
 }
 
+# DynamoDB table for tracking logged-in users
+resource "aws_dynamodb_table" "logged_in_user_directory" {
+  name           = "logged_in_user_directory"
+  billing_mode   = "PAY_PER_REQUEST"  # On-demand pricing
+  hash_key       = "email"            # Partition key
+
+  attribute {
+    name = "email"
+    type = "S"  # String
+  }
+
+  # Enable TTL on the expires_at attribute
+  ttl {
+    attribute_name = "expires_at"
+    enabled        = true
+  }
+
+  # Tags for resource management
+  tags = {
+    Name        = "DALScooter Logged In User Directory"
+    Project     = "DALScooter"
+  }
+}
+
 # Lambda Permissions for Cognito
 resource "aws_lambda_permission" "cognito_define_auth" {
   statement_id  = "AllowCognitoDefineAuth"

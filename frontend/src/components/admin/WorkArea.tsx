@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { adminService, type Customer } from '../../Services/adminService';
-import { heartbeatService, type OnlineUser } from '../../Services/heartbeatService';
+import { adminService, type Customer, type ActiveUser } from '../../Services/adminService';
+import { heartbeatService } from '../../Services/heartbeatService';
 
 interface WorkAreaProps {
   activeSection: string;
@@ -12,7 +12,7 @@ const WorkArea: React.FC<WorkAreaProps> = ({ activeSection }) => {
   const [error, setError] = useState<string>('');
   const [adminCreationLoading, setAdminCreationLoading] = useState(false);
   const [selectedCustomerEmail, setSelectedCustomerEmail] = useState<string>('');
-  const [onlineUsers, setOnlineUsers] = useState<OnlineUser[]>([]);
+  const [onlineUsers, setOnlineUsers] = useState<ActiveUser[]>([]);
   const [onlineUsersLoading, setOnlineUsersLoading] = useState(false);
 
   // Create admin from customer
@@ -65,10 +65,16 @@ const WorkArea: React.FC<WorkAreaProps> = ({ activeSection }) => {
   const fetchOnlineUsers = async () => {
     setOnlineUsersLoading(true);
     try {
-      const users = await heartbeatService.getOnlineUsers();
-      setOnlineUsers(users);
+      const response = await adminService.getActiveUsers();
+      if (response.success) {
+        setOnlineUsers(response.users || []);
+      } else {
+        console.error('Error retrieving active users:', response.message);
+        setOnlineUsers([]);
+      }
     } catch (error) {
       console.error('Error fetching online users:', error);
+      setOnlineUsers([]);
     } finally {
       setOnlineUsersLoading(false);
     }

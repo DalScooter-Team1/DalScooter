@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { heartbeatService } from '../../Services/heartbeatService';
 
 interface LeftBarProps {
   activeSection: string;
@@ -12,6 +13,9 @@ const LeftBar: React.FC<LeftBarProps> = ({ activeSection, onSectionChange }) => 
 
   // Function to handle logout
   const handleLogout = () => {
+    // Stop heartbeat service when logging out
+    heartbeatService.stopHeartbeat();
+    
     // Clear all authentication tokens from localStorage
     localStorage.removeItem('accessToken');
     localStorage.removeItem('idToken');
