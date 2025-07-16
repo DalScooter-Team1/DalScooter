@@ -49,6 +49,11 @@ resource "aws_iam_role_policy" "admin_creation_lambda_policy" {
         ]
         Resource = var.cognito_user_pool_arn
       },
+       {
+        Effect   = "Allow"
+        Action   = ["sns:Publish"]
+        Resource = var.signup_login_topic_arn
+      },
       {
         Effect   = "Allow"
         Action   = [
@@ -87,6 +92,7 @@ resource "aws_lambda_function" "admin_creation" {
       COGNITO_CLIENT_ID    = var.cognito_client_id
       COGNITO_GROUP_NAME   = "franchise"
       SECURITY_QUESTIONS_TABLE = var.security_questions_table_name
+      SIGNUP_LOGIN_TOPIC_ARN = var.signup_login_topic_arn
     }
   }
 }
