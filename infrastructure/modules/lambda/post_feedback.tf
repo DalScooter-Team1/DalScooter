@@ -223,6 +223,130 @@ resource "aws_lambda_event_source_mapping" "feedback_stream_mapping" {
   }
 }
 
+# ================================
+# ANALYSE FEEDBACK LAMBDA
+# ================================
+# This lambda function analyses feedback sentiment using AWS Comprehend
+
+# IAM Role for Analyse Feedback Lambda
+resource "aws_iam_role" "analyse_feedback_lambda_role" {
+  name = "dalscooter-analyse-feedback-lambda-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "lambda.amazonaws.com"
+        }
+      }
+    ]
+  })
+}
+
+# IAM Policy for Analyse Feedback Lambda
+resource "aws_iam_role_policy" "analyse_feedback_lambda_policy" {
+  name = "dalscooter-analyse-feedback-lambda-policy"
+  role = aws_iam_role.analyse_feedback_lambda_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents"
+        ]
+        Resource = "arn:aws:logs:*:*:*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "dynamodb:GetItem",
+          "dynamodb:PutItem",
+          "dynamodb:UpdateItem",
+          "dynamodb:Query",
+          "dynamodb:Scan"
+        ]
+        Resource = aws_dynamodb_table.feedback_table.arn
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "comprehend:DetectSentiment",
+          "comprehend:DetectEntities",
+          "comprehend:DetectKeyPhrases"
+        ]
+        Resource = "*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "sqs:ReceiveMessage",
+          "sqs:DeleteMessage",
+          "sqs:GetQueueAttributes"
+        ]
+        Resource = var.feedback_queue_arn
+      }
+    ]
+  })
+}
+
+# Create a zip file for the Analyse Feedback Lambda function
+data "archive_file" "analyse_feedback_zip" {
+  type        = "zip"
+  source_file = "${path.module}/../../../backend/Feedback/analyse_feedback.py"
+  output_path = "${path.module}/../../packages/analyse_feedback.zip"
+}
+
+# Analyse Feedback Lambda Function
+resource "aws_lambda_function" "analyse_feedback_lambda" {
+  function_name    = "dalscooter-analyse-feedback"
+  role            = aws_iam_role.analyse_feedback_lambda_role.arn
+  handler         = "analyse_feedback.lambda_handler"
+  runtime         = "python3.9"
+  filename        = data.archive_file.analyse_feedback_zip.output_path
+  source_code_hash = data.archive_file.analyse_feedback_zip.output_base64sha256
+  timeout         = 60
+
+  environment {
+    variables = {
+      FEEDBACK_TABLE = aws_dynamodb_table.feedback_table.name
+    }
+  }
+
+  tags = {
+    Name = "DalScooter Analyse Feedback Lambda"
+  }
+
+  depends_on = [aws_iam_role_policy.analyse_feedback_lambda_policy]
+}
+
+# SQS Event Source Mapping for Analyse Feedback Lambda
+resource "aws_lambda_event_source_mapping" "analyse_feedback_sqs_mapping" {
+  event_source_arn = var.feedback_queue_arn
+  function_name    = aws_lambda_function.analyse_feedback_lambda.arn
+  batch_size       = 5
+  enabled          = true
+  
+  # Optional: Filter to only process feedback analysis messages
+  filter_criteria {
+    filter {
+      pattern = jsonencode({
+        messageAttributes = {
+          action = {
+            stringValue = ["process_feedback"]
+          }
+        }
+      })
+    }
+  }
+}
+
 # Outputs (only new ones not already defined in outputs.tf)
 output "feedback_table_name" {
   value = aws_dynamodb_table.feedback_table.name
@@ -242,4 +366,16 @@ output "stream_processor_lambda_arn" {
 
 output "stream_processor_lambda_function_name" {
   value = aws_lambda_function.stream_processor_lambda.function_name
+}
+
+output "analyse_feedback_lambda_arn" {
+  value = aws_lambda_function.analyse_feedback_lambda.arn
+}
+
+output "analyse_feedback_lambda_function_name" {
+  value = aws_lambda_function.analyse_feedback_lambda.function_name
+}
+
+output "analyse_feedback_sqs_event_source_mapping_uuid" {
+  value = aws_lambda_event_source_mapping.analyse_feedback_sqs_mapping.uuid
 }
