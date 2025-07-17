@@ -51,3 +51,63 @@ variable "admin_creation_lambda_function_name" {
   description = "Function name of the admin creation Lambda"
   type        = string
 }
+
+variable "get_customers_lambda_arn" {
+  description = "ARN of the get customers Lambda function"
+  type        = string
+}
+
+variable "get_customers_lambda_invoke_arn" {
+  description = "Invoke ARN of the get customers Lambda function"
+  type        = string
+}
+
+variable "get_customers_lambda_function_name" {
+  description = "Function name of the get customers Lambda"
+  type        = string
+}
+
+variable "get_logged_in_users_lambda_arn" {
+  description = "ARN of the get logged in users Lambda function"
+  type        = string
+}
+
+variable "get_logged_in_users_lambda_invoke_arn" {
+  description = "Invoke ARN of the get logged in users Lambda function"
+  type        = string
+}
+
+variable "get_logged_in_users_lambda_function_name" {
+  description = "Function name of the get logged in users Lambda"
+  type        = string
+}
+
+variable "get_active_users_lambda_arn" {
+  description = "ARN of the get active users Lambda function"
+  type        = string
+}
+
+variable "get_active_users_lambda_invoke_arn" {
+  description = "Invoke ARN of the get active users Lambda function"
+  type        = string
+}
+
+variable "get_active_users_lambda_function_name" {
+  description = "Function name of the get active users Lambda"
+  type        = string
+}
+
+variable "post_feedback_lambda_arn" {
+  description = "ARN of the post feedback Lambda function"
+  type        = string
+}
+
+variable "post_feedback_lambda_invoke_arn" {
+  description = "Invoke ARN of the post feedback Lambda function"
+  type        = string
+}
+
+variable "post_feedback_lambda_function_name" {
+  description = "Function name of the post feedback Lambda"
+  type        = string
+}

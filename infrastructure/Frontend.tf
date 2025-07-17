@@ -40,7 +40,7 @@ resource "aws_amplify_app" "frontend" {
   # Environment variables
   environment_variables = {
     ENV = "production"
-    VITE_SERVER = "${aws_api_gateway_deployment.registration_deployment.invoke_url}"
+    VITE_SERVER = "${module.apis.api_gateway_invoke_url}"
     VITE_COGNITO_USER_POOL_ID = "${aws_cognito_user_pool.pool.id}"
     VITE_COGNITO_CLIENT_ID = "${aws_cognito_user_pool_client.client.id}"
   }
