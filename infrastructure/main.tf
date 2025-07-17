@@ -19,6 +19,10 @@ module "lambda" {
   
   # SNS references
   signup_login_topic_arn              = aws_sns_topic.user_signup_login.arn
+  
+  # SQS references for feedback processing
+  feedback_queue_url                  = aws_sqs_queue.feedback_queue.url
+  feedback_queue_arn                  = aws_sqs_queue.feedback_queue.arn
 }
 
 # ================================
@@ -50,6 +54,9 @@ module "apis" {
   get_active_users_lambda_arn                = module.lambda.get_active_users_lambda_arn
   get_active_users_lambda_invoke_arn         = module.lambda.get_active_users_lambda_invoke_arn
   get_active_users_lambda_function_name      = module.lambda.get_active_users_lambda_function_name
+  post_feedback_lambda_arn                   = module.lambda.post_feedback_lambda_arn
+  post_feedback_lambda_invoke_arn            = module.lambda.post_feedback_lambda_invoke_arn
+  post_feedback_lambda_function_name         = module.lambda.post_feedback_lambda_function_name
 }
 
 # ================================
