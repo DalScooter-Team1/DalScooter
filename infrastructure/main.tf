@@ -50,6 +50,9 @@ module "apis" {
   get_active_users_lambda_arn                = module.lambda.get_active_users_lambda_arn
   get_active_users_lambda_invoke_arn         = module.lambda.get_active_users_lambda_invoke_arn
   get_active_users_lambda_function_name      = module.lambda.get_active_users_lambda_function_name
+  post_feedback_lambda_arn                   = module.lambda.post_feedback_lambda_arn
+  post_feedback_lambda_invoke_arn            = module.lambda.post_feedback_lambda_invoke_arn
+  post_feedback_lambda_function_name         = module.lambda.post_feedback_lambda_function_name
 }
 
 # ================================
