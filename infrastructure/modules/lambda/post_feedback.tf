@@ -3,6 +3,17 @@
 # ================================
 # This lambda function takes feedback from the customers and stores it in DynamoDB
 
+# Variables for SQS queue integration
+variable "feedback_queue_url" {
+  description = "URL of the feedback processing SQS queue"
+  type        = string
+}
+
+variable "feedback_queue_arn" {
+  description = "ARN of the feedback processing SQS queue"
+  type        = string
+}
+
 # IAM Role for Post Feedback Lambda
 resource "aws_iam_role" "post_feedback_lambda_role" {
   name = "dalscooter-post-feedback-lambda-role"
@@ -69,6 +80,9 @@ resource "aws_dynamodb_table" "feedback_table" {
     type = "S"
   }
 
+  # Enable DynamoDB Streams
+  stream_enabled   = true
+  stream_view_type = "NEW_AND_OLD_IMAGES"
 
   tags = {
     Name = "DalScooter Feedback Table"
@@ -100,4 +114,132 @@ resource "aws_lambda_function" "post_feedback_lambda" {
         Name = "DalScooter Post Feedback Lambda"
     }
     depends_on = [aws_iam_role_policy.post_feedback_lambda_policy]
+}
+
+# ================================
+# DYNAMODB STREAM PROCESSOR
+# ================================
+# This lambda function processes DynamoDB stream events and sends UUID to SQS
+
+# IAM Role for Stream Processor Lambda
+resource "aws_iam_role" "stream_processor_lambda_role" {
+  name = "dalscooter-stream-processor-lambda-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "lambda.amazonaws.com"
+        }
+      }
+    ]
+  })
+}
+
+# IAM Policy for Stream Processor Lambda
+resource "aws_iam_role_policy" "stream_processor_lambda_policy" {
+  name = "dalscooter-stream-processor-lambda-policy"
+  role = aws_iam_role.stream_processor_lambda_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents"
+        ]
+        Resource = "arn:aws:logs:*:*:*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "dynamodb:DescribeStream",
+          "dynamodb:GetRecords",
+          "dynamodb:GetShardIterator",
+          "dynamodb:ListStreams"
+        ]
+        Resource = "${aws_dynamodb_table.feedback_table.stream_arn}"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "sqs:SendMessage"
+        ]
+        Resource = var.feedback_queue_arn
+      }
+    ]
+  })
+}
+
+# Create a zip file for the Stream Processor Lambda function
+data "archive_file" "stream_processor_zip" {
+  type        = "zip"
+  source_file = "${path.module}/../../../backend/Feedback/feedback_stream_processor.py"
+  output_path = "${path.module}/../../packages/feedback_stream_processor.zip"
+}
+
+# Stream Processor Lambda Function
+resource "aws_lambda_function" "stream_processor_lambda" {
+  function_name    = "dalscooter-feedback-stream-processor"
+  role            = aws_iam_role.stream_processor_lambda_role.arn
+  handler         = "feedback_stream_processor.lambda_handler"
+  runtime         = "python3.9"
+  filename        = data.archive_file.stream_processor_zip.output_path
+  source_code_hash = data.archive_file.stream_processor_zip.output_base64sha256
+  timeout         = 60
+
+  environment {
+    variables = {
+      FEEDBACK_QUEUE_URL = var.feedback_queue_url
+    }
+  }
+
+  tags = {
+    Name = "DalScooter Feedback Stream Processor"
+  }
+
+  depends_on = [aws_iam_role_policy.stream_processor_lambda_policy]
+}
+
+# DynamoDB Stream Event Source Mapping
+resource "aws_lambda_event_source_mapping" "feedback_stream_mapping" {
+  event_source_arn  = aws_dynamodb_table.feedback_table.stream_arn
+  function_name     = aws_lambda_function.stream_processor_lambda.arn
+  starting_position = "LATEST"
+  batch_size        = 10
+  
+  filter_criteria {
+    filter {
+      pattern = jsonencode({
+        eventName = ["INSERT"]  # Only trigger on new records
+      })
+    }
+  }
+}
+
+# Outputs (only new ones not already defined in outputs.tf)
+output "feedback_table_name" {
+  value = aws_dynamodb_table.feedback_table.name
+}
+
+output "feedback_table_arn" {
+  value = aws_dynamodb_table.feedback_table.arn
+}
+
+output "feedback_table_stream_arn" {
+  value = aws_dynamodb_table.feedback_table.stream_arn
+}
+
+output "stream_processor_lambda_arn" {
+  value = aws_lambda_function.stream_processor_lambda.arn
+}
+
+output "stream_processor_lambda_function_name" {
+  value = aws_lambda_function.stream_processor_lambda.function_name
 }

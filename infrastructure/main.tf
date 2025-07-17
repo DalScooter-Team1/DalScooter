@@ -19,6 +19,10 @@ module "lambda" {
   
   # SNS references
   signup_login_topic_arn              = aws_sns_topic.user_signup_login.arn
+  
+  # SQS references for feedback processing
+  feedback_queue_url                  = aws_sqs_queue.feedback_queue.url
+  feedback_queue_arn                  = aws_sqs_queue.feedback_queue.arn
 }
 
 # ================================

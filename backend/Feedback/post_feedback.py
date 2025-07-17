@@ -12,6 +12,7 @@ import os
 import boto3
 import datetime
 import json
+import uuid
 
 def lambda_handler(event, context):
     # DynamoDB setup
@@ -57,6 +58,7 @@ def lambda_handler(event, context):
     try:
         # Prepare the item to be stored
         item = {
+            'uuid': str(uuid.uuid4()),  # Generate proper UUID
            'email': body.get('email', 'anonymous'), 
             'feedback_text': feedback_text,
             'bike_type': body.get('bike_type', 'unknown'), 
