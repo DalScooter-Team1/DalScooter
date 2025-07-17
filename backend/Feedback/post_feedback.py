@@ -1,3 +1,11 @@
+#-----------------------------------
+# Request format: 
+# {
+#   "email": "anything@demo.com",
+#   "feedback_text": "Your feedback here",
+#   "booking_reference": "Optional booking reference"
+# }
+#-----------------------------------
 import os
 import boto3
 import datetime
