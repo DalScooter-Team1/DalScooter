@@ -3,7 +3,9 @@
 # {
 #   "email": "anything@demo.com",
 #   "feedback_text": "Your feedback here",
-#   "booking_reference": "Optional booking reference"
+#   "bike_type": "bike type",
+#   "bike_id": "bike ID",
+#   "booking_reference": "booking reference"
 # }
 #-----------------------------------
 import os
@@ -55,10 +57,12 @@ def lambda_handler(event, context):
     try:
         # Prepare the item to be stored
         item = {
-           'email': body.get('email', 'anonymous'),  # Use 'anonymous' if email is not provided
+           'email': body.get('email', 'anonymous'), 
             'feedback_text': feedback_text,
+            'bike_type': body.get('bike_type', 'unknown'), 
+            'bike_id': body.get('bike_id', 'unknown'),  
             'timestamp': datetime.datetime.utcnow().isoformat(),
-            'booking_reference': body.get('booking_reference', 'N/A')  # Use 'N/A' if booking reference is not provided
+            'booking_reference': body.get('booking_reference', 'N/A') 
         }
         
         #TO DO: run the analytics job to process the feedback
