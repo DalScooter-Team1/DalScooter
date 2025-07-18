@@ -149,3 +149,18 @@ output "get_active_users_lambda_function_name" {
   description = "Function name of the get active users Lambda"
   value       = aws_lambda_function.get_active_users.function_name
 }
+
+output "post_feedback_lambda_arn" {
+  description = "ARN of the post feedback Lambda function"
+  value       = aws_lambda_function.post_feedback_lambda.arn
+}
+
+output "post_feedback_lambda_invoke_arn" {
+  description = "Invoke ARN of the post feedback Lambda function"
+  value       = aws_lambda_function.post_feedback_lambda.invoke_arn
+}
+
+output "post_feedback_lambda_function_name" {
+  description = "Function name of the post feedback Lambda"
+  value       = aws_lambda_function.post_feedback_lambda.function_name
+}

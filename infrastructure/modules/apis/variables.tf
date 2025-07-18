@@ -96,3 +96,18 @@ variable "get_active_users_lambda_function_name" {
   description = "Function name of the get active users Lambda"
   type        = string
 }
+
+variable "post_feedback_lambda_arn" {
+  description = "ARN of the post feedback Lambda function"
+  type        = string
+}
+
+variable "post_feedback_lambda_invoke_arn" {
+  description = "Invoke ARN of the post feedback Lambda function"
+  type        = string
+}
+
+variable "post_feedback_lambda_function_name" {
+  description = "Function name of the post feedback Lambda"
+  type        = string
+}

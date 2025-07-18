@@ -72,3 +72,8 @@ output "admin_resource_id" {
   description = "ID of the admin resource"
   value       = aws_api_gateway_resource.admin.id
 }
+
+output "feedback_resource_id" {
+  description = "ID of the feedback resource"
+  value       = aws_api_gateway_resource.feedback.id
+}
