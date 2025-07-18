@@ -97,6 +97,36 @@ variable "get_active_users_lambda_function_name" {
   type        = string
 }
 
+variable "submit_concern_lambda_arn" {
+  description = "ARN of the submit concern Lambda function"
+  type        = string
+}
+
+variable "submit_concern_lambda_invoke_arn" {
+  description = "Invoke ARN of the submit concern Lambda function"
+  type        = string
+}
+
+variable "respond_concern_lambda_arn" {
+  description = "ARN of the respond concern Lambda function"
+  type        = string
+}
+
+variable "respond_concern_lambda_invoke_arn" {
+  description = "Invoke ARN of the respond concern Lambda function"
+  type        = string
+}
+
+variable "get_concerns_lambda_arn" {
+  description = "ARN of the get concerns Lambda function"
+  type        = string
+}
+
+variable "get_concerns_lambda_invoke_arn" {
+  description = "Invoke ARN of the get concerns Lambda function"
+  type        = string
+}
+
 variable "post_feedback_lambda_arn" {
   description = "ARN of the post feedback Lambda function"
   type        = string
