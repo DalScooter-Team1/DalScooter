@@ -14,8 +14,28 @@ def lambda_handler(event, context):
         body = json.loads(event.get('body', '{}'))
         content = body.get('content')
 
-        # Get user ID from Cognito token
-        user_id = event['requestContext']['authorizer']['claims']['sub']
+        # Get user ID from Cognito token via custom authorizer context
+        # Try multiple possible locations for user ID
+        user_id = None
+        if 'requestContext' in event and 'authorizer' in event['requestContext']:
+            authorizer = event['requestContext']['authorizer']
+            # Try context first (for custom authorizer)
+            if 'userId' in authorizer:
+                user_id = authorizer['userId']
+            # Try claims (for direct Cognito JWT)
+            elif 'claims' in authorizer and 'sub' in authorizer['claims']:
+                user_id = authorizer['claims']['sub']
+            # Try principalId as fallback
+            elif 'principalId' in authorizer:
+                user_id = authorizer['principalId']
+        
+        if not user_id:
+            print(f"Debug - event: {json.dumps(event)}")
+            return {
+                'statusCode': 400,
+                'headers': {'Access-Control-Allow-Origin': '*'},
+                'body': json.dumps({'error': 'Unable to identify user'})
+            }
 
         if not content:
             return {

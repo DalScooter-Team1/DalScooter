@@ -165,4 +165,29 @@ output "get_concerns_lambda_arn" {
   value = aws_lambda_function.get_concerns.arn
 }
 
+# Lambda permissions for API Gateway to invoke the functions
+resource "aws_lambda_permission" "api_gateway_invoke_submit_concern" {
+  statement_id  = "AllowExecutionFromAPIGateway"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.submit_concern.function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${module.apis.api_gateway_execution_arn}/*/*"
+}
+
+resource "aws_lambda_permission" "api_gateway_invoke_respond_concern" {
+  statement_id  = "AllowExecutionFromAPIGateway"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.respond_concern.function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${module.apis.api_gateway_execution_arn}/*/*"
+}
+
+resource "aws_lambda_permission" "api_gateway_invoke_get_concerns" {
+  statement_id  = "AllowExecutionFromAPIGateway"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.get_concerns.function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${module.apis.api_gateway_execution_arn}/*/*"
+}
+
 # Note: API Gateway resources for messagepassing are already defined in the apis module
