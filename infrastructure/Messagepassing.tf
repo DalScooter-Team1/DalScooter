@@ -72,7 +72,8 @@ resource "aws_iam_role_policy" "message_lambda_policy" {
           "dynamodb:GetItem",
           "dynamodb:PutItem",
           "dynamodb:UpdateItem",
-          "dynamodb:Query"
+          "dynamodb:Query",
+          "dynamodb:Scan"
         ]
         Resource = [
           aws_dynamodb_table.messages.arn,
@@ -152,42 +153,31 @@ resource "aws_lambda_function" "get_concerns" {
   }
 }
 
-# Output Lambda ARNs for message passing so they can be referenced in other modules
-output "submit_concern_lambda_arn" {
-  value = aws_lambda_function.submit_concern.arn
-}
+# NOTE: API Gateway resources are managed by the modules/apis module
+# No API Gateway resources needed here
 
-output "respond_concern_lambda_arn" {
-  value = aws_lambda_function.respond_concern.arn
-}
-
-output "get_concerns_lambda_arn" {
-  value = aws_lambda_function.get_concerns.arn
-}
-
-# Lambda permissions for API Gateway to invoke the functions
 resource "aws_lambda_permission" "api_gateway_invoke_submit_concern" {
-  statement_id  = "AllowExecutionFromAPIGateway"
+  statement_id  = "AllowAPIGatewayInvokeSubmitConcern"
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.submit_concern.function_name
   principal     = "apigateway.amazonaws.com"
-  source_arn    = "${module.apis.api_gateway_execution_arn}/*/*"
+  source_arn    = "${module.apis.api_gateway_execution_arn}/*/POST/submit-concern"
 }
 
 resource "aws_lambda_permission" "api_gateway_invoke_respond_concern" {
-  statement_id  = "AllowExecutionFromAPIGateway"
+  statement_id  = "AllowAPIGatewayInvokeRespondConcern"
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.respond_concern.function_name
   principal     = "apigateway.amazonaws.com"
-  source_arn    = "${module.apis.api_gateway_execution_arn}/*/*"
+  source_arn    = "${module.apis.api_gateway_execution_arn}/*/POST/respond-concern"
 }
 
 resource "aws_lambda_permission" "api_gateway_invoke_get_concerns" {
-  statement_id  = "AllowExecutionFromAPIGateway"
+  statement_id  = "AllowAPIGatewayInvokeGetConcerns"
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.get_concerns.function_name
   principal     = "apigateway.amazonaws.com"
-  source_arn    = "${module.apis.api_gateway_execution_arn}/*/*"
+  source_arn    = "${module.apis.api_gateway_execution_arn}/*/GET/messages"
 }
 
-# Note: API Gateway resources for messagepassing are already defined in the apis module
+
