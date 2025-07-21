@@ -53,8 +53,9 @@ def lambda_handler(event, context):
                     'Access-Control-Allow-Methods': 'GET, OPTIONS'
                 },
                 'body': json.dumps({
+                    'success': True,
                     'messages': messages,
-                    'count': len(messages),
+                    'totalCount': len(messages),
                     'debug': 'No franchise_id found - returning all messages'
                 }, cls=DecimalEncoder)
             }
@@ -76,8 +77,9 @@ def lambda_handler(event, context):
                 'Access-Control-Allow-Methods': 'GET, OPTIONS'
             },
             'body': json.dumps({
+                'success': True,
                 'messages': messages,
-                'count': len(messages)
+                'totalCount': len(messages)
             }, cls=DecimalEncoder)
         }
 

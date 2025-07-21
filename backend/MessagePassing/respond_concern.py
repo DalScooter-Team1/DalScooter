@@ -122,6 +122,7 @@ def lambda_handler(event, context):
             'statusCode': 200,
             'headers': {'Access-Control-Allow-Origin': '*'},
             'body': json.dumps({
+                'success': True,
                 'message': 'Response submitted successfully',
                 'responseMessageId': response_message_id
             })
