@@ -18,25 +18,23 @@ def lambda_handler(event, context):
         print(f"Debug - Customer messages event: {json.dumps(event, default=str)}")
         
         # Get customer ID from Cognito token via custom authorizer context
-        # Try multiple possible locations for user ID
         customer_id = None
         print(f"Debug - RequestContext: {event.get('requestContext', {})}")
         
         if 'requestContext' in event and 'authorizer' in event['requestContext']:
             authorizer = event['requestContext']['authorizer']
             print(f"Debug - Authorizer data: {authorizer}")
-            # Try context first (for custom authorizer)
+            
+            # The customer authorizer should pass userId in the context
             if 'userId' in authorizer:
                 customer_id = authorizer['userId']
                 print(f"Debug - Found userId in authorizer: {customer_id}")
-            # Try claims (for direct Cognito JWT)
-            elif 'claims' in authorizer and 'sub' in authorizer['claims']:
-                customer_id = authorizer['claims']['sub']
-                print(f"Debug - Found sub in claims: {customer_id}")
-            # Try principalId as fallback
+            # Fallback to principalId if userId not found
             elif 'principalId' in authorizer:
                 customer_id = authorizer['principalId']
                 print(f"Debug - Found principalId: {customer_id}")
+        else:
+            print("Debug - No requestContext.authorizer found in event")
         
         print(f"Debug - Final customer_id: {customer_id}")
         
@@ -50,12 +48,17 @@ def lambda_handler(event, context):
                     'Access-Control-Allow-Headers': 'Content-Type,Authorization',
                     'Access-Control-Allow-Methods': 'GET, OPTIONS'
                 },
-                'body': json.dumps({'error': 'Unable to identify customer'})
+                'body': json.dumps({
+                    'success': False,
+                    'error': 'Unable to identify customer'
+                })
             }
 
+        print(f"Fetching messages for customer: {customer_id}")
+        
         messages_table = dynamodb.Table(MESSAGES_TABLE)
         
-        # Scan for messages related to this customer (both concerns and responses)
+        # Get all messages related to this customer (both concerns they submitted and responses they received)
         response = messages_table.scan(
             FilterExpression='userId = :uid',
             ExpressionAttributeValues={':uid': customer_id}
@@ -84,6 +87,8 @@ def lambda_handler(event, context):
 
     except Exception as e:
         print(f"Error fetching customer messages: {str(e)}")
+        import traceback
+        print(f"Traceback: {traceback.format_exc()}")
         return {
             'statusCode': 500,
             'headers': {
