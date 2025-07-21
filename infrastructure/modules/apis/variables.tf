@@ -97,6 +97,7 @@ variable "get_active_users_lambda_function_name" {
   type        = string
 }
 
+# Messaging Lambda Variables
 variable "submit_concern_lambda_arn" {
   description = "ARN of the submit concern Lambda function"
   type        = string
@@ -127,6 +128,17 @@ variable "get_concerns_lambda_invoke_arn" {
   type        = string
 }
 
+variable "get_customer_messages_lambda_arn" {
+  description = "ARN of the get customer messages Lambda function"
+  type        = string
+}
+
+variable "get_customer_messages_lambda_invoke_arn" {
+  description = "Invoke ARN of the get customer messages Lambda function"
+  type        = string
+}
+
+# Post Feedback Lambda Variables
 variable "post_feedback_lambda_arn" {
   description = "ARN of the post feedback Lambda function"
   type        = string

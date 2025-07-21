@@ -45,32 +45,3 @@ variable "signup_login_topic_arn" {
   type        = string
 }
 
-variable "submit_concern_lambda_arn" {
-  description = "ARN of the submit concern Lambda function"
-  type        = string
-}
-
-variable "submit_concern_lambda_invoke_arn" {
-  description = "Invoke ARN of the submit concern Lambda function"
-  type        = string
-}
-
-variable "respond_concern_lambda_arn" {
-  description = "ARN of the respond concern Lambda function"
-  type        = string
-}
-
-variable "respond_concern_lambda_invoke_arn" {
-  description = "Invoke ARN of the respond concern Lambda function"
-  type        = string
-}
-
-variable "get_concerns_lambda_arn" {
-  description = "ARN of the get concerns Lambda function"
-  type        = string
-}
-
-variable "get_concerns_lambda_invoke_arn" {
-  description = "Invoke ARN of the get concerns Lambda function"
-  type        = string
-}

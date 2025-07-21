@@ -153,6 +153,52 @@ resource "aws_lambda_function" "get_concerns" {
   }
 }
 
+# Get My Messages Lambda (for customers)
+data "archive_file" "get_my_messages_zip" {
+  type        = "zip"
+  source_file = "${path.module}/../backend/MessagePassing/get_my_messages.py"
+  output_path = "${path.module}/packages/get_my_messages.zip"
+}
+
+resource "aws_lambda_function" "get_my_messages" {
+  filename         = data.archive_file.get_my_messages_zip.output_path
+  function_name    = "dalscooter-get-my-messages"
+  role             = aws_iam_role.message_lambda_role.arn
+  handler          = "get_my_messages.lambda_handler"
+  runtime          = "python3.9"
+  timeout          = 30
+  source_code_hash = data.archive_file.get_my_messages_zip.output_base64sha256
+
+  environment {
+    variables = {
+      MESSAGES_TABLE_NAME = aws_dynamodb_table.messages.name
+    }
+  }
+}
+
+# Get Customer Messages Lambda (for customers to get their own messages and responses)
+data "archive_file" "get_customer_messages_zip" {
+  type        = "zip"
+  source_file = "${path.module}/../backend/MessagePassing/get_customer_messages.py"
+  output_path = "${path.module}/packages/get_customer_messages.zip"
+}
+
+resource "aws_lambda_function" "get_customer_messages" {
+  filename         = data.archive_file.get_customer_messages_zip.output_path
+  function_name    = "dalscooter-get-customer-messages"
+  role             = aws_iam_role.message_lambda_role.arn
+  handler          = "get_customer_messages.lambda_handler"
+  runtime          = "python3.9"
+  timeout          = 30
+  source_code_hash = data.archive_file.get_customer_messages_zip.output_base64sha256
+
+  environment {
+    variables = {
+      MESSAGES_TABLE_NAME = aws_dynamodb_table.messages.name
+    }
+  }
+}
+
 # NOTE: API Gateway resources are managed by the modules/apis module
 # No API Gateway resources needed here
 
@@ -178,6 +224,22 @@ resource "aws_lambda_permission" "api_gateway_invoke_get_concerns" {
   function_name = aws_lambda_function.get_concerns.function_name
   principal     = "apigateway.amazonaws.com"
   source_arn    = "${module.apis.api_gateway_execution_arn}/*/GET/messages"
+}
+
+resource "aws_lambda_permission" "api_gateway_invoke_get_my_messages" {
+  statement_id  = "AllowAPIGatewayInvokeGetMyMessages"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.get_my_messages.function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${module.apis.api_gateway_execution_arn}/*/GET/my-messages"
+}
+
+resource "aws_lambda_permission" "api_gateway_invoke_get_customer_messages" {
+  statement_id  = "AllowAPIGatewayInvokeGetCustomerMessages"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.get_customer_messages.function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${module.apis.api_gateway_execution_arn}/*/GET/customer-messages"
 }
 
 
