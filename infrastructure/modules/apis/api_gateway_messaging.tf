@@ -86,9 +86,8 @@ resource "aws_api_gateway_method" "customer_messages_get" {
   rest_api_id   = aws_api_gateway_rest_api.dalscooter_apis.id
   resource_id   = aws_api_gateway_resource.customer_messages.id
   http_method   = "GET"
-  authorization = "NONE"
-  # Temporarily disable authorizer for debugging 400 error
-  # authorizer_id = aws_api_gateway_authorizer.customer_authorizer.id
+  authorization = "CUSTOM"
+  authorizer_id = aws_api_gateway_authorizer.customer_authorizer.id
 }
 
 resource "aws_api_gateway_integration" "customer_messages_integration" {
