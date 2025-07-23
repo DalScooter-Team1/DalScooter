@@ -73,40 +73,6 @@ output "admin_resource_id" {
   value       = aws_api_gateway_resource.admin.id
 }
 
-# ================================
-# LAMBDA FUNCTION OUTPUTS
-# ================================
-
-output "submit_concern_lambda_arn" {
-  description = "ARN of the submit concern Lambda function"
-  value       = var.submit_concern_lambda_arn
-}
-
-output "submit_concern_lambda_invoke_arn" {
-  description = "Invoke ARN of the submit concern Lambda function"
-  value       = var.submit_concern_lambda_invoke_arn
-}
-
-output "respond_concern_lambda_arn" {
-  description = "ARN of the respond concern Lambda function"
-  value       = var.respond_concern_lambda_arn
-}
-
-output "respond_concern_lambda_invoke_arn" {
-  description = "Invoke ARN of the respond concern Lambda function"
-  value       = var.respond_concern_lambda_invoke_arn
-}
-
-output "get_concerns_lambda_arn" {
-  description = "ARN of the get concerns Lambda function"
-  value       = var.get_concerns_lambda_arn
-}
-
-output "get_concerns_lambda_invoke_arn" {
-  description = "Invoke ARN of the get concerns Lambda function"
-  value       = var.get_concerns_lambda_invoke_arn
-}
-
 output "feedback_resource_id" {
   description = "ID of the feedback resource"
   value       = aws_api_gateway_resource.feedback.id

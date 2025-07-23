@@ -18,9 +18,9 @@
 
 # Create a directory for the package if it doesn't exist
 resource "local_file" "create_packages_dir" {
-  content  = ""
-  filename = "${path.module}/../../packages/.keep"
-
+  content     = ""
+  filename    = "${path.module}/../../packages/.keep"
+  
   provisioner "local-exec" {
     command = "mkdir -p ${path.module}/../../packages"
   }

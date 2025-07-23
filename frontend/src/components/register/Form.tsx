@@ -39,7 +39,7 @@ function Form() {
       setIsFlipping(false);
     }, 300);
   };
-
+  
   const handleSecurityQuestionChange = (index: number, question: string) => {
     const updatedQuestions = [...securityQuestions];
     updatedQuestions[index] = question;
@@ -62,7 +62,7 @@ function Form() {
         answer: securityAnswers[index]
       }));
 
-      const response = await fetch(`${import.meta.env.VITE_SERVER}prod/register`, {
+      const response = await fetch(`${import.meta.env.VITE_SERVER}/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -76,7 +76,7 @@ function Form() {
           securityQuestions: formattedSecurityQuestions
         }),
       });
-
+      
       const data = await response.json();
       if (response.ok) {
         console.log('Registration successful:', data);
@@ -101,7 +101,7 @@ function Form() {
       <LoaderAnimation isLoading={loading} />
       <div className="space-y-6">
         <h2 className="text-3xl font-bold text-center text-gray-800 mb-6">Open DalScooter account 🎉</h2>
-
+        
         {error && (
           <div className="text-sm text-red-600 bg-red-50 p-3 rounded-md border border-red-200">
             <div className="flex items-start">
@@ -114,7 +114,7 @@ function Form() {
             </div>
           </div>
         )}
-
+        
         <div className={`perspective-1000 ${isFlipping ? 'pointer-events-none' : ''}`}>
           <div className={`relative transition-transform duration-300 ${isFlipping ? 'scale-95 opacity-90' : ''}`}>
             {currentStep === 1 ? (
@@ -131,7 +131,7 @@ function Form() {
                     className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
-
+                
                 <div className="space-y-2">
                   <label htmlFor="lastName" className="block text-sm text-left font-medium text-gray-700">Last Name</label>
                   <input
@@ -144,7 +144,7 @@ function Form() {
                     className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
-
+                
                 <div className="space-y-2">
                   <label htmlFor="email" className="block text-sm text-left font-medium text-gray-700">Email</label>
                   <input
@@ -169,10 +169,10 @@ function Form() {
                     className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
-
+                
                 <div className="flex mt-8">
-                  <button
-                    type="button"
+                  <button 
+                    type="button" 
                     className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-md transition duration-200"
                     onClick={nextStep}
                     disabled={!firstName || !lastName || !email || !password}
@@ -184,7 +184,7 @@ function Form() {
             ) : (
               <div className="space-y-6">
                 <div className="flex items-center mb-6">
-                  <button
+                  <button 
                     type="button"
                     onClick={prevStep}
                     className="mr-3 text-white hover:text-gray-700"
@@ -197,7 +197,7 @@ function Form() {
                   <h3 className="text-xl font-medium text-gray-700">Security Questions</h3>
                 </div>
                 <p className="text-sm text-gray-500">Please select and answer three security questions</p>
-
+                
                 {[0, 1, 2].map((index) => (
                   <div key={index} className="space-y-2">
                     <label className="block text-sm font-medium text-black">
@@ -211,8 +211,8 @@ function Form() {
                     >
                       <option value="">Select a security question</option>
                       {availableQuestions.map((question, qIndex) => (
-                        <option
-                          key={qIndex}
+                        <option 
+                          key={qIndex} 
                           value={question}
                           disabled={securityQuestions.includes(question) && securityQuestions[index] !== question}
                           className="text-black"
@@ -221,7 +221,7 @@ function Form() {
                         </option>
                       ))}
                     </select>
-
+                    
                     {securityQuestions[index] && (
                       <>
                         <label className="block text-sm font-medium text-black mt-2">Your Answer</label>
@@ -239,8 +239,8 @@ function Form() {
                 ))}
 
                 <div className="flex mt-8">
-                  <button
-                    type="button"
+                  <button 
+                    type="button" 
                     className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-md transition duration-200"
                     onClick={handleRegister}
                     disabled={securityQuestions.some(q => !q) || securityAnswers.some(a => !a) || loading}
