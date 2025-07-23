@@ -66,11 +66,11 @@ resource "aws_iam_role_policy" "post_feedback_lambda_policy" {
 
 #Create the DynamoDB table for storing feedback
 resource "aws_dynamodb_table" "feedback_table" {
-  name           = "dalscooter-feedback"
-  billing_mode   = "PAY_PER_REQUEST"
-  hash_key       = "email"
-  range_key      = "timestamp"
-  
+  name         = "dalscooter-feedback"
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "email"
+  range_key    = "timestamp"
+
   attribute {
     name = "email"
     type = "S"
@@ -98,22 +98,22 @@ data "archive_file" "post_feedback_zip" {
 
 # Post Feedback Lambda Function
 resource "aws_lambda_function" "post_feedback_lambda" {
-    function_name = "dalscooter-post-feedback-lambda"
-    role          = aws_iam_role.post_feedback_lambda_role.arn
-    handler       = "post_feedback.lambda_handler"
-    runtime       = "python3.9"
-    filename      = data.archive_file.post_feedback_zip.output_path
-    source_code_hash = data.archive_file.post_feedback_zip.output_base64sha256
-    timeout       = 30
-    environment {
-        variables = {
-            FEEDBACK_TABLE = aws_dynamodb_table.feedback_table.name
-        }
+  function_name    = "dalscooter-post-feedback-lambda"
+  role             = aws_iam_role.post_feedback_lambda_role.arn
+  handler          = "post_feedback.lambda_handler"
+  runtime          = "python3.9"
+  filename         = data.archive_file.post_feedback_zip.output_path
+  source_code_hash = data.archive_file.post_feedback_zip.output_base64sha256
+  timeout          = 30
+  environment {
+    variables = {
+      FEEDBACK_TABLE = aws_dynamodb_table.feedback_table.name
     }
-    tags = {
-        Name = "DalScooter Post Feedback Lambda"
-    }
-    depends_on = [aws_iam_role_policy.post_feedback_lambda_policy]
+  }
+  tags = {
+    Name = "DalScooter Post Feedback Lambda"
+  }
+  depends_on = [aws_iam_role_policy.post_feedback_lambda_policy]
 }
 
 # ================================
@@ -187,12 +187,12 @@ data "archive_file" "stream_processor_zip" {
 # Stream Processor Lambda Function
 resource "aws_lambda_function" "stream_processor_lambda" {
   function_name    = "dalscooter-feedback-stream-processor"
-  role            = aws_iam_role.stream_processor_lambda_role.arn
-  handler         = "feedback_stream_processor.lambda_handler"
-  runtime         = "python3.9"
-  filename        = data.archive_file.stream_processor_zip.output_path
+  role             = aws_iam_role.stream_processor_lambda_role.arn
+  handler          = "feedback_stream_processor.lambda_handler"
+  runtime          = "python3.9"
+  filename         = data.archive_file.stream_processor_zip.output_path
   source_code_hash = data.archive_file.stream_processor_zip.output_base64sha256
-  timeout         = 60
+  timeout          = 60
 
   environment {
     variables = {
@@ -213,11 +213,11 @@ resource "aws_lambda_event_source_mapping" "feedback_stream_mapping" {
   function_name     = aws_lambda_function.stream_processor_lambda.arn
   starting_position = "LATEST"
   batch_size        = 10
-  
+
   filter_criteria {
     filter {
       pattern = jsonencode({
-        eventName = ["INSERT"]  # Only trigger on new records
+        eventName = ["INSERT"] # Only trigger on new records
       })
     }
   }
@@ -306,12 +306,12 @@ data "archive_file" "analyse_feedback_zip" {
 # Analyse Feedback Lambda Function
 resource "aws_lambda_function" "analyse_feedback_lambda" {
   function_name    = "dalscooter-analyse-feedback"
-  role            = aws_iam_role.analyse_feedback_lambda_role.arn
-  handler         = "analyse_feedback.lambda_handler"
-  runtime         = "python3.9"
-  filename        = data.archive_file.analyse_feedback_zip.output_path
+  role             = aws_iam_role.analyse_feedback_lambda_role.arn
+  handler          = "analyse_feedback.lambda_handler"
+  runtime          = "python3.9"
+  filename         = data.archive_file.analyse_feedback_zip.output_path
   source_code_hash = data.archive_file.analyse_feedback_zip.output_base64sha256
-  timeout         = 60
+  timeout          = 60
 
   environment {
     variables = {
@@ -332,7 +332,7 @@ resource "aws_lambda_event_source_mapping" "analyse_feedback_sqs_mapping" {
   function_name    = aws_lambda_function.analyse_feedback_lambda.arn
   batch_size       = 5
   enabled          = true
-  
+
   # Optional: Filter to only process feedback analysis messages
   filter_criteria {
     filter {
