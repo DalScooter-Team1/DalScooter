@@ -62,7 +62,7 @@ function Form() {
         answer: securityAnswers[index]
       }));
 
-      const response = await fetch(`${import.meta.env.VITE_SERVER}/prod/register`, {
+      const response = await fetch(`${import.meta.env.VITE_SERVER}/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
