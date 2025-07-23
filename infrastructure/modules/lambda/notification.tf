@@ -23,8 +23,8 @@ resource "aws_iam_role_policy" "notification_lambda_policy" {
     Version = "2012-10-17"
     Statement = [
       {
-        Effect = "Allow"
-        Action = [
+        Effect   = "Allow"
+        Action   = [
           "logs:CreateLogGroup",
           "logs:CreateLogStream",
           "logs:PutLogEvents"
@@ -32,8 +32,8 @@ resource "aws_iam_role_policy" "notification_lambda_policy" {
         Resource = "arn:aws:logs:*:*:*"
       },
       {
-        Effect = "Allow"
-        Action = [
+        Effect   = "Allow"
+        Action   = [
           "ses:SendEmail",
           "ses:SendRawEmail"
         ]
@@ -63,7 +63,7 @@ resource "aws_lambda_function" "notification" {
   environment {
     variables = {
       SES_REGION       = "us-east-1"
-      SES_FROM_ADDRESS = "mh753143@dal.ca"
+      SES_FROM_ADDRESS = "example@dal.ca"
     }
   }
 }
