@@ -63,3 +63,16 @@
 #   description = "Tags for the DynamoDB table for logged-in user directory"
 #   type        = map(string)
 # }
+
+# S3 bucket for logged in user directory stream
+variable "s3_bucket_name" {
+  description = "Name of the S3 bucket to store CSV logs for logged in user directory stream"
+  type        = string
+  default = "dalscooter-logged-in-user-directory"
+}
+
+variable "s3_folder" {
+  description = "S3 folder for CSV logs (optional)"
+  type        = string
+  default     = "logged_in_user_directory/"
+}
