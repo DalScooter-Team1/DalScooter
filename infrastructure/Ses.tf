@@ -14,3 +14,5 @@ resource "aws_ses_email_identity" "emails" {
   email    = each.value
 }
 
+#testing comment
+
