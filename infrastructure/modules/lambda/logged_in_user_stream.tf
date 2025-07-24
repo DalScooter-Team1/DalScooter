@@ -52,6 +52,14 @@ resource "aws_iam_role_policy" "logged_in_user_stream_lambda_policy" {
         Resource = "arn:aws:logs:*:*:*"
       },
       {
+        Effect   = "Allow"
+        Action   = [
+          "cognito-idp:AdminGetUser",
+          "cognito-idp:AdminListGroupsForUser"
+        ]
+        Resource = var.cognito_user_pool_arn
+      },
+      {
         Effect = "Allow"
         Action = [
           "dynamodb:DescribeStream",
@@ -63,7 +71,10 @@ resource "aws_iam_role_policy" "logged_in_user_stream_lambda_policy" {
       },
       {
         Effect = "Allow"
-        Action = ["s3:PutObject"]
+        Action = ["s3:PutObject",
+          "s3:GetObject",
+          "s3:ListBucket"
+        ]
         Resource = [
           "arn:aws:s3:::${var.s3_bucket_name}",
           "arn:aws:s3:::${var.s3_bucket_name}/*"
@@ -95,6 +106,7 @@ resource "aws_lambda_function" "logged_in_user_stream" {
     variables = {
       S3_BUCKET = var.s3_bucket_name
       S3_FOLDER = var.s3_folder
+      COGNITO_USER_POOL_ID = var.cognito_user_pool_id
     }
   }
   depends_on = [aws_iam_role_policy.logged_in_user_stream_lambda_policy]

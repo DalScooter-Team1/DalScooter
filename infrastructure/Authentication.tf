@@ -119,14 +119,14 @@ resource "aws_dynamodb_table" "user_security_questions" {
 resource "aws_dynamodb_table" "logged_in_user_directory" {
   name           = "logged_in_user_directory"
   billing_mode   = "PAY_PER_REQUEST"  # On-demand pricing
-  hash_key       = "email"            # Partition key
+  hash_key       = "sub"            # Partition key
 
 
   stream_enabled   = true
   stream_view_type = "NEW_AND_OLD_IMAGES"
 
   attribute {
-    name = "email"
+    name = "sub"
     type = "S"  # String
   }
 
