@@ -50,7 +50,7 @@ def lambda_handler(event, context):
         if not decoded:
             return _response(401, {'error': 'Invalid JWT token'})
 
-        sub =  decoded.get("sub")  # fallback to user ID if email missing
+        sub =  decoded.get("sub") or decoded.get("email")  # fallback to user ID if email missing
         if not sub:
             return _response(400, {'error': 'Cognito Sub or user identifier not found in token'})
 
@@ -68,7 +68,7 @@ def lambda_handler(event, context):
         # Step 4: Save to DynamoDB
         table.put_item(Item=item)
 
-        return _response(200, {'message': 'Heartbeat recorded', 'email': email, 'last_seen': now_iso})
+        return _response(200, {'message': 'Heartbeat recorded', 'cognitoID': sub, 'last_seen': now_iso})
 
     except Exception as e:
         print("Error:", e)
