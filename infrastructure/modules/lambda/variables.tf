@@ -44,4 +44,3 @@ variable "signup_login_topic_arn" {
   description = "ARN of the signup/login SNS topic"
   type        = string
 }
-
