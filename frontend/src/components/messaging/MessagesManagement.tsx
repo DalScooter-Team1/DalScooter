@@ -9,6 +9,7 @@ const MessagesManagement: React.FC = () => {
     const [responseContent, setResponseContent] = useState('');
     const [responding, setResponding] = useState(false);
     const [responseError, setResponseError] = useState('');
+    const [activeTab, setActiveTab] = useState<'pending' | 'history'>('pending');
 
     useEffect(() => {
         fetchMessages();
@@ -20,25 +21,43 @@ const MessagesManagement: React.FC = () => {
 
         try {
             const response = await messagingService.getMessages();
-            if (response.success) {
+            console.log('Fetch messages response:', response); // Debug log
+
+            if (response.success && response.messages) {
                 // Sort messages by timestamp, newest first
                 const sortedMessages = response.messages.sort((a, b) => b.timestamp - a.timestamp);
                 setMessages(sortedMessages);
+                console.log('Messages updated:', sortedMessages.length); // Debug log
+            } else {
+                console.error('Failed to fetch messages - response not successful or no messages:', response);
+                setError('Failed to fetch messages - invalid response');
+                setMessages([]); // Clear messages if response is invalid
             }
         } catch (error: any) {
+            console.error('Error in fetchMessages:', error);
             setError(error.message || 'Failed to fetch messages');
+            setMessages([]); // Clear messages on error
         } finally {
             setLoading(false);
         }
     };
 
     const handleRespondClick = (message: Message) => {
-        if (message.messageType === 'concern' && message.status === 'pending') {
+        if (message.messageType === 'concern' && (message.status === 'pending' || message.status === 'assigned')) {
             setSelectedMessage(message);
             setResponseContent('');
             setResponseError('');
         }
     };
+
+    // Filter messages based on active tab
+    const filteredMessages = messages.filter(message => {
+        if (activeTab === 'pending') {
+            return message.messageType === 'concern' && (message.status === 'pending' || message.status === 'assigned');
+        } else {
+            return message.messageType === 'concern' && message.status === 'resolved';
+        }
+    });
 
     const handleCancelResponse = () => {
         setSelectedMessage(null);
@@ -94,6 +113,14 @@ const MessagesManagement: React.FC = () => {
             );
         }
 
+        if (message.status === 'assigned') {
+            return (
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                    Assigned
+                </span>
+            );
+        }
+
         return (
             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
                 Pending
@@ -129,7 +156,7 @@ const MessagesManagement: React.FC = () => {
                             </svg>
                         </div>
                         <div>
-                            <h2 className="text-xl font-semibold text-gray-900">Customer Messages</h2>
+                            <h2 className="text-xl font-semibold text-gray-900">Message Management</h2>
                             <p className="text-sm text-gray-600">Manage customer concerns and responses</p>
                         </div>
                     </div>
@@ -146,76 +173,130 @@ const MessagesManagement: React.FC = () => {
                 </div>
             </div>
 
-            {/* Error Display */}
-            {error && (
-                <div className="bg-red-50 border border-red-200 rounded-md p-4">
-                    <div className="flex">
-                        <div className="flex-shrink-0">
-                            <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                            </svg>
-                        </div>
-                        <div className="ml-3">
-                            <p className="text-sm text-red-800">{error}</p>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Messages List */}
+            {/* Tab Navigation */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-                {messages.length === 0 ? (
-                    <div className="p-12 text-center">
-                        <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
-                        </svg>
-                        <h3 className="mt-2 text-sm font-medium text-gray-900">No messages yet</h3>
-                        <p className="mt-1 text-sm text-gray-500">Customer concerns will appear here when submitted.</p>
-                    </div>
-                ) : (
-                    <div className="divide-y divide-gray-200">
-                        {messages.map((message) => (
-                            <div key={`${message.messageId}-${message.timestamp}`} className="p-6 hover:bg-gray-50">
-                                <div className="flex items-start justify-between">
-                                    <div className="flex-1">
-                                        <div className="flex items-center space-x-3 mb-2">
-                                            {getStatusBadge(message)}
-                                            <span className="text-sm text-gray-500">
-                                                {messagingService.getTimeAgo(message.timestamp)}
-                                            </span>
-                                            <span className="text-sm text-gray-500">
-                                                {messagingService.formatTimestamp(message.timestamp)}
-                                            </span>
-                                        </div>
-
-                                        <div className="flex items-center space-x-2 mb-3">
-                                            <span className="text-sm font-medium text-gray-900">
-                                                {message.userEmail || message.userId}
-                                            </span>
-                                            <span className="text-sm text-gray-500">•</span>
-                                            <span className="text-sm text-gray-500">
-                                                ID: {message.messageId.substring(0, 8)}...
-                                            </span>
-                                        </div>
-
-                                        <p className="text-gray-800 whitespace-pre-wrap">{message.content}</p>
-                                    </div>
-
-                                    <div className="ml-4">
-                                        {message.messageType === 'concern' && message.status === 'pending' && (
-                                            <button
-                                                onClick={() => handleRespondClick(message)}
-                                                className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-1 px-3 rounded-md transition duration-200"
-                                            >
-                                                Respond
-                                            </button>
-                                        )}
-                                    </div>
-                                </div>
+                <div className="border-b border-gray-200">
+                    <nav className="-mb-px flex space-x-8" aria-label="Tabs">
+                        <button
+                            onClick={() => setActiveTab('pending')}
+                            className={`py-4 px-6 border-b-2 font-medium text-sm transition-colors duration-200 ${activeTab === 'pending'
+                                ? 'border-blue-500 text-blue-600'
+                                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                                }`}
+                        >
+                            <div className="flex items-center space-x-2">
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                                </svg>
+                                <span>Customer's Messages</span>
                             </div>
-                        ))}
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('history')}
+                            className={`py-4 px-6 border-b-2 font-medium text-sm transition-colors duration-200 ${activeTab === 'history'
+                                ? 'border-blue-500 text-blue-600'
+                                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                                }`}
+                        >
+                            <div className="flex items-center space-x-2">
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                <span>History</span>
+                            </div>
+                        </button>
+                    </nav>
+                </div>
+
+                {/* Error Display */}
+                {error && (
+                    <div className="bg-red-50 border border-red-200 rounded-md p-4">
+                        <div className="flex">
+                            <div className="flex-shrink-0">
+                                <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                                </svg>
+                            </div>
+                            <div className="ml-3">
+                                <p className="text-sm text-red-800">{error}</p>
+                            </div>
+                        </div>
                     </div>
                 )}
+
+                {/* Messages List */}
+                <div className="p-6">
+                    {filteredMessages.length === 0 ? (
+                        <div className="text-center py-12">
+                            <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={activeTab === 'pending'
+                                    ? "M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                                    : "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                                } />
+                            </svg>
+                            <h3 className="mt-2 text-sm font-medium text-gray-900">
+                                {activeTab === 'pending' ? 'No pending messages' : 'No resolved messages yet'}
+                            </h3>
+                            <p className="mt-1 text-sm text-gray-500">
+                                {activeTab === 'pending'
+                                    ? 'New customer concerns will appear here when submitted.'
+                                    : 'Resolved customer concerns will appear here after you reply to them.'
+                                }
+                            </p>
+                        </div>
+                    ) : (
+                        <div className="space-y-4">
+                            {filteredMessages.map((message) => (
+                                <div key={`${message.messageId}-${message.timestamp}`} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                                    <div className="flex items-start justify-between">
+                                        <div className="flex-1">
+                                            <div className="flex items-center space-x-3 mb-2">
+                                                {getStatusBadge(message)}
+                                                <span className="text-sm text-gray-500">
+                                                    {messagingService.getTimeAgo(message.timestamp)}
+                                                </span>
+                                                <span className="text-sm text-gray-500">
+                                                    {messagingService.formatTimestamp(message.timestamp)}
+                                                </span>
+                                            </div>
+
+                                            <div className="flex items-center space-x-2 mb-3">
+                                                <span className="text-sm font-medium text-gray-900">
+                                                    {message.userEmail || message.userId}
+                                                </span>
+                                                <span className="text-sm text-gray-500">•</span>
+                                                <span className="text-sm text-gray-500">
+                                                    ID: {message.messageId.substring(0, 8)}...
+                                                </span>
+                                            </div>
+
+                                            <p className="text-gray-800 whitespace-pre-wrap">{message.content}</p>
+                                        </div>
+
+                                        <div className="ml-4">
+                                            {activeTab === 'pending' && message.messageType === 'concern' && (message.status === 'pending' || message.status === 'assigned') && (
+                                                <button
+                                                    onClick={() => handleRespondClick(message)}
+                                                    className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-2 px-4 rounded-md transition duration-200 flex items-center space-x-2"
+                                                >
+                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                                                    </svg>
+                                                    <span>Reply</span>
+                                                </button>
+                                            )}
+                                            {activeTab === 'history' && (
+                                                <div className="text-sm text-gray-500">
+                                                    Resolved
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
             </div>
 
             {/* Response Modal */}

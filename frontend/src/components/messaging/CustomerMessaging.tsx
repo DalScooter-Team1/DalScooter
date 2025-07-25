@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import SubmitConcern from './SubmitConcern';
-import { messagingService, type Message } from '../../Services/messagingService';
+import { messagingService, type Message, type Conversation } from '../../Services/messagingService';
 
 const CustomerMessaging: React.FC = () => {
     const [activeTab, setActiveTab] = useState<'submit' | 'history'>('submit');
-    const [messages, setMessages] = useState<Message[]>([]);
+    const [conversations, setConversations] = useState<Conversation[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
 
@@ -22,12 +22,14 @@ const CustomerMessaging: React.FC = () => {
         try {
             const response = await messagingService.getCustomerMessages();
             if (response.success) {
-                setMessages(response.messages);
+                setConversations(response.conversations || []);
             } else {
                 setError('Failed to fetch messages');
+                setConversations([]);
             }
         } catch (error: any) {
             setError(error.message || 'Failed to fetch messages');
+            setConversations([]);
         } finally {
             setLoading(false);
         }
@@ -140,7 +142,7 @@ const CustomerMessaging: React.FC = () => {
                             {/* Messages List */}
                             {!loading && !error && (
                                 <>
-                                    {messages.length === 0 ? (
+                                    {(conversations || []).length === 0 ? (
                                         <div className="text-center py-12">
                                             <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
@@ -152,29 +154,46 @@ const CustomerMessaging: React.FC = () => {
                                         </div>
                                     ) : (
                                         <div className="space-y-4">
-                                            {messages.map((message) => (
-                                                <div key={`${message.messageId}-${message.timestamp}`} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                                                    <div className="flex items-start justify-between mb-3">
-                                                        <div className="flex items-center space-x-3">
-                                                            {getStatusBadge(message)}
-                                                            <span className="text-sm text-gray-500">
-                                                                {messagingService.getTimeAgo(message.timestamp)}
+                                            {(conversations || []).map((conversation) => (
+                                                <div key={conversation.conversationId} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                                                    {/* Original Concern */}
+                                                    <div className="mb-4">
+                                                        <div className="flex items-start justify-between mb-3">
+                                                            <div className="flex items-center space-x-3">
+                                                                {getStatusBadge(conversation.concern)}
+                                                                <span className="text-sm text-gray-500">
+                                                                    {messagingService.getTimeAgo(conversation.concern.timestamp)}
+                                                                </span>
+                                                            </div>
+                                                            <span className="text-xs text-gray-400">
+                                                                {messagingService.formatTimestamp(conversation.concern.timestamp)}
                                                             </span>
                                                         </div>
-                                                        <span className="text-xs text-gray-400">
-                                                            {messagingService.formatTimestamp(message.timestamp)}
-                                                        </span>
+                                                        <div className="bg-white rounded-lg p-3 border border-gray-100">
+                                                            <div className="flex items-center justify-between mb-2">
+                                                                <h4 className="text-sm font-medium text-gray-900">Your Concern</h4>
+                                                            </div>
+                                                            <p className="text-gray-700 text-sm leading-relaxed">{conversation.concern.content}</p>
+                                                        </div>
                                                     </div>
 
-                                                    <div className="mb-2">
-                                                        <span className="text-sm font-medium text-gray-700">
-                                                            {message.messageType === 'concern' ? 'Your Concern:' : 'Response from Support:'}
-                                                        </span>
-                                                    </div>
-
-                                                    <p className="text-gray-800 whitespace-pre-wrap text-sm leading-relaxed">
-                                                        {message.content}
-                                                    </p>
+                                                    {/* Responses */}
+                                                    {conversation.responses && conversation.responses.length > 0 && (
+                                                        <div className="space-y-3">
+                                                            <h5 className="text-sm font-medium text-gray-600">Responses:</h5>
+                                                            {conversation.responses.map((response) => (
+                                                                <div key={`${response.messageId}-${response.timestamp}`} className="bg-blue-50 rounded-lg p-3 border border-blue-100">
+                                                                    <div className="flex items-center justify-between mb-2">
+                                                                        <span className="text-xs text-blue-600 font-medium">Franchise Response</span>
+                                                                        <span className="text-xs text-gray-500">
+                                                                            {messagingService.formatTimestamp(response.timestamp)}
+                                                                        </span>
+                                                                    </div>
+                                                                    <p className="text-gray-700 text-sm leading-relaxed">{response.content}</p>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    )}
                                                 </div>
                                             ))}
                                         </div>

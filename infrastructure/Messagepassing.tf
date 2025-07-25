@@ -79,6 +79,33 @@ resource "aws_iam_role_policy" "message_lambda_policy" {
           aws_dynamodb_table.messages.arn,
           "${aws_dynamodb_table.messages.arn}/index/franchiseId-index"
         ]
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "sqs:SendMessage",
+          "sqs:GetQueueAttributes"
+        ]
+        Resource = aws_sqs_queue.concerns_queue.arn
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "sqs:ReceiveMessage",
+          "sqs:DeleteMessage",
+          "sqs:GetQueueAttributes"
+        ]
+        Resource = aws_sqs_queue.concerns_queue.arn
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "cognito-idp:ListUsers",
+          "cognito-idp:AdminGetUser",
+          "cognito-idp:ListUsersInGroup",
+          "cognito-idp:AdminListGroupsForUser"
+        ]
+        Resource = "*"
       }
     ]
   })
@@ -103,6 +130,7 @@ resource "aws_lambda_function" "submit_concern" {
   environment {
     variables = {
       MESSAGES_TABLE_NAME = aws_dynamodb_table.messages.name
+      CONCERNS_QUEUE_URL  = aws_sqs_queue.concerns_queue.id
     }
   }
 }
@@ -240,6 +268,44 @@ resource "aws_lambda_permission" "api_gateway_invoke_get_customer_messages" {
   function_name = aws_lambda_function.get_customer_messages.function_name
   principal     = "apigateway.amazonaws.com"
   source_arn    = "${module.apis.api_gateway_execution_arn}/*/GET/customer-messages"
+}
+
+# ================================
+# SQS INTEGRATION FOR CONCERNS
+# ================================
+
+# Process Concern Lambda for SQS processing
+data "archive_file" "process_concern_zip" {
+  type        = "zip"
+  source_file = "${path.module}/../backend/MessagePassing/process_concern.py"
+  output_path = "${path.module}/packages/process_concern.zip"
+}
+
+resource "aws_lambda_function" "process_concern" {
+  filename         = data.archive_file.process_concern_zip.output_path
+  function_name    = "dalscooter-process-concern"
+  role             = aws_iam_role.message_lambda_role.arn
+  handler          = "process_concern.lambda_handler"
+  runtime          = "python3.9"
+  timeout          = 60
+  source_code_hash = data.archive_file.process_concern_zip.output_base64sha256
+
+  environment {
+    variables = {
+      DYNAMODB_TABLE       = aws_dynamodb_table.messages.name
+      COGNITO_USER_POOL_ID = aws_cognito_user_pool.pool.id
+    }
+  }
+}
+
+# SQS trigger for the process_concern Lambda
+resource "aws_lambda_event_source_mapping" "process_concern_sqs_trigger" {
+  event_source_arn                   = aws_sqs_queue.concerns_queue.arn
+  function_name                      = aws_lambda_function.process_concern.arn
+  batch_size                         = 10
+  maximum_batching_window_in_seconds = 5
+
+  function_response_types = ["ReportBatchItemFailures"]
 }
 
 

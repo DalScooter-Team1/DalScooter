@@ -43,9 +43,18 @@ export interface Message {
     franchiseId?: string;
     content: string;
     messageType: 'concern' | 'response';
-    status: 'pending' | 'resolved';
+    status: 'pending' | 'assigned' | 'resolved';
     userEmail?: string;
     createdAt?: string;
+}
+
+export interface Conversation {
+    conversationId: string;
+    concern: Message;
+    responses: Message[];
+    latestActivity: number;
+    hasResponse: boolean;
+    status: string;
 }
 
 export interface SubmitConcernRequest {
@@ -63,6 +72,12 @@ export interface SubmitConcernResponse {
 export interface GetMessagesResponse {
     success: boolean;
     messages: Message[];
+    totalCount: number;
+}
+
+export interface GetCustomerMessagesResponse {
+    success: boolean;
+    conversations: Conversation[];
     totalCount: number;
 }
 
@@ -95,7 +110,17 @@ export const messagingService = {
     getMessages: async (): Promise<GetMessagesResponse> => {
         try {
             const response = await messagingAPI.get('/messages');
-            return response.data;
+            const data = response.data;
+            console.log('Backend response for getMessages:', data); // Debug log
+
+            // Backend now consistently returns 'messages' field
+            const messages = data.messages || [];
+
+            return {
+                success: data.success || false,
+                messages: messages,
+                totalCount: data.totalCount || messages.length
+            };
         } catch (error: any) {
             console.error('Error fetching messages:', error);
             throw new Error(error.response?.data?.error || 'Failed to fetch messages');
@@ -103,7 +128,7 @@ export const messagingService = {
     },
 
     // Get customer's own messages and responses (for customers)
-    getCustomerMessages: async (): Promise<GetMessagesResponse> => {
+    getCustomerMessages: async (): Promise<GetCustomerMessagesResponse> => {
         try {
             const response = await messagingAPI.get('/customer-messages');
             return response.data;

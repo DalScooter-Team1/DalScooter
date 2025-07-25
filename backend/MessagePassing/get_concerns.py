@@ -62,13 +62,30 @@ def lambda_handler(event, context):
 
         messages_table = dynamodb.Table(MESSAGES_TABLE)
         
-        # Scan for open concerns (those without franchiseId) and concerns assigned to this franchise
-        response = messages_table.scan(
-            FilterExpression='attribute_not_exists(franchiseId) OR franchiseId = :fid',
-            ExpressionAttributeValues={':fid': franchise_id}
-        )
-
-        messages = response.get('Items', [])
+        # Get all messages (concerns and responses)
+        response = messages_table.scan()
+        all_messages = response.get('Items', [])
+        
+        # Filter for concerns only, and check franchise assignment
+        concerns = []
+        for message in all_messages:
+            if message.get('messageType') == 'concern':
+                # Include if no franchise assignment OR assigned to this franchise
+                assigned_franchise = message.get('assignedTo')
+                if not assigned_franchise or assigned_franchise == franchise_id:
+                    # Add response count for this concern
+                    responses = [m for m in all_messages 
+                               if m.get('messageType') == 'response' 
+                               and m.get('originalMessageId') == message['messageId']]
+                    
+                    message['responseCount'] = len(responses)
+                    message['hasResponse'] = len(responses) > 0
+                    message['lastResponseAt'] = max([r['timestamp'] for r in responses]) if responses else None
+                    concerns.append(message)
+        
+        # Sort by timestamp, newest first
+        sorted_concerns = sorted(concerns, key=lambda x: x.get('timestamp', 0), reverse=True)
+        
         return {
             'statusCode': 200,
             'headers': {
@@ -78,8 +95,9 @@ def lambda_handler(event, context):
             },
             'body': json.dumps({
                 'success': True,
-                'messages': messages,
-                'totalCount': len(messages)
+                'messages': sorted_concerns,
+                'totalCount': len(sorted_concerns),
+                'franchiseId': franchise_id
             }, cls=DecimalEncoder)
         }
 
