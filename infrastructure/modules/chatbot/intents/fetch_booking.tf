@@ -47,6 +47,8 @@ resource "aws_lexv2models_intent" "fetch_booking" {
       }
     }
   }
+
+
 }
 
 resource "aws_lexv2models_slot" "reference_number" {
@@ -136,6 +138,9 @@ resource "aws_lexv2models_slot" "reference_number" {
       }
     }
   }
+  #To do: add other case responses
+  #Todo: Handle the other values than the ABC123 as being accepted 
+  #To do: Refine the slot types
 }
 
 resource "aws_lexv2models_slot_type" "Alphanumeric" {
