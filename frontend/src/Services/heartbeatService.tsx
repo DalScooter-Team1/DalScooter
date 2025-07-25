@@ -74,8 +74,7 @@ class HeartbeatService {
     this.currentUserType = userType;
     this.isPaused = false;
 
-    // Send initial heartbeat
-    this.sendHeartbeat(userId, userType);
+    // Do not send initial heartbeat immediately; let the interval handle it
 
     // Set up interval for periodic heartbeats
     this.intervalId = setInterval(() => {
