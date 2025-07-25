@@ -77,3 +77,34 @@ variable "concerns_queue_url" {
   description = "URL of the concerns SQS queue"
   type        = string
 }
+
+# Bike Inventory Variables
+variable "bikes_table_name" {
+  description = "Name of the bikes DynamoDB table"
+  type        = string
+}
+
+variable "bikes_table_arn" {
+  description = "ARN of the bikes DynamoDB table"
+  type        = string
+}
+
+variable "discount_codes_table_name" {
+  description = "Name of the discount codes DynamoDB table"
+  type        = string
+}
+
+variable "discount_codes_table_arn" {
+  description = "ARN of the discount codes DynamoDB table"
+  type        = string
+}
+
+variable "user_discount_usage_table_name" {
+  description = "Name of the user discount usage DynamoDB table"
+  type        = string
+}
+
+variable "user_discount_usage_table_arn" {
+  description = "ARN of the user discount usage DynamoDB table"
+  type        = string
+}

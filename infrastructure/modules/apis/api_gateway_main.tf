@@ -42,7 +42,32 @@ resource "aws_api_gateway_deployment" "registration_deployment" {
     aws_api_gateway_method.customer_messages_get,
     aws_api_gateway_integration.customer_messages_integration,
     aws_api_gateway_method.customer_messages_options,
-    aws_api_gateway_integration.customer_messages_options_integration
+    aws_api_gateway_integration.customer_messages_options_integration,
+    # Bike inventory endpoints
+    aws_api_gateway_method.bikes_get,
+    aws_api_gateway_integration.bikes_get_integration,
+    aws_api_gateway_method.bikes_post,
+    aws_api_gateway_integration.bikes_post_integration,
+    aws_api_gateway_method.bike_put,
+    aws_api_gateway_integration.bike_put_integration,
+    aws_api_gateway_method.bike_delete,
+    aws_api_gateway_integration.bike_delete_integration,
+    aws_api_gateway_method.bike_availability_get,
+    aws_api_gateway_integration.bike_availability_integration,
+    aws_api_gateway_method.discount_codes_get,
+    aws_api_gateway_integration.discount_codes_get_integration,
+    aws_api_gateway_method.discount_codes_post,
+    aws_api_gateway_integration.discount_codes_post_integration,
+    aws_api_gateway_method.discount_code_put,
+    aws_api_gateway_integration.discount_code_put_integration,
+    aws_api_gateway_method.discount_code_delete,
+    aws_api_gateway_integration.discount_code_delete_integration,
+    aws_api_gateway_method.bikes_options,
+    aws_api_gateway_integration.bikes_options_integration,
+    aws_api_gateway_method.bike_availability_options,
+    aws_api_gateway_integration.bike_availability_options_integration,
+    aws_api_gateway_method.discount_codes_options,
+    aws_api_gateway_integration.discount_codes_options_integration
   ]
 
   rest_api_id = aws_api_gateway_rest_api.dalscooter_apis.id
