@@ -91,6 +91,15 @@ module "apis" {
   post_feedback_lambda_function_name = module.lambda.post_feedback_lambda_function_name
 }
 
+
+# ================================
+# CHATBOT MODULE
+# ================================
+module "chatbot" {
+  
+source = "./modules/chatbot"
+}
+
 # ================================
 # API GATEWAY OUTPUTS
 # ================================
