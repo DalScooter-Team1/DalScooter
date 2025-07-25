@@ -62,9 +62,7 @@ resource "aws_lexv2models_slot" "reference_number" {
     slot_constraint = "Required"
     prompt_specification {
       allow_interrupt            = true
-      #If user does not provide the booking reference number, 
-      #it will ask for it 3 times
-      max_retries                = 3
+      max_retries                = 1
       message_selection_strategy = "Random"
 
       message_group {
@@ -75,9 +73,8 @@ resource "aws_lexv2models_slot" "reference_number" {
         }
       }
 
-# Below one is the settings from the terraform documentation please keep this is as it is so that the terraform 
-# does not throw any error.
-
+# Keep the below block as it is, 
+# It is added from the Terraform documentation to handle the error thrown by the terraform.
       prompt_attempts_specification {
         allow_interrupt = true
         map_block_key   = "Initial"
@@ -137,11 +134,8 @@ resource "aws_lexv2models_slot" "reference_number" {
           start_timeout_ms = 30000
         }
       }
-
     }
-  
-}
-
+  }
 }
 
 resource "aws_lexv2models_slot_type" "Alphanumeric" {
