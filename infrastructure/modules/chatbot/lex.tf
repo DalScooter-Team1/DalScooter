@@ -12,6 +12,7 @@ resource "aws_lexv2models_bot" "dalscooter_chatbot" {
     Name    = "DALScooter Chatbot"
     Project = "DALScooter"
   }
+  
    
 }
 
