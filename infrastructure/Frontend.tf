@@ -83,7 +83,7 @@ variable "github_access_token" {
   description = "GitHub Access Token for Amplify"
   type        = string
   sensitive   = true
-  default     = "Your_Github_Access_Token" # Replace with your actual token
+  default     = "Your_GitHub_Access_Token" # Replace with your actual token
 }
 
 # Output the Amplify app URL
