@@ -23,6 +23,16 @@ module "lambda" {
   # SQS references (for feedback processing)
   feedback_queue_url = aws_sqs_queue.feedback_queue.url
   feedback_queue_arn = aws_sqs_queue.feedback_queue.arn
+
+  # SQS references (for concerns processing)
+  concerns_queue_url = aws_sqs_queue.concerns_queue.id
+  concerns_queue_arn = aws_sqs_queue.concerns_queue.arn
+
+  # Messages table references (for concerns processing)
+  dynamodb_table_name = aws_dynamodb_table.messages.name
+  dynamodb_table_arn  = aws_dynamodb_table.messages.arn
+  user_pool_id        = aws_cognito_user_pool.pool.id
+  user_pool_arn       = aws_cognito_user_pool.pool.arn
 }
 
 # ================================

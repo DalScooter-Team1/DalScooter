@@ -15,14 +15,14 @@ const LeftBar: React.FC<LeftBarProps> = ({ activeSection, onSectionChange }) => 
   const handleLogout = () => {
     // Stop heartbeat service when logging out
     heartbeatService.stopHeartbeat();
-    
+
     // Clear all authentication tokens from localStorage
     localStorage.removeItem('accessToken');
     localStorage.removeItem('idToken');
     localStorage.removeItem('refreshToken');
     localStorage.removeItem('userRoles');
     localStorage.removeItem('decodedToken');
-    
+
     // Redirect to login page
     navigate('/login');
   };
@@ -35,11 +35,11 @@ const LeftBar: React.FC<LeftBarProps> = ({ activeSection, onSectionChange }) => 
         const decodedToken = JSON.parse(decodedTokenString);
         const firstName = decodedToken.given_name || 'Admin';
         const lastName = decodedToken.family_name || 'User';
-        
+
         // Extract first letter of each name
         const firstInitial = firstName.charAt(0).toUpperCase();
         const lastInitial = lastName.charAt(0).toUpperCase();
-        
+
         return `${firstInitial}${lastInitial}`;
       } catch (error) {
         console.error('Error parsing decoded token:', error);
@@ -93,6 +93,15 @@ const LeftBar: React.FC<LeftBarProps> = ({ activeSection, onSectionChange }) => 
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+        </svg>
+      )
+    },
+    {
+      id: 'messages',
+      name: 'Messages',
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
         </svg>
       )
     },
@@ -172,11 +181,10 @@ const LeftBar: React.FC<LeftBarProps> = ({ activeSection, onSectionChange }) => 
             <button
               key={item.id}
               onClick={() => onSectionChange(item.id)}
-              className={`w-full flex items-center px-3 py-3 rounded-lg transition-all duration-200 group ${
-                activeSection === item.id
+              className={`w-full flex items-center px-3 py-3 rounded-lg transition-all duration-200 group ${activeSection === item.id
                   ? 'bg-blue-600 text-white shadow-lg'
                   : 'text-gray-300 hover:bg-gray-800 hover:text-white'
-              } ${isCollapsed ? 'justify-center' : 'space-x-3'}`}
+                } ${isCollapsed ? 'justify-center' : 'space-x-3'}`}
               title={isCollapsed ? item.name : undefined}
             >
               <div className={`${activeSection === item.id ? 'text-white' : 'text-gray-400 group-hover:text-white'} transition-colors`}>
@@ -205,7 +213,7 @@ const LeftBar: React.FC<LeftBarProps> = ({ activeSection, onSectionChange }) => 
                 <p className="text-sm font-medium text-white truncate">{userInfo.firstName} {userInfo.lastName}</p>
                 <p className="text-xs text-gray-400 truncate">{userInfo.email}</p>
               </div>
-              <button 
+              <button
                 onClick={handleLogout}
                 className="text-gray-400 hover:text-white transition-colors"
                 title="Logout"
@@ -222,7 +230,7 @@ const LeftBar: React.FC<LeftBarProps> = ({ activeSection, onSectionChange }) => 
       {/* Collapsed Footer - Logout Button */}
       {isCollapsed && (
         <div className="p-4 border-t border-gray-700">
-          <button 
+          <button
             onClick={handleLogout}
             className="w-full p-3 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800 transition-all duration-200"
             title="Logout"

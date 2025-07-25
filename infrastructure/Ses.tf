@@ -2,8 +2,8 @@ variable "verified_emails" {
   description = "List of email addresses to verify in SES (you’ll get a verification email for each)"
   type        = list(string)
   default = [
-    "mahekkamani2001@gmail.com",
-    "mh753143@dal.ca"
+    "example@gmail.com",
+    "example@dal.ca"
     #Remove above email and add here your emails that you want to get emails to from SES service
     #add emails as a list/array of string
   ]
