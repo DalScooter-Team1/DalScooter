@@ -59,10 +59,15 @@ def lambda_handler(event, context):
     import logging
     logger = logging.getLogger()
     logger.setLevel(logging.INFO)
+
     logger.info('Lambda function started.')
+
     s3 = boto3.client('s3')
+
     records = event.get('Records', [])
-    logger.info(f'Received {len(records)} records.')
+
+    logger.info(f'Received {(records)}')
+
     bucket = os.environ['S3_BUCKET']
     folder = os.environ.get('S3_FOLDER', 'logged_in_user_directory/')
     logger.info(f'Using S3 bucket: {bucket}, folder: {folder}')
@@ -77,14 +82,14 @@ def lambda_handler(event, context):
         if new_image:
             logger.info(f'Record {idx}: Found NewImage with keys: {list(new_image.keys())}')
             headers.update(new_image.keys())
-            email = new_image.get('email', {}).get('S')
-            if email:
-                user_details = get_user_details(email)
+            sub = new_image.get('sub', {}).get('S')
+            if sub:
+                user_details = get_user_details(sub)
                 user_details_map[idx] = user_details
                 # Add user details fields to headers
                 headers.add('family_name')
                 headers.add('given_name')
-                headers.add('user_email')
+             
         else:
             logger.info(f'Record {idx}: No NewImage found.')
     headers = sorted(headers)
@@ -101,13 +106,25 @@ def lambda_handler(event, context):
                     val = user_details_map.get(idx, {}).get('lastName', '')
                 elif h == 'given_name':
                     val = user_details_map.get(idx, {}).get('firstName', '')
-                elif h == 'user_email':
-                    val = user_details_map.get(idx, {}).get('email', '')
                 else:
                     val = new_image.get(h, {}).get('S') or new_image.get(h, {}).get('N') or ''
                 row.append(val)
-            csv_rows.append(row)
-            logger.info(f'Record {idx}: Row prepared for CSV: {row}')
+            # Check if sub already exists in csv_rows, update if found, else append
+            sub_value = new_image.get('sub', {}).get('S')
+            updated = False
+            for i, existing_row in enumerate(csv_rows):
+                try:
+                    sub_idx = headers.index('sub')
+                except ValueError:
+                    sub_idx = -1
+                if sub_idx != -1 and existing_row[sub_idx] == sub_value:
+                    csv_rows[i] = row  # Update existing
+                    updated = True
+                    logger.info(f'Record {idx}: Updated existing row for sub: {sub_value}')
+                    break
+            if not updated:
+                csv_rows.append(row)
+                logger.info(f'Record {idx}: Added new row for sub: {sub_value}')
         else:
             logger.info(f'Record {idx}: Skipped, no NewImage.')
 
@@ -127,7 +144,8 @@ def lambda_handler(event, context):
     key = f"{folder}logged_in_users.csv"
     logger.info(f'S3 object key for CSV: {key}')
 
-    # Try to get the existing CSV from S3
+
+    # Try to get the existing CSV from S3 and deduplicate by 'sub'
     try:
         existing_obj = s3.get_object(Bucket=bucket, Key=key)
         existing_data = existing_obj['Body'].read().decode('utf-8')
@@ -135,14 +153,33 @@ def lambda_handler(event, context):
         reader = csv.reader(existing_lines)
         existing_rows = list(reader)
         logger.info(f'Existing CSV found with {len(existing_rows)-1 if existing_rows else 0} rows.')
-        # If headers match, append only new rows
-        if existing_rows and existing_rows[0] == headers:
-            all_rows = existing_rows + csv_rows
-            logger.info('Headers match. Appending new rows to existing CSV.')
+        # Build a dict of sub -> row for existing rows (skip header)
+        sub_idx = None
+        if existing_rows:
+            try:
+                sub_idx = existing_rows[0].index('sub')
+            except ValueError:
+                sub_idx = None
+        existing_map = {}
+        if sub_idx is not None:
+            for row in existing_rows[1:]:
+                if len(row) > sub_idx:
+                    existing_map[row[sub_idx]] = row
+        # Add/update with new rows
+        try:
+            new_sub_idx = headers.index('sub')
+        except ValueError:
+            new_sub_idx = None
+        if new_sub_idx is not None:
+            for row in csv_rows:
+                if len(row) > new_sub_idx:
+                    existing_map[row[new_sub_idx]] = row
+            # Compose all rows: header + deduped rows
+            all_rows = [headers] + list(existing_map.values())
+            logger.info('Deduplicated rows by sub. Writing updated CSV.')
         else:
-            # If headers changed, rewrite the file with new headers and all rows
             all_rows = [headers] + csv_rows
-            logger.info('Headers changed or missing. Rewriting CSV with new headers.')
+            logger.info('No sub column found. Writing new rows only.')
     except s3.exceptions.NoSuchKey:
         # File does not exist, create new
         all_rows = [headers] + csv_rows
@@ -156,7 +193,7 @@ def lambda_handler(event, context):
     writer = csv.writer(output)
     writer.writerows(all_rows)
     s3.put_object(Bucket=bucket, Key=key, Body=output.getvalue().encode('utf-8'))
-    logger.info(f"Appended {len(csv_rows)} records to {key}")
+    logger.info(f"Wrote {len(all_rows)-1} records to {key}")
 
     # User details already fetched and included in CSV rows above
 
