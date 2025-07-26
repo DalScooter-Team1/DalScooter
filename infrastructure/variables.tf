@@ -11,7 +11,7 @@
 # variable "explicit_auth_flows" {
 #   description = "List of explicit auth flows for the Cognito User Pool Client"
 #   type        = list(string)
-  
+
 # }
 
 # variable "customer_group_name" {

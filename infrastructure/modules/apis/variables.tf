@@ -153,3 +153,49 @@ variable "post_feedback_lambda_function_name" {
   description = "Function name of the post feedback Lambda"
   type        = string
 }
+
+# Bike Inventory Lambda Variables
+variable "bike_management_lambda_arn" {
+  description = "ARN of the bike management Lambda function"
+  type        = string
+}
+
+variable "bike_management_lambda_invoke_arn" {
+  description = "Invoke ARN of the bike management Lambda function"
+  type        = string
+}
+
+variable "bike_management_lambda_function_name" {
+  description = "Name of the bike management Lambda function"
+  type        = string
+}
+
+variable "bike_availability_lambda_arn" {
+  description = "ARN of the bike availability Lambda function"
+  type        = string
+}
+
+variable "bike_availability_lambda_invoke_arn" {
+  description = "Invoke ARN of the bike availability Lambda function"
+  type        = string
+}
+
+variable "bike_availability_lambda_function_name" {
+  description = "Name of the bike availability Lambda function"
+  type        = string
+}
+
+variable "discount_management_lambda_arn" {
+  description = "ARN of the discount management Lambda function"
+  type        = string
+}
+
+variable "discount_management_lambda_invoke_arn" {
+  description = "Invoke ARN of the discount management Lambda function"
+  type        = string
+}
+
+variable "discount_management_lambda_function_name" {
+  description = "Name of the discount management Lambda function"
+  type        = string
+}

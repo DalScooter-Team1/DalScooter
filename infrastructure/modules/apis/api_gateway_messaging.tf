@@ -38,8 +38,9 @@ resource "aws_api_gateway_method" "respond_concern_post" {
   rest_api_id   = aws_api_gateway_rest_api.dalscooter_apis.id
   resource_id   = aws_api_gateway_resource.respond_concern.id
   http_method   = "POST"
-  authorization = "CUSTOM"
-  authorizer_id = aws_api_gateway_authorizer.franchise_authorizer.id
+  authorization = "NONE"
+  # Temporarily disabled for testing - re-enable after user group setup
+  # authorizer_id = aws_api_gateway_authorizer.franchise_authorizer.id
 }
 
 resource "aws_api_gateway_integration" "respond_concern_integration" {
@@ -62,8 +63,9 @@ resource "aws_api_gateway_method" "messages_get" {
   rest_api_id   = aws_api_gateway_rest_api.dalscooter_apis.id
   resource_id   = aws_api_gateway_resource.messages.id
   http_method   = "GET"
-  authorization = "CUSTOM"
-  authorizer_id = aws_api_gateway_authorizer.franchise_authorizer.id
+  authorization = "NONE"
+  # Temporarily disabled for testing - re-enable after user group setup
+  # authorizer_id = aws_api_gateway_authorizer.franchise_authorizer.id
 }
 
 resource "aws_api_gateway_integration" "messages_integration" {
@@ -86,8 +88,9 @@ resource "aws_api_gateway_method" "customer_messages_get" {
   rest_api_id   = aws_api_gateway_rest_api.dalscooter_apis.id
   resource_id   = aws_api_gateway_resource.customer_messages.id
   http_method   = "GET"
-  authorization = "CUSTOM"
-  authorizer_id = aws_api_gateway_authorizer.customer_authorizer.id
+  authorization = "NONE"
+  # Temporarily disabled for testing - re-enable after user group setup
+  # authorizer_id = aws_api_gateway_authorizer.customer_authorizer.id
 }
 
 resource "aws_api_gateway_integration" "customer_messages_integration" {

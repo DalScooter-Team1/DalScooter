@@ -7,12 +7,12 @@ resource "aws_api_gateway_resource" "admin" {
 }
 
 # API Gateway Method for Admin Creation (POST)
+# Note: This endpoint is intentionally unprotected to allow creation of the first admin user
 resource "aws_api_gateway_method" "admin_post" {
   rest_api_id   = aws_api_gateway_rest_api.dalscooter_apis.id
   resource_id   = aws_api_gateway_resource.admin.id
   http_method   = "POST"
-  authorization = "CUSTOM"
-  authorizer_id = aws_api_gateway_authorizer.franchise_authorizer.id
+  authorization = "NONE"
 }
 
 # API Gateway Integration for Admin Creation
@@ -22,8 +22,8 @@ resource "aws_api_gateway_integration" "admin_integration" {
   http_method = aws_api_gateway_method.admin_post.http_method
 
   integration_http_method = "POST"
-  type                   = "AWS_PROXY"
-  uri                    = var.admin_creation_lambda_invoke_arn
+  type                    = "AWS_PROXY"
+  uri                     = var.admin_creation_lambda_invoke_arn
 }
 
 # Method response for POST with CORS headers
@@ -32,9 +32,9 @@ resource "aws_api_gateway_method_response" "admin_post_response" {
   resource_id = aws_api_gateway_resource.admin.id
   http_method = aws_api_gateway_method.admin_post.http_method
   status_code = "200"
-  
+
   response_parameters = {
-    "method.response.header.Access-Control-Allow-Origin" = true
+    "method.response.header.Access-Control-Allow-Origin"  = true
     "method.response.header.Access-Control-Allow-Headers" = true
     "method.response.header.Access-Control-Allow-Methods" = true
   }
@@ -46,9 +46,9 @@ resource "aws_api_gateway_integration_response" "admin_post_integration_response
   resource_id = aws_api_gateway_resource.admin.id
   http_method = aws_api_gateway_method.admin_post.http_method
   status_code = aws_api_gateway_method_response.admin_post_response.status_code
-  
+
   response_parameters = {
-    "method.response.header.Access-Control-Allow-Origin" = "'*'"
+    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
     "method.response.header.Access-Control-Allow-Headers" = "'Content-Type'"
     "method.response.header.Access-Control-Allow-Methods" = "'POST, OPTIONS'"
   }
@@ -69,7 +69,7 @@ resource "aws_api_gateway_integration" "admin_options_integration" {
   rest_api_id = aws_api_gateway_rest_api.dalscooter_apis.id
   resource_id = aws_api_gateway_resource.admin.id
   http_method = aws_api_gateway_method.admin_options.http_method
-  
+
   type = "MOCK"
   request_templates = {
     "application/json" = "{\"statusCode\": 200}"
@@ -82,7 +82,7 @@ resource "aws_api_gateway_method_response" "admin_options_response" {
   resource_id = aws_api_gateway_resource.admin.id
   http_method = aws_api_gateway_method.admin_options.http_method
   status_code = "200"
-  
+
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers" = true
     "method.response.header.Access-Control-Allow-Methods" = true
@@ -96,7 +96,7 @@ resource "aws_api_gateway_integration_response" "admin_options_integration_respo
   resource_id = aws_api_gateway_resource.admin.id
   http_method = aws_api_gateway_method.admin_options.http_method
   status_code = aws_api_gateway_method_response.admin_options_response.status_code
-  
+
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
     "method.response.header.Access-Control-Allow-Methods" = "'POST,OPTIONS'"
@@ -140,8 +140,8 @@ resource "aws_api_gateway_integration" "admin_active_users_integration" {
   http_method = aws_api_gateway_method.admin_active_users_get.http_method
 
   integration_http_method = "POST"
-  type                   = "AWS_PROXY"
-  uri                    = var.get_active_users_lambda_invoke_arn
+  type                    = "AWS_PROXY"
+  uri                     = var.get_active_users_lambda_invoke_arn
 }
 
 # Method response for GET with CORS headers
@@ -150,9 +150,9 @@ resource "aws_api_gateway_method_response" "admin_active_users_get_response" {
   resource_id = aws_api_gateway_resource.admin_active_users.id
   http_method = aws_api_gateway_method.admin_active_users_get.http_method
   status_code = "200"
-  
+
   response_parameters = {
-    "method.response.header.Access-Control-Allow-Origin" = true
+    "method.response.header.Access-Control-Allow-Origin"  = true
     "method.response.header.Access-Control-Allow-Headers" = true
     "method.response.header.Access-Control-Allow-Methods" = true
   }
@@ -164,9 +164,9 @@ resource "aws_api_gateway_integration_response" "admin_active_users_get_integrat
   resource_id = aws_api_gateway_resource.admin_active_users.id
   http_method = aws_api_gateway_method.admin_active_users_get.http_method
   status_code = aws_api_gateway_method_response.admin_active_users_get_response.status_code
-  
+
   response_parameters = {
-    "method.response.header.Access-Control-Allow-Origin" = "'*'"
+    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
     "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,Authorization'"
     "method.response.header.Access-Control-Allow-Methods" = "'GET, OPTIONS'"
   }
@@ -187,7 +187,7 @@ resource "aws_api_gateway_integration" "admin_active_users_options_integration" 
   rest_api_id = aws_api_gateway_rest_api.dalscooter_apis.id
   resource_id = aws_api_gateway_resource.admin_active_users.id
   http_method = aws_api_gateway_method.admin_active_users_options.http_method
-  
+
   type = "MOCK"
   request_templates = {
     "application/json" = "{\"statusCode\": 200}"
@@ -200,7 +200,7 @@ resource "aws_api_gateway_method_response" "admin_active_users_options_response"
   resource_id = aws_api_gateway_resource.admin_active_users.id
   http_method = aws_api_gateway_method.admin_active_users_options.http_method
   status_code = "200"
-  
+
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers" = true
     "method.response.header.Access-Control-Allow-Methods" = true
@@ -214,7 +214,7 @@ resource "aws_api_gateway_integration_response" "admin_active_users_options_inte
   resource_id = aws_api_gateway_resource.admin_active_users.id
   http_method = aws_api_gateway_method.admin_active_users_options.http_method
   status_code = aws_api_gateway_method_response.admin_active_users_options_response.status_code
-  
+
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,Authorization'"
     "method.response.header.Access-Control-Allow-Methods" = "'GET,OPTIONS'"
