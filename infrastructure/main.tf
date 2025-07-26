@@ -15,7 +15,10 @@ module "lambda" {
   security_questions_table_name       = aws_dynamodb_table.user_security_questions.name
   security_questions_table_arn        = aws_dynamodb_table.user_security_questions.arn
   logged_in_user_directory_table_name = aws_dynamodb_table.logged_in_user_directory.name
-  logged_in_user_directory_table_arn  = aws_dynamodb_table.logged_in_user_directory.arn
+  logged_in_user_directory_stream_arn = aws_dynamodb_table.logged_in_user_directory.stream_arn
+
+  # Add the missing required argument
+  logged_in_user_directory_table_arn = aws_dynamodb_table.logged_in_user_directory.arn
 
   # SNS references
   signup_login_topic_arn = aws_sns_topic.user_signup_login.arn
@@ -23,9 +26,8 @@ module "lambda" {
   # SQS references (for feedback processing)
   feedback_queue_url = aws_sqs_queue.feedback_queue.url
   feedback_queue_arn = aws_sqs_queue.feedback_queue.arn
-
-  # SQS references (for concerns processing)
-  concerns_queue_url = aws_sqs_queue.concerns_queue.id
+  
+   concerns_queue_url = aws_sqs_queue.concerns_queue.id
   concerns_queue_arn = aws_sqs_queue.concerns_queue.arn
 
   # Messages table references (for concerns processing)
@@ -41,6 +43,27 @@ module "lambda" {
   discount_codes_table_arn       = aws_dynamodb_table.discount_codes.arn
   user_discount_usage_table_name = aws_dynamodb_table.user_discount_usage.name
   user_discount_usage_table_arn  = aws_dynamodb_table.user_discount_usage.arn
+
+
+  # S3 for logged in user stream
+  s3_bucket_name = var.s3_bucket_name
+  s3_folder      = var.s3_folder
+}
+ 
+
+# ================================
+# S3 BUCKET FOR LOGGED IN USER DIRECTORY STREAM
+# ================================
+
+resource "aws_s3_bucket" "logged_in_user_directory" {
+  bucket = var.s3_bucket_name
+  force_destroy = true
+  tags = {
+    Name    = "DALScooter Logged In User Directory Stream Bucket"
+    Project = "DALScooter"
+  }
+ 
+ 
 }
 
 # ================================
@@ -66,9 +89,9 @@ module "apis" {
   get_customers_lambda_arn                 = module.lambda.get_customers_lambda_arn
   get_customers_lambda_invoke_arn          = module.lambda.get_customers_lambda_invoke_arn
   get_customers_lambda_function_name       = module.lambda.get_customers_lambda_function_name
-  get_logged_in_users_lambda_arn           = module.lambda.get_logged_in_users_lambda_arn
-  get_logged_in_users_lambda_invoke_arn    = module.lambda.get_logged_in_users_lambda_invoke_arn
-  get_logged_in_users_lambda_function_name = module.lambda.get_logged_in_users_lambda_function_name
+  process_heartbeat_lambda_arn             = module.lambda.process_heartbeat_lambda_arn
+  process_heartbeat_lambda_invoke_arn       = module.lambda.process_heartbeat_lambda_invoke_arn
+  process_heartbeat_lambda_function_name    = module.lambda.process_heartbeat_lambda_function_name
   get_active_users_lambda_arn              = module.lambda.get_active_users_lambda_arn
   get_active_users_lambda_invoke_arn       = module.lambda.get_active_users_lambda_invoke_arn
   get_active_users_lambda_function_name    = module.lambda.get_active_users_lambda_function_name
@@ -98,6 +121,15 @@ module "apis" {
   discount_management_lambda_arn           = module.lambda.discount_management_lambda_arn
   discount_management_lambda_invoke_arn    = module.lambda.discount_management_lambda_invoke_arn
   discount_management_lambda_function_name = module.lambda.discount_management_lambda_function_name
+}
+
+
+# ================================
+# CHATBOT MODULE
+# ================================
+module "chatbot" {
+  
+source = "./modules/chatbot"
 }
 
 # ================================

@@ -117,13 +117,19 @@ resource "aws_dynamodb_table" "user_security_questions" {
 
 # DynamoDB table for tracking logged-in users
 resource "aws_dynamodb_table" "logged_in_user_directory" {
-  name         = "logged_in_user_directory"
-  billing_mode = "PAY_PER_REQUEST" # On-demand pricing
-  hash_key     = "email"           # Partition key
+
+  name           = "logged_in_user_directory"
+  billing_mode   = "PAY_PER_REQUEST"  # On-demand pricing
+  hash_key       = "sub"            # Partition key
+
+
+  stream_enabled   = true
+  stream_view_type = "NEW_AND_OLD_IMAGES"
 
   attribute {
-    name = "email"
-    type = "S" # String
+    name = "sub"
+    type = "S"  # String
+ 
   }
 
   # Enable TTL on the expires_at attribute
@@ -138,6 +144,13 @@ resource "aws_dynamodb_table" "logged_in_user_directory" {
     Project = "DALScooter"
   }
 }
+
+# Output the stream ARN for use in Lambda event source mapping
+output "logged_in_user_directory_stream_arn" {
+  value = aws_dynamodb_table.logged_in_user_directory.stream_arn
+}
+
+ 
 
 # Lambda Permissions for Cognito
 resource "aws_lambda_permission" "cognito_define_auth" {

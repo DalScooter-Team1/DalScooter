@@ -5,6 +5,7 @@ import datetime
 import time
 import base64
 
+# save the data in the DynamoDB table
 # DynamoDB setup
 dynamodb = boto3.resource('dynamodb')
 table = dynamodb.Table(os.environ['DYNAMODB_TABLE'])
@@ -49,9 +50,9 @@ def lambda_handler(event, context):
         if not decoded:
             return _response(401, {'error': 'Invalid JWT token'})
 
-        email = decoded.get("email") or decoded.get("sub")  # fallback to user ID if email missing
-        if not email:
-            return _response(400, {'error': 'Email or user identifier not found in token'})
+        sub =  decoded.get("sub") or decoded.get("email")  # fallback to user ID if email missing
+        if not sub:
+            return _response(400, {'error': 'Cognito Sub or user identifier not found in token'})
 
         # Step 3: Prepare item
         now_iso = datetime.datetime.utcnow().isoformat()
@@ -59,7 +60,7 @@ def lambda_handler(event, context):
         ttl_unix = int(time.time()) + ttl_seconds
 
         item = {
-            'email': email,
+            'sub': sub,
             'last_seen': now_iso,
             'expires_at': ttl_unix  # used for DynamoDB TTL
         }
@@ -67,7 +68,7 @@ def lambda_handler(event, context):
         # Step 4: Save to DynamoDB
         table.put_item(Item=item)
 
-        return _response(200, {'message': 'Heartbeat recorded', 'email': email, 'last_seen': now_iso})
+        return _response(200, {'message': 'Heartbeat recorded', 'cognitoID': sub, 'last_seen': now_iso})
 
     except Exception as e:
         print("Error:", e)
