@@ -164,3 +164,7 @@ output "post_feedback_lambda_function_name" {
   description = "Function name of the post feedback Lambda"
   value       = aws_lambda_function.post_feedback_lambda.function_name
 }
+
+# ================================
+# BIKE INVENTORY LAMBDA OUTPUTS
+# ================================

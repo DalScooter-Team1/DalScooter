@@ -33,6 +33,14 @@ module "lambda" {
   dynamodb_table_arn  = aws_dynamodb_table.messages.arn
   user_pool_id        = aws_cognito_user_pool.pool.id
   user_pool_arn       = aws_cognito_user_pool.pool.arn
+
+  # Bike Inventory references
+  bikes_table_name               = aws_dynamodb_table.bikes.name
+  bikes_table_arn                = aws_dynamodb_table.bikes.arn
+  discount_codes_table_name      = aws_dynamodb_table.discount_codes.name
+  discount_codes_table_arn       = aws_dynamodb_table.discount_codes.arn
+  user_discount_usage_table_name = aws_dynamodb_table.user_discount_usage.name
+  user_discount_usage_table_arn  = aws_dynamodb_table.user_discount_usage.arn
 }
 
 # ================================
@@ -79,6 +87,17 @@ module "apis" {
   post_feedback_lambda_arn           = module.lambda.post_feedback_lambda_arn
   post_feedback_lambda_invoke_arn    = module.lambda.post_feedback_lambda_invoke_arn
   post_feedback_lambda_function_name = module.lambda.post_feedback_lambda_function_name
+
+  # Bike Inventory Lambda references
+  bike_management_lambda_arn               = module.lambda.bike_management_lambda_arn
+  bike_management_lambda_invoke_arn        = module.lambda.bike_management_lambda_invoke_arn
+  bike_management_lambda_function_name     = module.lambda.bike_management_lambda_function_name
+  bike_availability_lambda_arn             = module.lambda.bike_availability_lambda_arn
+  bike_availability_lambda_invoke_arn      = module.lambda.bike_availability_lambda_invoke_arn
+  bike_availability_lambda_function_name   = module.lambda.bike_availability_lambda_function_name
+  discount_management_lambda_arn           = module.lambda.discount_management_lambda_arn
+  discount_management_lambda_invoke_arn    = module.lambda.discount_management_lambda_invoke_arn
+  discount_management_lambda_function_name = module.lambda.discount_management_lambda_function_name
 }
 
 # ================================

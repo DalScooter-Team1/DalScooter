@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { adminService, type Customer, type ActiveUser } from '../../Services/adminService';
 import { heartbeatService } from '../../Services/heartbeatService';
 import MessagesManagement from '../messaging/MessagesManagement';
+import BikeInventoryManagement from './BikeInventoryManagement';
 
 interface WorkAreaProps {
   activeSection: string;
@@ -428,15 +429,7 @@ const WorkArea: React.FC<WorkAreaProps> = ({ activeSection }) => {
       case 'messages':
         return <MessagesManagement />;
       case 'scooters':
-        return (
-          <div className="space-y-6">
-            <h2 className="text-2xl font-bold text-gray-900">Scooter Fleet Management</h2>
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <p style={{ background: 'yellow' }}> TO do: show the regular bike listing page - to avoid re-integration of the feedback and other endpoints </p>
-              <p className="text-gray-500">Scooter management interface coming soon...</p>
-            </div>
-          </div>
-        );
+        return <BikeInventoryManagement />;
       case 'bookings':
         return (
           <div className="space-y-6">
