@@ -128,6 +128,7 @@ resource "aws_dynamodb_table" "logged_in_user_directory" {
   attribute {
     name = "sub"
     type = "S"  # String
+ 
   }
 
   # Enable TTL on the expires_at attribute

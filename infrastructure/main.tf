@@ -26,11 +26,30 @@ module "lambda" {
   # SQS references (for feedback processing)
   feedback_queue_url = aws_sqs_queue.feedback_queue.url
   feedback_queue_arn = aws_sqs_queue.feedback_queue.arn
+  
+   concerns_queue_url = aws_sqs_queue.concerns_queue.id
+  concerns_queue_arn = aws_sqs_queue.concerns_queue.arn
+
+  # Messages table references (for concerns processing)
+  dynamodb_table_name = aws_dynamodb_table.messages.name
+  dynamodb_table_arn  = aws_dynamodb_table.messages.arn
+  user_pool_id        = aws_cognito_user_pool.pool.id
+  user_pool_arn       = aws_cognito_user_pool.pool.arn
+
+  # Bike Inventory references
+  bikes_table_name               = aws_dynamodb_table.bikes.name
+  bikes_table_arn                = aws_dynamodb_table.bikes.arn
+  discount_codes_table_name      = aws_dynamodb_table.discount_codes.name
+  discount_codes_table_arn       = aws_dynamodb_table.discount_codes.arn
+  user_discount_usage_table_name = aws_dynamodb_table.user_discount_usage.name
+  user_discount_usage_table_arn  = aws_dynamodb_table.user_discount_usage.arn
+
 
   # S3 for logged in user stream
   s3_bucket_name = var.s3_bucket_name
   s3_folder      = var.s3_folder
 }
+ 
 
 # ================================
 # S3 BUCKET FOR LOGGED IN USER DIRECTORY STREAM
@@ -43,6 +62,11 @@ resource "aws_s3_bucket" "logged_in_user_directory" {
     Name    = "DALScooter Logged In User Directory Stream Bucket"
     Project = "DALScooter"
   }
+<<<<<<< HEAD
+=======
+ 
+ 
+>>>>>>> refs/remotes/origin/US6.2-Sentiment-Analysis-&-Display
 }
 
 # ================================
