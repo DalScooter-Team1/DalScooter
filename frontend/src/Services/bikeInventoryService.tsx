@@ -48,32 +48,75 @@ bikeInventoryAPI.interceptors.response.use(
 // Type definitions
 export type BikeType = 'Gyroscooter' | 'eBikes' | 'Segway';
 
+// Backend response format (what comes from Lambda)
+export interface BikeBackendResponse {
+    bikeId: string;
+    bikeType: BikeType;
+    accessCode: string;
+    hourlyRate: number;
+    status: string;
+    franchiseId: string;
+    features: {
+        heightAdjustment: boolean;
+        batteryLife: number;
+        maxSpeed: number;
+        weight: number;
+    };
+    location: {
+        latitude: number;
+        longitude: number;
+        address: string;
+    };
+    createdAt: string;
+    updatedAt: string;
+    isActive: boolean;
+}
+
+// Frontend display format (converted from backend)
 export interface Bike {
     bike_id: string;
     bike_type: BikeType;
-    model: string;
-    features: string[];
+    access_code: string;
     hourly_rate: number;
+    status: string;
     availability: boolean;
     franchise_id: string;
+    features: string[];
+    location: string;
     created_at: string;
     updated_at: string;
 }
 
+// Backend request format (what we send to Lambda)
 export interface BikeCreateRequest {
-    bike_type: BikeType;
-    model: string;
-    features: string[];
-    hourly_rate: number;
-    availability?: boolean;
+    bikeType: BikeType;
+    accessCode: string;
+    hourlyRate: number;
+    franchiseId?: string;
+    heightAdjustment?: boolean;
+    batteryLife?: number;
+    maxSpeed?: number;
+    weight?: number;
+    latitude?: number;
+    longitude?: number;
+    address?: string;
 }
 
 export interface BikeUpdateRequest {
-    bike_type?: BikeType;
-    model?: string;
-    features?: string[];
-    hourly_rate?: number;
-    availability?: boolean;
+    accessCode?: string;
+    hourlyRate?: number;
+    status?: string;
+    features?: {
+        heightAdjustment?: boolean;
+        batteryLife?: number;
+        maxSpeed?: number;
+        weight?: number;
+    };
+    location?: {
+        latitude?: number;
+        longitude?: number;
+        address?: string;
+    };
 }
 
 export interface DiscountCode {
@@ -88,14 +131,14 @@ export interface DiscountCode {
 
 export interface DiscountCodeCreateRequest {
     code: string;
-    discount_percentage: number;
-    expiry_hours: number; // 0-48 hours (0-2 days)
+    discountPercentage: number;
+    expiryHours: number; // 0-48 hours (0-2 days)
 }
 
 export interface DiscountCodeUpdateRequest {
-    discount_percentage?: number;
-    expiry_hours?: number;
-    is_active?: boolean;
+    discountPercentage?: number;
+    expiryHours?: number;
+    isActive?: boolean;
 }
 
 export interface BikeInventoryResponse<T = any> {
@@ -106,8 +149,9 @@ export interface BikeInventoryResponse<T = any> {
 
 export interface BikeListResponse {
     success: boolean;
-    bikes: Bike[];
+    bikes: BikeBackendResponse[];
     message?: string;
+    count?: number;
 }
 
 export interface DiscountCodeListResponse {
@@ -120,37 +164,105 @@ export interface BikeAvailabilityResponse {
     success: boolean;
     available_bikes: {
         bike_type: BikeType;
-        bikes: Bike[];
+        bikes: BikeBackendResponse[];
     }[];
     message?: string;
 }
 
 // Bike Inventory Service functions
 export const bikeInventoryService = {
+    // ===== CONVERSION HELPERS =====
+
+    // Convert backend bike response to frontend format
+    convertBackendBikeToFrontend: (backendBike: BikeBackendResponse): Bike => {
+        return {
+            bike_id: backendBike.bikeId,
+            bike_type: backendBike.bikeType,
+            access_code: backendBike.accessCode,
+            hourly_rate: backendBike.hourlyRate,
+            status: backendBike.status,
+            availability: backendBike.status === 'available',
+            franchise_id: backendBike.franchiseId,
+            features: [
+                backendBike.features.heightAdjustment ? 'Height Adjustment' : '',
+                `Battery Life: ${backendBike.features.batteryLife}%`,
+                `Max Speed: ${backendBike.features.maxSpeed} km/h`,
+                `Weight: ${backendBike.features.weight} kg`
+            ].filter(Boolean),
+            location: backendBike.location.address,
+            created_at: backendBike.createdAt,
+            updated_at: backendBike.updatedAt,
+        };
+    },
+
     // ===== BIKE MANAGEMENT =====
 
     // Get all bikes for the franchise
-    getBikes: async (): Promise<BikeListResponse> => {
+    getBikes: async (): Promise<{ success: boolean; bikes: Bike[]; message?: string; }> => {
         const response = await bikeInventoryAPI.get('/bikes');
-        return response.data;
+        const data = response.data;
+
+        if (data.success && data.bikes) {
+            const convertedBikes = data.bikes.map((bike: BikeBackendResponse) =>
+                bikeInventoryService.convertBackendBikeToFrontend(bike)
+            );
+            return {
+                success: true,
+                bikes: convertedBikes,
+                message: data.message
+            };
+        }
+
+        return {
+            success: data.success,
+            bikes: [],
+            message: data.message
+        };
     },
 
     // Get bike by ID
     getBike: async (bikeId: string): Promise<BikeInventoryResponse<Bike>> => {
         const response = await bikeInventoryAPI.get(`/bikes/${bikeId}`);
-        return response.data;
+        const data = response.data;
+
+        if (data.success && data.bike) {
+            return {
+                success: true,
+                data: bikeInventoryService.convertBackendBikeToFrontend(data.bike)
+            };
+        }
+
+        return data;
     },
 
     // Create a new bike
     createBike: async (bikeData: BikeCreateRequest): Promise<BikeInventoryResponse<Bike>> => {
         const response = await bikeInventoryAPI.post('/bikes', bikeData);
-        return response.data;
+        const data = response.data;
+
+        if (data.success && data.bike) {
+            return {
+                success: true,
+                data: bikeInventoryService.convertBackendBikeToFrontend(data.bike)
+            };
+        }
+
+        return data;
     },
 
     // Update an existing bike
     updateBike: async (bikeId: string, bikeData: BikeUpdateRequest): Promise<BikeInventoryResponse<Bike>> => {
         const response = await bikeInventoryAPI.put(`/bikes/${bikeId}`, bikeData);
-        return response.data;
+        const data = response.data;
+
+        if (data.success && data.bike) {
+            return {
+                success: true,
+                data: bikeInventoryService.convertBackendBikeToFrontend(data.bike)
+            };
+        }
+
+        return data;
     },
 
     // Delete a bike
@@ -175,7 +287,14 @@ export const bikeInventoryService = {
 
     // Create a new discount code
     createDiscountCode: async (discountData: DiscountCodeCreateRequest): Promise<BikeInventoryResponse<DiscountCode>> => {
-        const response = await bikeInventoryAPI.post('/discount-codes', discountData);
+        // Convert expiryHours to expiryDays for backend compatibility
+        const backendData = {
+            ...discountData,
+            expiryDays: Math.ceil(discountData.expiryHours / 24) // Convert hours to days, round up
+        };
+        delete (backendData as any).expiryHours; // Remove the frontend field
+
+        const response = await bikeInventoryAPI.post('/discount-codes', backendData);
         return response.data;
     },
 
@@ -196,7 +315,7 @@ export const bikeInventoryService = {
     // Get available bikes for customers (public endpoint)
     getAvailableBikes: async (): Promise<BikeAvailabilityResponse> => {
         // Use the base API without auth interceptors for public endpoint
-        const response = await axios.get(`${API_BASE_URL}/bikes/availability`);
+        const response = await axios.get(`${API_BASE_URL}/bike-availability`);
         return response.data;
     },
 

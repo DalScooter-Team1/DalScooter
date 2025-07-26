@@ -36,8 +36,37 @@ def verify_franchise_user(event):
         if not auth_header.startswith('Bearer '):
             return False, "Missing or invalid authorization header"
         
-        # For now, we'll assume the token is valid if it exists
-        # In production, you'd decode and verify the JWT token
+        token = auth_header.split(' ')[1]
+        
+        # Decode JWT payload (simple version - for production, use proper JWT verification)
+        try:
+            # Split the token into parts
+            parts = token.split('.')
+            if len(parts) != 3:
+                return False, "Invalid JWT token format"
+                
+            # Decode the payload (second part)
+            payload = parts[1]
+            # Add padding if needed
+            padding = len(payload) % 4
+            if padding:
+                payload += '=' * (4 - padding)
+                
+            # Decode from base64
+            import base64
+            decoded_bytes = base64.urlsafe_b64decode(payload)
+            payload_json = json.loads(decoded_bytes.decode('utf-8'))
+            
+        except Exception as e:
+            return False, f"Error decoding JWT token: {str(e)}"
+        
+        # Check for the 'cognito:groups' claim which contains user groups
+        cognito_groups = payload_json.get('cognito:groups', [])
+        
+        # Verify admin role (franchise group)
+        if 'franchise' not in cognito_groups:
+            return False, f"User is not in the franchise group. Available groups: {cognito_groups}"
+            
         return True, None
         
     except Exception as e:
@@ -65,7 +94,7 @@ def lambda_handler(event, context):
         }
     
     try:
-        # Verify franchise user permissions
+        # Verify franchise user authentication for admin operations
         is_authorized, auth_error = verify_franchise_user(event)
         if not is_authorized:
             return {
@@ -206,13 +235,13 @@ def handle_add_bike(event):
             'franchiseId': body.get('franchiseId', 'default'),
             'features': {
                 'heightAdjustment': body.get('heightAdjustment', False),
-                'batteryLife': body.get('batteryLife', 100),
-                'maxSpeed': body.get('maxSpeed', 25),
-                'weight': body.get('weight', 15)
+                'batteryLife': Decimal(str(body.get('batteryLife', 100))),
+                'maxSpeed': Decimal(str(body.get('maxSpeed', 25))),
+                'weight': Decimal(str(body.get('weight', 15)))
             },
             'location': {
-                'latitude': body.get('latitude', 44.6360),  # Default to Halifax
-                'longitude': body.get('longitude', -63.5909),
+                'latitude': Decimal(str(body.get('latitude', 44.6360))),  # Default to Halifax
+                'longitude': Decimal(str(body.get('longitude', -63.5909))),
                 'address': body.get('address', 'Dalhousie University, Halifax, NS')
             },
             'createdAt': datetime.utcnow().isoformat(),

@@ -33,8 +33,37 @@ def verify_franchise_user(event):
         if not auth_header.startswith('Bearer '):
             return False, "Missing or invalid authorization header"
         
-        # For now, we'll assume the token is valid if it exists
-        # In production, you'd decode and verify the JWT token
+        token = auth_header.split(' ')[1]
+        
+        # Decode JWT payload (simple version - for production, use proper JWT verification)
+        try:
+            # Split the token into parts
+            parts = token.split('.')
+            if len(parts) != 3:
+                return False, "Invalid JWT token format"
+                
+            # Decode the payload (second part)
+            payload = parts[1]
+            # Add padding if needed
+            padding = len(payload) % 4
+            if padding:
+                payload += '=' * (4 - padding)
+                
+            # Decode from base64
+            import base64
+            decoded_bytes = base64.urlsafe_b64decode(payload)
+            payload_json = json.loads(decoded_bytes.decode('utf-8'))
+            
+        except Exception as e:
+            return False, f"Error decoding JWT token: {str(e)}"
+        
+        # Check for the 'cognito:groups' claim which contains user groups
+        cognito_groups = payload_json.get('cognito:groups', [])
+        
+        # Verify admin role (franchise group)
+        if 'franchise' not in cognito_groups:
+            return False, f"User is not in the franchise group. Available groups: {cognito_groups}"
+            
         return True, None
         
     except Exception as e:
@@ -67,7 +96,7 @@ def lambda_handler(event, context):
         }
     
     try:
-        # Verify franchise user permissions
+        # Verify franchise user authentication for admin operations
         is_authorized, auth_error = verify_franchise_user(event)
         if not is_authorized:
             return {
@@ -151,7 +180,7 @@ def handle_get_discount_codes(event):
             'headers': get_cors_headers(),
             'body': json.dumps({
                 'success': True,
-                'discountCodes': active_codes,
+                'discount_codes': active_codes,  # Changed from 'discountCodes' to 'discount_codes'
                 'count': len(active_codes)
             }, default=decimal_default)
         }
@@ -221,16 +250,18 @@ def handle_create_discount_code(event):
         code_item = {
             'codeId': code_id,
             'code': discount_code,
-            'discountPercentage': Decimal(str(discount_percentage)),
+            'discount_percentage': Decimal(str(discount_percentage)),  # Changed from discountPercentage
             'status': 'active',
-            'expiryDate': expiry_date.isoformat(),
+            'expiry_date': expiry_date.isoformat(),  # Changed from expiryDate
             'expiryTimestamp': expiry_timestamp,  # For TTL
             'usageLimit': body.get('usageLimit', 100),  # Default limit
             'usageCount': 0,
             'description': body.get('description', f'{discount_percentage}% off DalScooter rental'),
-            'createdAt': datetime.utcnow().isoformat(),
+            'created_at': datetime.utcnow().isoformat(),  # Changed from createdAt
             'createdBy': body.get('createdBy', 'franchise-operator'),
-            'isActive': True
+            'is_active': True,  # Changed from isActive
+            'franchise_id': body.get('franchiseId', 'default'),  # Added franchise_id
+            'updated_at': datetime.utcnow().isoformat()  # Added updated_at
         }
         
         # Check if code already exists

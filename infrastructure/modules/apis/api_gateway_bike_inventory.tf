@@ -309,9 +309,7 @@ resource "aws_api_gateway_integration" "bikes_options_integration" {
   type        = "MOCK"
 
   request_templates = {
-    "application/json" = jsonencode({
-      statusCode = 200
-    })
+    "application/json" = "{\"statusCode\": 200}"
   }
 }
 
@@ -330,9 +328,7 @@ resource "aws_api_gateway_integration" "bike_availability_options_integration" {
   type        = "MOCK"
 
   request_templates = {
-    "application/json" = jsonencode({
-      statusCode = 200
-    })
+    "application/json" = "{\"statusCode\": 200}"
   }
 }
 
@@ -351,9 +347,7 @@ resource "aws_api_gateway_integration" "discount_codes_options_integration" {
   type        = "MOCK"
 
   request_templates = {
-    "application/json" = jsonencode({
-      statusCode = 200
-    })
+    "application/json" = "{\"statusCode\": 200}"
   }
 }
 
@@ -372,9 +366,7 @@ resource "aws_api_gateway_integration" "bike_by_id_options_integration" {
   type        = "MOCK"
 
   request_templates = {
-    "application/json" = jsonencode({
-      statusCode = 200
-    })
+    "application/json" = "{\"statusCode\": 200}"
   }
 }
 

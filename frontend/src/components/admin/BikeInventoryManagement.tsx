@@ -1,6 +1,27 @@
 import React, { useState, useEffect } from 'react';
 import { bikeInventoryService, type Bike, type DiscountCode, type BikeCreateRequest, type DiscountCodeCreateRequest, type BikeType } from '../../Services/bikeInventoryService.tsx';
 
+// Frontend form interfaces
+interface BikeFormData {
+    bikeType: BikeType;
+    accessCode: string;
+    hourlyRate: number;
+    heightAdjustment: boolean;
+    batteryLife: number;
+    maxSpeed: number;
+    weight: number;
+    address: string;
+    features: string[];
+    availability: boolean;
+    model: string;
+}
+
+interface DiscountFormData {
+    code: string;
+    discountPercentage: number;
+    expiryHours: number;
+}
+
 interface BikeInventoryManagementProps {
     // Props can be added as needed
 }
@@ -16,21 +37,27 @@ const BikeInventoryManagement: React.FC<BikeInventoryManagementProps> = () => {
     // Bike form state
     const [showBikeForm, setShowBikeForm] = useState(false);
     const [editingBike, setEditingBike] = useState<Bike | null>(null);
-    const [bikeForm, setBikeForm] = useState<BikeCreateRequest>({
-        bike_type: 'Gyroscooter',
-        model: '',
+    const [bikeForm, setBikeForm] = useState<BikeFormData>({
+        bikeType: 'Gyroscooter',
+        accessCode: '',
+        hourlyRate: 10,
+        heightAdjustment: false,
+        batteryLife: 100,
+        maxSpeed: 25,
+        weight: 15,
+        address: 'Dalhousie University, Halifax, NS',
         features: [],
-        hourly_rate: 10,
         availability: true,
+        model: '',
     });
 
     // Discount form state
     const [showDiscountForm, setShowDiscountForm] = useState(false);
     const [editingDiscount, setEditingDiscount] = useState<DiscountCode | null>(null);
-    const [discountForm, setDiscountForm] = useState<DiscountCodeCreateRequest>({
+    const [discountForm, setDiscountForm] = useState<DiscountFormData>({
         code: '',
-        discount_percentage: 5,
-        expiry_hours: 24,
+        discountPercentage: 5,
+        expiryHours: 24,
     });
 
     // Feature input helper
@@ -73,11 +100,35 @@ const BikeInventoryManagement: React.FC<BikeInventoryManagementProps> = () => {
         clearMessages();
 
         try {
+            // Convert form data to API format
+            const bikeData: BikeCreateRequest = {
+                bikeType: bikeForm.bikeType,
+                accessCode: bikeForm.accessCode,
+                hourlyRate: bikeForm.hourlyRate,
+                heightAdjustment: bikeForm.heightAdjustment,
+                batteryLife: bikeForm.batteryLife,
+                maxSpeed: bikeForm.maxSpeed,
+                weight: bikeForm.weight,
+                address: bikeForm.address,
+            };
+
             let response;
             if (editingBike) {
-                response = await bikeInventoryService.updateBike(editingBike.bike_id, bikeForm);
+                response = await bikeInventoryService.updateBike(editingBike.bike_id, {
+                    accessCode: bikeData.accessCode,
+                    hourlyRate: bikeData.hourlyRate,
+                    features: {
+                        heightAdjustment: bikeData.heightAdjustment,
+                        batteryLife: bikeData.batteryLife,
+                        maxSpeed: bikeData.maxSpeed,
+                        weight: bikeData.weight,
+                    },
+                    location: {
+                        address: bikeData.address,
+                    }
+                });
             } else {
-                response = await bikeInventoryService.createBike(bikeForm);
+                response = await bikeInventoryService.createBike(bikeData);
             }
 
             if (response.success) {
@@ -98,23 +149,34 @@ const BikeInventoryManagement: React.FC<BikeInventoryManagementProps> = () => {
 
     const resetBikeForm = () => {
         setBikeForm({
-            bike_type: 'Gyroscooter',
-            model: '',
+            bikeType: 'Gyroscooter',
+            accessCode: '',
+            hourlyRate: 10,
+            heightAdjustment: false,
+            batteryLife: 100,
+            maxSpeed: 25,
+            weight: 15,
+            address: 'Dalhousie University, Halifax, NS',
             features: [],
-            hourly_rate: 10,
             availability: true,
+            model: '',
         });
-        setNewFeature('');
     };
 
     const handleEditBike = (bike: Bike) => {
         setEditingBike(bike);
         setBikeForm({
-            bike_type: bike.bike_type,
-            model: bike.model,
-            features: [...bike.features],
-            hourly_rate: bike.hourly_rate,
+            bikeType: bike.bike_type,
+            accessCode: bike.access_code,
+            hourlyRate: bike.hourly_rate,
+            heightAdjustment: bike.features.includes('Height Adjustment'),
+            batteryLife: parseInt(bike.features.find(f => f.includes('Battery Life'))?.split(' ')[2] || '100'),
+            maxSpeed: parseInt(bike.features.find(f => f.includes('Max Speed'))?.split(' ')[2] || '25'),
+            weight: parseInt(bike.features.find(f => f.includes('Weight'))?.split(' ')[1] || '15'),
+            address: bike.location,
+            features: bike.features,
             availability: bike.availability,
+            model: bike.bike_type, // Use bike type as model
         });
         setShowBikeForm(true);
     };
@@ -181,13 +243,13 @@ const BikeInventoryManagement: React.FC<BikeInventoryManagementProps> = () => {
         clearMessages();
 
         // Validate business rules
-        if (!bikeInventoryService.isValidDiscountPercentage(discountForm.discount_percentage)) {
+        if (!bikeInventoryService.isValidDiscountPercentage(discountForm.discountPercentage)) {
             setError('Discount percentage must be between 5% and 15%');
             setLoading(false);
             return;
         }
 
-        if (!bikeInventoryService.isValidExpiryHours(discountForm.expiry_hours)) {
+        if (!bikeInventoryService.isValidExpiryHours(discountForm.expiryHours)) {
             setError('Expiry time must be between 0 and 48 hours (0-2 days)');
             setLoading(false);
             return;
@@ -197,8 +259,8 @@ const BikeInventoryManagement: React.FC<BikeInventoryManagementProps> = () => {
             let response;
             if (editingDiscount) {
                 response = await bikeInventoryService.updateDiscountCode(editingDiscount.code, {
-                    discount_percentage: discountForm.discount_percentage,
-                    expiry_hours: discountForm.expiry_hours,
+                    discountPercentage: discountForm.discountPercentage,
+                    expiryHours: discountForm.expiryHours,
                 });
             } else {
                 response = await bikeInventoryService.createDiscountCode(discountForm);
@@ -223,8 +285,8 @@ const BikeInventoryManagement: React.FC<BikeInventoryManagementProps> = () => {
     const resetDiscountForm = () => {
         setDiscountForm({
             code: '',
-            discount_percentage: 5,
-            expiry_hours: 24,
+            discountPercentage: 5,
+            expiryHours: 24,
         });
     };
 
@@ -236,8 +298,8 @@ const BikeInventoryManagement: React.FC<BikeInventoryManagementProps> = () => {
 
         setDiscountForm({
             code: discount.code,
-            discount_percentage: discount.discount_percentage,
-            expiry_hours: Math.min(48, diffHours),
+            discountPercentage: discount.discount_percentage,
+            expiryHours: Math.min(48, diffHours),
         });
         setShowDiscountForm(true);
     };
@@ -302,7 +364,7 @@ const BikeInventoryManagement: React.FC<BikeInventoryManagementProps> = () => {
 
                             <div className="space-y-2 mb-4">
                                 <p className="text-sm"><strong>Hourly Rate:</strong> ${bike.hourly_rate}</p>
-                                <p className="text-sm"><strong>Model:</strong> {bike.model}</p>
+                                <p className="text-sm"><strong>Location:</strong> {bike.location}</p>
                                 <p className="text-sm"><strong>Features:</strong> {bike.features.join(', ')}</p>
                             </div>
 
@@ -341,8 +403,8 @@ const BikeInventoryManagement: React.FC<BikeInventoryManagementProps> = () => {
                                             Bike Type
                                         </label>
                                         <select
-                                            value={bikeForm.bike_type}
-                                            onChange={(e) => setBikeForm({ ...bikeForm, bike_type: e.target.value as BikeType })}
+                                            value={bikeForm.bikeType}
+                                            onChange={(e) => setBikeForm({ ...bikeForm, bikeType: e.target.value as BikeType })}
                                             className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                                             required
                                         >
@@ -372,15 +434,107 @@ const BikeInventoryManagement: React.FC<BikeInventoryManagementProps> = () => {
                                         <input
                                             type="number"
                                             step="0.01"
-                                            value={bikeForm.hourly_rate}
-                                            onChange={(e) => setBikeForm({ ...bikeForm, hourly_rate: parseFloat(e.target.value) })}
+                                            value={bikeForm.hourlyRate}
+                                            onChange={(e) => setBikeForm({ ...bikeForm, hourlyRate: parseFloat(e.target.value) })}
                                             className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                            required
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            Access Code
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={bikeForm.accessCode}
+                                            onChange={(e) => setBikeForm({ ...bikeForm, accessCode: e.target.value })}
+                                            className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                            placeholder="Enter unique access code"
                                             required
                                         />
                                     </div>
                                 </div>
 
-                                <div>
+                                {/* Feature Configuration Section */}
+                                <div className="border-t border-gray-200 pt-4">
+                                    <h4 className="text-md font-medium text-gray-900 mb-4">🔧 Bike Features</h4>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                Battery Life (%)
+                                            </label>
+                                            <input
+                                                type="number"
+                                                min="0"
+                                                max="100"
+                                                value={bikeForm.batteryLife}
+                                                onChange={(e) => setBikeForm({ ...bikeForm, batteryLife: parseInt(e.target.value) })}
+                                                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                placeholder="100"
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                Max Speed (km/h)
+                                            </label>
+                                            <input
+                                                type="number"
+                                                min="10"
+                                                max="50"
+                                                value={bikeForm.maxSpeed}
+                                                onChange={(e) => setBikeForm({ ...bikeForm, maxSpeed: parseInt(e.target.value) })}
+                                                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                placeholder="25"
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                Weight (kg)
+                                            </label>
+                                            <input
+                                                type="number"
+                                                min="5"
+                                                max="50"
+                                                value={bikeForm.weight}
+                                                onChange={(e) => setBikeForm({ ...bikeForm, weight: parseInt(e.target.value) })}
+                                                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                placeholder="15"
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                Location Address
+                                            </label>
+                                            <input
+                                                type="text"
+                                                value={bikeForm.address}
+                                                onChange={(e) => setBikeForm({ ...bikeForm, address: e.target.value })}
+                                                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                placeholder="Dalhousie University, Halifax, NS"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="mt-4">
+                                        <label className="flex items-center">
+                                            <input
+                                                type="checkbox"
+                                                checked={bikeForm.heightAdjustment}
+                                                onChange={(e) => setBikeForm({ ...bikeForm, heightAdjustment: e.target.checked })}
+                                                className="mr-2"
+                                            />
+                                            <span className="text-sm font-medium text-gray-700">Height Adjustment Available</span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                {/* Availability Section */}
+                                <div className="border-t border-gray-200 pt-4">
                                     <label className="flex items-center">
                                         <input
                                             type="checkbox"
@@ -388,7 +542,7 @@ const BikeInventoryManagement: React.FC<BikeInventoryManagementProps> = () => {
                                             onChange={(e) => setBikeForm({ ...bikeForm, availability: e.target.checked })}
                                             className="mr-2"
                                         />
-                                        <span className="text-sm font-medium text-gray-700">Available for Rental</span>
+                                        <span className="text-sm font-medium text-gray-700">📍 Available for Rental</span>
                                     </label>
                                 </div>
 
@@ -498,8 +652,8 @@ const BikeInventoryManagement: React.FC<BikeInventoryManagementProps> = () => {
                                         type="number"
                                         min="5"
                                         max="15"
-                                        value={discountForm.discount_percentage}
-                                        onChange={(e) => setDiscountForm({ ...discountForm, discount_percentage: parseInt(e.target.value) })}
+                                        value={discountForm.discountPercentage}
+                                        onChange={(e) => setDiscountForm({ ...discountForm, discountPercentage: parseInt(e.target.value) })}
                                         className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
                                         required
                                         disabled={!!editingDiscount}
@@ -512,8 +666,8 @@ const BikeInventoryManagement: React.FC<BikeInventoryManagementProps> = () => {
                                             Expiry (0-2 days from now)
                                         </label>
                                         <select
-                                            value={discountForm.expiry_hours}
-                                            onChange={(e) => setDiscountForm({ ...discountForm, expiry_hours: parseInt(e.target.value) })}
+                                            value={discountForm.expiryHours}
+                                            onChange={(e) => setDiscountForm({ ...discountForm, expiryHours: parseInt(e.target.value) })}
                                             className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
                                             required
                                         >
