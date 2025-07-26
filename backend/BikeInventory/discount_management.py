@@ -4,6 +4,7 @@ import os
 import uuid
 import secrets
 import string
+import base64
 from datetime import datetime, timedelta
 from decimal import Decimal
 
@@ -50,7 +51,6 @@ def verify_franchise_user(event):
                 payload += '=' * (4 - padding)
                 
             # Decode from base64
-            import base64
             decoded_bytes = base64.urlsafe_b64decode(payload)
             payload_json = json.loads(decoded_bytes.decode('utf-8'))
             
@@ -163,7 +163,7 @@ def handle_get_discount_codes(event):
         active_codes = []
         
         for code in codes:
-            expiry_date = datetime.fromisoformat(code['expiryDate'])
+            expiry_date = datetime.fromisoformat(code['expiry_date'])
             if expiry_date > current_time:
                 active_codes.append(code)
             elif code['status'] == 'active':
