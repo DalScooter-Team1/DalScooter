@@ -442,10 +442,7 @@ const WorkArea: React.FC<WorkAreaProps> = ({ activeSection }) => {
       case 'analytics':
         return (
           <div className="space-y-6">
-            <h2 className="text-2xl font-bold text-gray-900">Analytics & Reports</h2>
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <p className="text-gray-500">Analytics dashboard coming soon...</p>
-            </div>
+            <iframe width="780" height="600" src="https://lookerstudio.google.com/embed/reporting/924da47b-7aa9-47d0-9777-865b51613efe/page/ZXqSF"    sandbox="allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"></iframe>
           </div>
         );
       case 'settings':
