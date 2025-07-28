@@ -153,6 +153,8 @@ resource "null_resource" "update_intent_with_slot_priority" {
     slot_id   = aws_lexv2models_slot.reference_number.slot_id
   }
 
+  #This is a amazon comman line script to update the intent with the slot priority
+  #This will be executed only when the intent or slot is created or updated
   provisioner "local-exec" {
     command = <<EOT
       aws lexv2-models update-intent \
