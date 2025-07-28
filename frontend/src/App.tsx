@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import AdminDashboard from './pages/AdminDashboard';
 import CustomerDashboard from './pages/CustomerDashboard';
 import { useHeartbeatInitializer } from './hooks/useHeartbeatInitializer';
+import Home from './pages/Home';
 
 function App() {
   // Initialize heartbeat service for customers
@@ -15,7 +16,8 @@ function App() {
      <BrowserRouter>
       <Routes>
 
-        <Route path='/' element={<Register />} />
+        <Route path='/' element={<Home />} />
+        <Route path='/register' element={<Register />} />
         <Route path='/login' element= {<Login/>}/>
         <Route path='/admin-dashboard' element={<AdminDashboard/>}/>
         <Route path='/customer-dashboard' element={<CustomerDashboard/>}/>
