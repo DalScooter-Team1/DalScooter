@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { adminService, type Customer, type ActiveUser } from '../../Services/adminService';
 import { heartbeatService } from '../../Services/heartbeatService';
+import MessagesManagement from '../messaging/MessagesManagement';
+import BikeInventoryManagement from './BikeInventoryManagement';
 
 interface WorkAreaProps {
   activeSection: string;
@@ -39,7 +41,7 @@ const WorkArea: React.FC<WorkAreaProps> = ({ activeSection }) => {
   const fetchCustomers = async () => {
     setLoading(true);
     setError('');
-    
+
     try {
       const data = await adminService.getCustomers({ group: 'customers' });
       if (data.success) {
@@ -187,16 +189,14 @@ const WorkArea: React.FC<WorkAreaProps> = ({ activeSection }) => {
                         </p>
                       </div>
                       <div className="flex flex-col items-end space-y-1">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          customer.userStatus === 'CONFIRMED' ? 'bg-green-100 text-green-800' :
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${customer.userStatus === 'CONFIRMED' ? 'bg-green-100 text-green-800' :
                           customer.userStatus === 'UNCONFIRMED' ? 'bg-yellow-100 text-yellow-800' :
-                          'bg-red-100 text-red-800'
-                        }`}>
+                            'bg-red-100 text-red-800'
+                          }`}>
                           {customer.userStatus}
                         </span>
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          customer.emailVerified ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'
-                        }`}>
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${customer.emailVerified ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'
+                          }`}>
                           {customer.emailVerified ? 'Verified' : 'Unverified'}
                         </span>
                         <button
@@ -335,7 +335,7 @@ const WorkArea: React.FC<WorkAreaProps> = ({ activeSection }) => {
                 </button>
               </div>
             </div>
-            
+
             <div className="space-y-3 max-h-96 overflow-y-auto">
               {onlineUsersLoading ? (
                 <div className="animate-pulse space-y-3">
@@ -367,9 +367,8 @@ const WorkArea: React.FC<WorkAreaProps> = ({ activeSection }) => {
                         {user.firstName} {user.lastName}
                       </p>
                       <div className="flex items-center space-x-2">
-                        <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium ${
-                          user.userType === 'franchise' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'
-                        }`}>
+                        <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium ${user.userType === 'franchise' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'
+                          }`}>
                           {user.userType}
                         </span>
                         <span className="text-xs text-gray-500">
@@ -385,41 +384,40 @@ const WorkArea: React.FC<WorkAreaProps> = ({ activeSection }) => {
         </div>
       </div>
 
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-          <div className="p-6 border-b border-gray-200">
-            <h3 className="text-lg font-medium text-gray-900">Scooter Status</h3>
-          </div>
-          <div className="p-6">
-            <div className="space-y-4">
-              {[
-                { id: 'SC001', status: 'Available', battery: 85, location: 'Halifax Downtown' },
-                { id: 'SC002', status: 'In Use', battery: 67, location: 'Dalhousie Campus' },
-                { id: 'SC003', status: 'Charging', battery: 23, location: 'Spring Garden Rd' },
-                { id: 'SC004', status: 'Maintenance', battery: 0, location: 'Service Center' },
-              ].map((scooter) => (
-                <div key={scooter.id} className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">{scooter.id}</p>
-                    <p className="text-sm text-gray-500">{scooter.location}</p>
-                  </div>
-                  <div className="text-right">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      scooter.status === 'Available' ? 'bg-green-100 text-green-800' :
-                      scooter.status === 'In Use' ? 'bg-blue-100 text-blue-800' :
-                      scooter.status === 'Charging' ? 'bg-yellow-100 text-yellow-800' :
-                      'bg-red-100 text-red-800'
-                    }`}>
-                      {scooter.status}
-                    </span>
-                    <p className="text-sm text-gray-500 mt-1">{scooter.battery}% Battery</p>
-                  </div>
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+        <div className="p-6 border-b border-gray-200">
+          <h3 className="text-lg font-medium text-gray-900">Scooter Status</h3>
+        </div>
+        <div className="p-6">
+          <div className="space-y-4">
+            {[
+              { id: 'SC001', status: 'Available', battery: 85, location: 'Halifax Downtown' },
+              { id: 'SC002', status: 'In Use', battery: 67, location: 'Dalhousie Campus' },
+              { id: 'SC003', status: 'Charging', battery: 23, location: 'Spring Garden Rd' },
+              { id: 'SC004', status: 'Maintenance', battery: 0, location: 'Service Center' },
+            ].map((scooter) => (
+              <div key={scooter.id} className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-900">{scooter.id}</p>
+                  <p className="text-sm text-gray-500">{scooter.location}</p>
                 </div>
-              ))}
-            </div>
+                <div className="text-right">
+                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${scooter.status === 'Available' ? 'bg-green-100 text-green-800' :
+                    scooter.status === 'In Use' ? 'bg-blue-100 text-blue-800' :
+                      scooter.status === 'Charging' ? 'bg-yellow-100 text-yellow-800' :
+                        'bg-red-100 text-red-800'
+                    }`}>
+                    {scooter.status}
+                  </span>
+                  <p className="text-sm text-gray-500 mt-1">{scooter.battery}% Battery</p>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </div>
- 
+    </div>
+
   );
 
   const renderContent = () => {
@@ -428,16 +426,10 @@ const WorkArea: React.FC<WorkAreaProps> = ({ activeSection }) => {
         return renderDashboard();
       case 'customers':
         return renderCustomers();
+      case 'messages':
+        return <MessagesManagement />;
       case 'scooters':
-        return (
-          <div className="space-y-6">
-            <h2 className="text-2xl font-bold text-gray-900">Scooter Fleet Management</h2>
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <p style={{background:'yellow'}}> TO do: show the regular bike listing page - to avoid re-integration of the feedback and other endpoints </p>
-              <p className="text-gray-500">Scooter management interface coming soon...</p>
-            </div>
-          </div>
-        );
+        return <BikeInventoryManagement />;
       case 'bookings':
         return (
           <div className="space-y-6">
@@ -481,7 +473,7 @@ const WorkArea: React.FC<WorkAreaProps> = ({ activeSection }) => {
           <p className="text-sm text-gray-500">Manage your DalScooter operations efficiently</p>
         </div>
       </div>
-      
+
       {/* Main Content */}
       <div className="flex-1 overflow-auto">
         <div className="p-6">

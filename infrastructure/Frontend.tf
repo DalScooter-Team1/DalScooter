@@ -1,8 +1,11 @@
 resource "aws_amplify_app" "frontend" {
-  name         = "DalScooterFrontend"
+  name       = "DalScooterFrontend"
   repository = "git@github.com:DalScooter-Team1/DalScooter.git"
 
   access_token = var.github_access_token
+
+  # Break dependency cycle by explicitly depending on API Gateway deployment
+  depends_on = [module.apis]
 
   # Build settings
   build_spec = <<-EOT
@@ -33,16 +36,16 @@ resource "aws_amplify_app" "frontend" {
 
   # Enable automatic branch deployments
   enable_auto_branch_creation = true
-  enable_branch_auto_build   = true
+  enable_branch_auto_build    = true
   enable_branch_auto_deletion = true
 
 
   # Environment variables
   environment_variables = {
-    ENV = "production"
-    VITE_SERVER = "${module.apis.api_gateway_invoke_url}"
-    VITE_COGNITO_USER_POOL_ID = "${aws_cognito_user_pool.pool.id}"
-    VITE_COGNITO_CLIENT_ID = "${aws_cognito_user_pool_client.client.id}"
+    ENV                       = "production"
+    VITE_SERVER               = "https://${module.apis.api_gateway_id}.execute-api.us-east-1.amazonaws.com/prod"
+    VITE_COGNITO_USER_POOL_ID = aws_cognito_user_pool.pool.id
+    VITE_COGNITO_CLIENT_ID    = aws_cognito_user_pool_client.client.id
   }
 }
 
@@ -68,12 +71,22 @@ resource "aws_amplify_branch" "main" {
   enable_auto_build = true
 }
 
+resource "aws_amplify_branch" "msgmodule" {
+  app_id      = aws_amplify_app.frontend.id
+  branch_name = "msgmodule"
+
+  framework = "React"
+  stage     = "PRODUCTION"
+
+  enable_auto_build = true
+}
+
 # Define variables
 variable "github_access_token" {
   description = "GitHub Access Token for Amplify"
   type        = string
   sensitive   = true
-  default = "Your_GitHub_Access_Token_Here" # Replace with your actual token
+  default     = "Your_GitHub_Access_Token" # Replace with your actual token
 }
 
 # Output the Amplify app URL

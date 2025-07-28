@@ -22,7 +22,7 @@ resource "aws_api_gateway_integration" "heartbeat_integration" {
 
   integration_http_method = "POST"
   type                   = "AWS_PROXY"
-  uri                    = var.get_logged_in_users_lambda_invoke_arn
+  uri                    = var.process_heartbeat_lambda_invoke_arn
 }
 
 # Method response for POST with CORS headers
@@ -103,11 +103,11 @@ resource "aws_api_gateway_integration_response" "heartbeat_options_integration_r
   }
 }
 
-# Lambda Permission for API Gateway to invoke Get Logged In Users Lambda
-resource "aws_lambda_permission" "api_gateway_invoke_get_logged_in_users" {
-  statement_id  = "AllowAPIGatewayInvokeGetLoggedInUsers"
+# Lambda Permission for API Gateway to invoke Process Heartbeat Lambda
+resource "aws_lambda_permission" "api_gateway_invoke_process_heartbeat" {
+  statement_id  = "AllowAPIGatewayInvokeProcessHeartbeat"
   action        = "lambda:InvokeFunction"
-  function_name = var.get_logged_in_users_lambda_function_name
+  function_name = var.process_heartbeat_lambda_function_name
   principal     = "apigateway.amazonaws.com"
   source_arn    = "${aws_api_gateway_rest_api.dalscooter_apis.execution_arn}/*/*"
 }

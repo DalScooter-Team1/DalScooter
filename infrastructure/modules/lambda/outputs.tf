@@ -119,19 +119,19 @@ output "get_customers_lambda_function_name" {
 }
 
 # Get Logged In Users Lambda
-output "get_logged_in_users_lambda_arn" {
-  description = "ARN of the get logged in users Lambda function"
-  value       = aws_lambda_function.get_logged_in_users.arn
+output "process_heartbeat_lambda_arn" {
+  description = "ARN of the process heartbeat Lambda function"
+  value       = aws_lambda_function.process_heartbeat.arn
 }
 
-output "get_logged_in_users_lambda_invoke_arn" {
-  description = "Invoke ARN of the get logged in users Lambda function"
-  value       = aws_lambda_function.get_logged_in_users.invoke_arn
+output "process_heartbeat_lambda_invoke_arn" {
+  description = "Invoke ARN of the process heartbeat Lambda function"
+  value       = aws_lambda_function.process_heartbeat.invoke_arn
 }
 
-output "get_logged_in_users_lambda_function_name" {
-  description = "Function name of the get logged in users Lambda"
-  value       = aws_lambda_function.get_logged_in_users.function_name
+output "process_heartbeat_lambda_function_name" {
+  description = "Function name of the process heartbeat Lambda"
+  value       = aws_lambda_function.process_heartbeat.function_name
 }
 
 # Get Active Users Lambda
@@ -164,3 +164,5 @@ output "post_feedback_lambda_function_name" {
   description = "Function name of the post feedback Lambda"
   value       = aws_lambda_function.post_feedback_lambda.function_name
 }
+
+ 
