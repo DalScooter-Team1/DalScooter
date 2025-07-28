@@ -34,6 +34,10 @@ variable "logged_in_user_directory_table_name" {
   type        = string
 }
 
+variable "logged_in_user_directory_table_arn" {
+  description = "ARN of the logged-in user directory DynamoDB table"
+  type        = string
+}
 
 variable "logged_in_user_directory_stream_arn" {
   description = "Stream ARN of the logged-in user directory DynamoDB table"

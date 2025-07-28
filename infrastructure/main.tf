@@ -15,10 +15,12 @@ module "lambda" {
   security_questions_table_name       = aws_dynamodb_table.user_security_questions.name
   security_questions_table_arn        = aws_dynamodb_table.user_security_questions.arn
   logged_in_user_directory_table_name = aws_dynamodb_table.logged_in_user_directory.name
+  logged_in_user_directory_table_arn  = aws_dynamodb_table.logged_in_user_directory.arn
   logged_in_user_directory_stream_arn = aws_dynamodb_table.logged_in_user_directory.stream_arn
 
-  # Add the missing required argument
-  logged_in_user_directory_table_arn = aws_dynamodb_table.logged_in_user_directory.arn
+  # S3 references
+  s3_bucket_name = var.s3_bucket_name
+  s3_folder      = var.s3_folder
 
   # SNS references
   signup_login_topic_arn = aws_sns_topic.user_signup_login.arn
@@ -26,8 +28,8 @@ module "lambda" {
   # SQS references (for feedback processing)
   feedback_queue_url = aws_sqs_queue.feedback_queue.url
   feedback_queue_arn = aws_sqs_queue.feedback_queue.arn
-  
-   concerns_queue_url = aws_sqs_queue.concerns_queue.id
+
+  concerns_queue_url = aws_sqs_queue.concerns_queue.id
   concerns_queue_arn = aws_sqs_queue.concerns_queue.arn
 
   # Messages table references (for concerns processing)
@@ -43,27 +45,22 @@ module "lambda" {
   discount_codes_table_arn       = aws_dynamodb_table.discount_codes.arn
   user_discount_usage_table_name = aws_dynamodb_table.user_discount_usage.name
   user_discount_usage_table_arn  = aws_dynamodb_table.user_discount_usage.arn
-
-
-  # S3 for logged in user stream
-  s3_bucket_name = var.s3_bucket_name
-  s3_folder      = var.s3_folder
 }
- 
+
 
 # ================================
 # S3 BUCKET FOR LOGGED IN USER DIRECTORY STREAM
 # ================================
 
 resource "aws_s3_bucket" "logged_in_user_directory" {
-  bucket = var.s3_bucket_name
+  bucket        = var.s3_bucket_name
   force_destroy = true
   tags = {
     Name    = "DALScooter Logged In User Directory Stream Bucket"
     Project = "DALScooter"
   }
- 
- 
+
+
 }
 
 # ================================
@@ -76,25 +73,25 @@ module "apis" {
   source = "./modules/apis"
 
   # Lambda function references from Lambda module
-  customer_lambda_arn                      = module.lambda.customer_authenticator_lambda_arn
-  customer_lambda_invoke_arn               = module.lambda.customer_authenticator_lambda_invoke_arn
-  admin_lambda_arn                         = module.lambda.admin_authenticator_lambda_arn
-  admin_lambda_invoke_arn                  = module.lambda.admin_authenticator_lambda_invoke_arn
-  user_registration_lambda_arn             = module.lambda.user_registration_lambda_arn
-  user_registration_lambda_invoke_arn      = module.lambda.user_registration_lambda_invoke_arn
-  user_registration_lambda_function_name   = module.lambda.user_registration_lambda_function_name
-  admin_creation_lambda_arn                = module.lambda.admin_creation_lambda_arn
-  admin_creation_lambda_invoke_arn         = module.lambda.admin_creation_lambda_invoke_arn
-  admin_creation_lambda_function_name      = module.lambda.admin_creation_lambda_function_name
-  get_customers_lambda_arn                 = module.lambda.get_customers_lambda_arn
-  get_customers_lambda_invoke_arn          = module.lambda.get_customers_lambda_invoke_arn
-  get_customers_lambda_function_name       = module.lambda.get_customers_lambda_function_name
-  process_heartbeat_lambda_arn             = module.lambda.process_heartbeat_lambda_arn
-  process_heartbeat_lambda_invoke_arn       = module.lambda.process_heartbeat_lambda_invoke_arn
-  process_heartbeat_lambda_function_name    = module.lambda.process_heartbeat_lambda_function_name
-  get_active_users_lambda_arn              = module.lambda.get_active_users_lambda_arn
-  get_active_users_lambda_invoke_arn       = module.lambda.get_active_users_lambda_invoke_arn
-  get_active_users_lambda_function_name    = module.lambda.get_active_users_lambda_function_name
+  customer_lambda_arn                    = module.lambda.customer_authenticator_lambda_arn
+  customer_lambda_invoke_arn             = module.lambda.customer_authenticator_lambda_invoke_arn
+  admin_lambda_arn                       = module.lambda.admin_authenticator_lambda_arn
+  admin_lambda_invoke_arn                = module.lambda.admin_authenticator_lambda_invoke_arn
+  user_registration_lambda_arn           = module.lambda.user_registration_lambda_arn
+  user_registration_lambda_invoke_arn    = module.lambda.user_registration_lambda_invoke_arn
+  user_registration_lambda_function_name = module.lambda.user_registration_lambda_function_name
+  admin_creation_lambda_arn              = module.lambda.admin_creation_lambda_arn
+  admin_creation_lambda_invoke_arn       = module.lambda.admin_creation_lambda_invoke_arn
+  admin_creation_lambda_function_name    = module.lambda.admin_creation_lambda_function_name
+  get_customers_lambda_arn               = module.lambda.get_customers_lambda_arn
+  get_customers_lambda_invoke_arn        = module.lambda.get_customers_lambda_invoke_arn
+  get_customers_lambda_function_name     = module.lambda.get_customers_lambda_function_name
+  process_heartbeat_lambda_arn           = module.lambda.process_heartbeat_lambda_arn
+  process_heartbeat_lambda_invoke_arn    = module.lambda.process_heartbeat_lambda_invoke_arn
+  process_heartbeat_lambda_function_name = module.lambda.process_heartbeat_lambda_function_name
+  get_active_users_lambda_arn            = module.lambda.get_active_users_lambda_arn
+  get_active_users_lambda_invoke_arn     = module.lambda.get_active_users_lambda_invoke_arn
+  get_active_users_lambda_function_name  = module.lambda.get_active_users_lambda_function_name
 
   # Messaging Lambda references
   submit_concern_lambda_arn               = aws_lambda_function.submit_concern.arn
@@ -125,12 +122,11 @@ module "apis" {
 
 
 # ================================
-# CHATBOT MODULE
+# CHATBOT MODULE (COMMENTED OUT - REQUIRES NEWER AWS PROVIDER)
 # ================================
-module "chatbot" {
-  
-source = "./modules/chatbot"
-}
+# module "chatbot" {
+#   source = "./modules/chatbot"
+# }
 
 # ================================
 # API GATEWAY OUTPUTS
