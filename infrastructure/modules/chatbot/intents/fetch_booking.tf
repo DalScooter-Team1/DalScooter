@@ -36,6 +36,8 @@ resource "aws_lexv2models_intent" "fetch_booking" {
     utterance = "I want to check my booking"
   }
 
+
+
   initial_response_setting {
     initial_response {
       message_group {
@@ -48,7 +50,8 @@ resource "aws_lexv2models_intent" "fetch_booking" {
     }
   }
 
-
+   
+ 
 }
 
 resource "aws_lexv2models_slot" "reference_number" {
@@ -58,7 +61,8 @@ resource "aws_lexv2models_slot" "reference_number" {
   locale_id     = var.locale_id
   name          = "booking_reference_number"
   description   = "Slot to capture the booking reference number"
-  slot_type_id  = aws_lexv2models_slot_type.Alphanumeric.slot_type_id
+  slot_type_id  = "AMAZON.AlphaNumeric"
+  depends_on = [ aws_lexv2models_intent.fetch_booking ]
 
   value_elicitation_setting {
     slot_constraint = "Required"
@@ -67,6 +71,7 @@ resource "aws_lexv2models_slot" "reference_number" {
       max_retries                = 1
       message_selection_strategy = "Random"
 
+      #This will be the prompt that will be shown to the user when the bot asks for the booking reference number
       message_group {
         message {
           plain_text_message {
@@ -74,9 +79,6 @@ resource "aws_lexv2models_slot" "reference_number" {
           }
         }
       }
-
-# Keep the below block as it is, 
-# It is added from the Terraform documentation to handle the error thrown by the terraform.
       prompt_attempts_specification {
         allow_interrupt = true
         map_block_key   = "Initial"
@@ -139,30 +141,37 @@ resource "aws_lexv2models_slot" "reference_number" {
     }
   }
   #To do: add other case responses
-  #Todo: Handle the other values than the ABC123 as being accepted 
   #To do: Refine the slot types
 }
 
-resource "aws_lexv2models_slot_type" "Alphanumeric" {
-  bot_id      = var.bot_id
-  bot_version = "DRAFT"
-  locale_id   = var.locale_id
-  name        = "AlphanumericSlotType"
-  description = "Slot type for alphanumeric values"
+#We did not specify the slot priority in the first place
+#Now we will try to update the slot priority
 
-  value_selection_setting {
-    resolution_strategy = "OriginalValue"
+resource "null_resource" "update_intent_with_slot_priority" {
+  triggers = {
+    intent_id = aws_lexv2models_intent.fetch_booking.intent_id
+    slot_id   = aws_lexv2models_slot.reference_number.slot_id
   }
 
-  slot_type_values {
-    sample_value {
-      value = "ABC123"
-    }
+  #This is a amazon comman line script to update the intent with the slot priority
+  #This will be executed only when the intent or slot is created or updated
+  provisioner "local-exec" {
+    command = <<EOT
+      aws lexv2-models update-intent \
+        --intent-id ${aws_lexv2models_intent.fetch_booking.intent_id} \
+        --intent-name fetch_booking_intent \
+        --bot-id ${var.bot_id} \
+        --bot-version DRAFT \
+        --locale-id ${var.locale_id} \
+        --slot-priorities priority=1,slotId=${aws_lexv2models_slot.reference_number.slot_id}
+    EOT
   }
-  
+
+  depends_on = [
+    aws_lexv2models_intent.fetch_booking,
+    aws_lexv2models_slot.reference_number
+  ]
 }
-
-
 
 
 

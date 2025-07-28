@@ -16,20 +16,14 @@ variable "s3_folder" {
   default     = "logged_in_user_directory/"
 }
 
-# Add missing variable for DynamoDB table ARN
-variable "logged_in_user_directory_table_arn" {
-  description = "ARN of the logged_in_user_directory DynamoDB table"
-  type        = string
-}
-
 # IAM Role for the Lambda
 resource "aws_iam_role" "logged_in_user_stream_lambda_role" {
   name = "dalscooter-logged-in-user-stream-lambda-role"
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{
-      Action = "sts:AssumeRole"
-      Effect = "Allow"
+      Action    = "sts:AssumeRole"
+      Effect    = "Allow"
       Principal = { Service = "lambda.amazonaws.com" }
     }]
   })
@@ -52,8 +46,8 @@ resource "aws_iam_role_policy" "logged_in_user_stream_lambda_policy" {
         Resource = "arn:aws:logs:*:*:*"
       },
       {
-        Effect   = "Allow"
-        Action   = [
+        Effect = "Allow"
+        Action = [
           "cognito-idp:AdminGetUser",
           "cognito-idp:AdminListGroupsForUser"
         ]
@@ -104,8 +98,8 @@ resource "aws_lambda_function" "logged_in_user_stream" {
 
   environment {
     variables = {
-      S3_BUCKET = var.s3_bucket_name
-      S3_FOLDER = var.s3_folder
+      S3_BUCKET            = var.s3_bucket_name
+      S3_FOLDER            = var.s3_folder
       COGNITO_USER_POOL_ID = var.cognito_user_pool_id
     }
   }

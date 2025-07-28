@@ -4,6 +4,9 @@ resource "aws_amplify_app" "frontend" {
 
   access_token = var.github_access_token
 
+  # Break dependency cycle by explicitly depending on API Gateway deployment
+  depends_on = [module.apis]
+
   # Build settings
   build_spec = <<-EOT
     version: 1
@@ -40,9 +43,9 @@ resource "aws_amplify_app" "frontend" {
   # Environment variables
   environment_variables = {
     ENV                       = "production"
-    VITE_SERVER               = "${module.apis.api_gateway_invoke_url}"
-    VITE_COGNITO_USER_POOL_ID = "${aws_cognito_user_pool.pool.id}"
-    VITE_COGNITO_CLIENT_ID    = "${aws_cognito_user_pool_client.client.id}"
+    VITE_SERVER               = "https://${module.apis.api_gateway_id}.execute-api.us-east-1.amazonaws.com/prod"
+    VITE_COGNITO_USER_POOL_ID = aws_cognito_user_pool.pool.id
+    VITE_COGNITO_CLIENT_ID    = aws_cognito_user_pool_client.client.id
   }
 }
 
