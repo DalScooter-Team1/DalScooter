@@ -70,6 +70,7 @@ const WorkArea: React.FC<WorkAreaProps> = ({ activeSection }) => {
       const response = await adminService.getActiveUsers();
       if (response.success) {
         setOnlineUsers(response.users || []);
+        console.log('Active users:', response.users);
       } else {
         console.error('Error retrieving active users:', response.message);
         setOnlineUsers([]);
