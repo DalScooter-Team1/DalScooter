@@ -76,3 +76,10 @@ variable "s3_folder" {
   type        = string
   default     = "logged_in_user_directory/"
 }
+
+# Booking table name var from booking_cleanup 
+variable "booking_table_name" {
+  description = "Name of the DynamoDB bookings table"
+  type        = string
+  default     = "dalscooter-bookings"
+}
