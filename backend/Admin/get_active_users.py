@@ -42,7 +42,7 @@ def get_user_details(email):
             user_groups = [group['GroupName'] for group in groups_response.get('Groups', [])]
         except:
             user_groups = []
-        
+        print(f"User groups for {attributes}")
         return {
             'firstName': attributes.get('given_name', ''),
             'lastName': attributes.get('family_name', ''),
@@ -80,7 +80,7 @@ def lambda_handler(event, context):
         # Process the results
         active_users = []
         for item in response.get('Items', []):
-            email = item.get('email', '')
+            email = item.get('sub', '')
             last_seen = item.get('last_seen', '')
             expires_at = int(item.get('expires_at', 0))
             
