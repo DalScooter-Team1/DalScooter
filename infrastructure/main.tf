@@ -1,4 +1,10 @@
 # ================================
+# DATA SOURCES
+# ================================
+# Get current AWS account information
+data "aws_caller_identity" "current" {}
+
+# ================================
 # LAMBDA MODULE
 # ================================
 # This module contains all Lambda functions for the application
