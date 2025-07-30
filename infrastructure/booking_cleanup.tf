@@ -69,8 +69,10 @@ resource "local_file" "booking_cleanup_packages_dir" {
 }
 # Lambda Function (cleanup)
 resource "aws_lambda_function" "booking_cleanup" {
+ 
   function_name = "booking-cleanup-handler"
   filename         = data.archive_file.booking_cleanup_zip.output_path
+ 
   handler          = "booking_cleanup.lambda_handler"
   runtime          = "python3.9"
   role             = aws_iam_role.booking_cleanup_lambda_role.arn
