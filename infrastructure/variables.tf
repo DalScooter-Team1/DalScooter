@@ -68,7 +68,9 @@
 variable "s3_bucket_name" {
   description = "Name of the S3 bucket to store CSV logs for logged in user directory stream"
   type        = string
+ 
   default = "dalscooter-logged-in-user-directory12-123123"
+ 
  
 }
 
@@ -84,6 +86,7 @@ variable "booking_table_name" {
   type        = string
   default     = "dalscooter-bookings"
 }
+ 
 
 # AWS region variable
 variable "region" {
@@ -91,3 +94,4 @@ variable "region" {
   type        = string
   default     = "us-east-1"
 }
+ 
