@@ -601,7 +601,7 @@ def handle_delete_bike(event):
                 })
             }
 
-        # Check if bike exists and is active before deleting
+        # Check if bike exists before deleting
         response = bikes_table.get_item(Key={'bikeId': bike_id})
         if 'Item' not in response:
             return {
@@ -616,25 +616,19 @@ def handle_delete_bike(event):
         bike = response['Item']
         print(f"Found bike: {json.dumps(bike, default=str)}")
         
-        if not bike.get('isActive', True):
+        # Check if bike is currently rented/active
+        if bike.get('status') == 'rented':
             return {
-                'statusCode': 404,
+                'statusCode': 400,
                 'headers': get_cors_headers(),
                 'body': json.dumps({
                     'success': False,
-                    'message': 'Bike not found or already deleted'
+                    'message': 'Cannot delete bike that is currently rented'
                 })
             }
         
-        # Soft delete by setting isActive to False
-        bikes_table.update_item(
-            Key={'bikeId': bike_id},
-            UpdateExpression='SET isActive = :isActive, updatedAt = :updatedAt',
-            ExpressionAttributeValues={
-                ':isActive': False,
-                ':updatedAt': datetime.utcnow().isoformat()
-            }
-        )
+        # Hard delete by removing the item from the database
+        bikes_table.delete_item(Key={'bikeId': bike_id})
         
         return {
             'statusCode': 200,
