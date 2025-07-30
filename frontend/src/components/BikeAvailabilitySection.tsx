@@ -107,7 +107,37 @@ const BikeAvailabilitySection: React.FC<BikeAvailabilitySectionProps> = ({
                 {/* Card Header */}
                 <div className="p-6 border-b border-gray-100">
                   <div className="flex justify-between items-start mb-3">
-                    <h4 className="text-lg font-semibold text-gray-900">{bike.bikeType}</h4>
+                    <div className="flex items-center space-x-3">
+                      <div className="p-2 bg-gradient-to-r from-amber-400 to-yellow-500 rounded-lg animate-pulse">
+                        {bike.bikeType === 'Gyroscooter' && (
+                          <svg className="w-6 h-6 text-white animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                            <circle cx="8" cy="18" r="2" className="animate-spin" style={{ animationDuration: '3s' }} />
+                            <circle cx="16" cy="18" r="2" className="animate-spin" style={{ animationDuration: '3s' }} />
+                          </svg>
+                        )}
+                        {bike.bikeType === 'eBikes' && (
+                          <svg className="w-6 h-6 text-white animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            <circle cx="12" cy="12" r="3" className="animate-ping" style={{ animationDuration: '2s' }} />
+                          </svg>
+                        )}
+                        {bike.bikeType === 'Segway' && (
+                          <svg className="w-6 h-6 text-white animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+                            <rect x="8" y="8" width="8" height="8" rx="2" className="animate-pulse" />
+                          </svg>
+                        )}
+                        {!['Gyroscooter', 'eBikes', 'Segway'].includes(bike.bikeType) && (
+                          <svg className="w-6 h-6 text-white animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                            <circle cx="10" cy="18" r="2" className="animate-spin" style={{ animationDuration: '2s' }} />
+                            <circle cx="18" cy="18" r="2" className="animate-spin" style={{ animationDuration: '2s' }} />
+                          </svg>
+                        )}
+                      </div>
+                      <h4 className="text-lg font-semibold text-gray-900">{bike.bikeType}</h4>
+                    </div>
                     <span className={`px-3 py-1 rounded-full text-xs font-medium ${
                       bike.status === 'available' 
                         ? 'bg-amber-100 text-amber-800 border border-amber-300' 
