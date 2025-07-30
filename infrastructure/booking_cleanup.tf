@@ -28,7 +28,8 @@ resource "aws_iam_role_policy" "booking_cleanup_policy" {
           "dynamodb:UpdateItem",
           "dynamodb:GetItem"
         ],
-        Resource = "arn:aws:dynamodb:${var.region}:${data.aws_caller_identity.current.account_id}:table/${var.booking_table_name}"
+         
+        Resource = aws_dynamodb_table.booking_table.arn
       },
       {
         Effect = "Allow",
@@ -43,14 +44,39 @@ resource "aws_iam_role_policy" "booking_cleanup_policy" {
   })
 }
 
+resource "aws_dynamodb_table" "booking_table" {
+  name         = var.booking_table_name
+  billing_mode = "PAY_PER_REQUEST"
+  
+  attribute {
+    name = "bookingId"
+    type = "S"
+  }
+
+  hash_key = "bookingId"
+}
+
+data "archive_file" "booking_cleanup_zip" {
+  type        = "zip"
+  source_file = "${path.module}/../backend/BookingQueue/booking_cleanup.py"
+  output_path = "${path.module}/../packages/booking_cleanup.zip"
+  depends_on  = [local_file.booking_cleanup_packages_dir]
+}
+
+resource "local_file" "booking_cleanup_packages_dir" {
+  content  = "Booking cleanup packages directory"
+  filename = "${path.module}/../packages/booking_cleanup/.gitkeep"
+}
 # Lambda Function (cleanup)
 resource "aws_lambda_function" "booking_cleanup" {
-  function_name    = "booking-cleanup-handler"
-  filename         = "booking_cleanup.zip" # zipped code
+ 
+  function_name = "booking-cleanup-handler"
+  filename         = data.archive_file.booking_cleanup_zip.output_path
+ 
   handler          = "booking_cleanup.lambda_handler"
   runtime          = "python3.9"
   role             = aws_iam_role.booking_cleanup_lambda_role.arn
-  source_code_hash = filebase64sha256("booking_cleanup.zip")
+  source_code_hash = data.archive_file.booking_cleanup_zip.output_base64sha256
 
   environment {
     variables = {
