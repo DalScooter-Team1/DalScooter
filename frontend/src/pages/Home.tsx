@@ -2,7 +2,12 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import dalImage from "../assets/Dal image.jpg";
 import { bikeInventoryService } from "../Services/bikeInventoryService";
-import type { BikeBackendResponse } from "../Services/bikeInventoryService";
+import type { BikeAvailabilityResponse, BikeBackendResponse } from "../Services/bikeInventoryService";
+import { Button } from "@headlessui/react";
+import Modal from "../components/modal/modal";
+import BookingModalContent, { type BikeModalData, type BookingData } from "./BookingModalContent";
+import { useAuth } from "../context/AuthContext";
+
 
 // Simplified type for display only
 interface BikeCardInfo {
@@ -14,12 +19,17 @@ interface BikeCardInfo {
 
 function Home() {
   const [bikes, setBikes] = useState<BikeCardInfo[]>([]);
-
+  const [bikesBackendResponse, setBikesBackendResponse] = useState<BikeAvailabilityResponse | undefined>(undefined);
+  const [openModal, setOpenModal] = useState(false);
+  const [bikeModalData, setBikeModalData] = useState<Array<BikeModalData> | undefined>(undefined);
+  const { authState } = useAuth();
+  const user = authState.user // || { username: "testuser" }; // Mock user for development
+  
   useEffect(() => {
     const fetchBikes = async () => {
       try {
         const response = await bikeInventoryService.getAvailableBikes();
-        console.log(response);
+        setBikesBackendResponse(response);
         if (response.success && response.available_bikes) {
           const transformed = response.available_bikes.map((entry) => {
             const sample = entry.bikes?.[0] as BikeBackendResponse | undefined;
@@ -39,6 +49,30 @@ function Home() {
 
     fetchBikes();
   }, []);
+
+  function handleOpenModal(){
+    if(bikesBackendResponse?.available_bikes?.length !== 0) {
+      const availableBikes : Array<BikeModalData> = [];
+      bikesBackendResponse?.available_bikes?.forEach((bikeType) => {
+        if (bikeType.bikes && bikeType.bikes.length > 0) {
+          availableBikes.push({
+            type: bikeType.bike_type,
+            inventory: bikeType.bikes.length,
+            label: `${bikeType.bike_type} - ${bikeType.bikes.length} Bikes Available`,
+            hourlyRate: bikeType.bikes[0].hourlyRate
+          });
+        }
+      });
+      setBikeModalData(availableBikes);
+    }
+    setOpenModal(true);
+  }
+
+  function bookBike(bookingData: BookingData) {
+    // console.log("Booking Data:", bookingData);
+    //TODO: call the booking service here
+    // given here: bikeid, starttime, endtime
+  }
 
   return (
     <div className="flex h-screen">
@@ -66,12 +100,18 @@ function Home() {
       {/* Right Panel with Bikes */}
       <div className="w-1/2 p-10 flex flex-col">
         <div className="flex justify-end space-x-4 mb-4">
-          <Link to="/login" className="text-blue-600 hover:underline">
-            Login
-          </Link>
-          <Link to="/register" className="text-blue-600 hover:underline">
-            Register
-          </Link>
+          {user ? '' : (
+            <>
+              <Link to="/login" className="text-blue-600 hover:underline">
+                Login
+              </Link>
+              <Link to="/register" className="text-blue-600 hover:underline">
+                Register
+              </Link>
+            </>
+          )}
+          
+          
         </div>
         <h2 className="text-3xl font-semibold mb-6">Available Bikes</h2>
 
@@ -91,6 +131,18 @@ function Home() {
             <p>No bikes available at this time.</p>
           )}
         </div>
+        {
+          user ? (
+            <Button onClick={handleOpenModal} className="mt-6 w-50 bg-black text-white hover:bg-gray-800">
+              Reserve a Bike
+            </Button>
+          ): ""
+        }
+        
+
+        <Modal isOpen={openModal} onClose={() => setOpenModal(false)}>
+          <BookingModalContent data={bikeModalData} onSubmit={bookBike} />
+        </Modal>
       </div>
     </div>
   );

@@ -7,13 +7,15 @@ import AdminDashboard from './pages/AdminDashboard';
 import CustomerDashboard from './pages/CustomerDashboard';
 import { useHeartbeatInitializer } from './hooks/useHeartbeatInitializer';
 import Home from './pages/Home';
+import { AuthProvider } from './context/AuthContext';
 
 function App() {
   // Initialize heartbeat service for customers
   useHeartbeatInitializer();
 
   return (
-     <BrowserRouter>
+    <AuthProvider>
+      <BrowserRouter>
       <Routes>
 
         <Route path='/' element={<Home />} />
@@ -24,6 +26,7 @@ function App() {
         
       </Routes>
       </BrowserRouter>
+    </AuthProvider>
      
   )
 }
