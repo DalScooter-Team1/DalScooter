@@ -162,11 +162,25 @@ export interface DiscountCodeListResponse {
 
 export interface BikeAvailabilityResponse {
     success: boolean;
-    available_bikes: {
-        bike_type: BikeType;
-        bikes: BikeBackendResponse[];
+    bikeAvailability: {
+        bikeType: string;
+        availableCount: number;
+        status: string;
+        pricing: {
+            minHourlyRate: number;
+            maxHourlyRate: number;
+            avgHourlyRate: number;
+        };
+        features: {
+            maxSpeed: string;
+            batteryLife: string;
+            weightCapacity: string;
+            specialFeatures: string[];
+        };
+        sampleBikes: BikeBackendResponse[];
     }[];
-    message?: string;
+    totalAvailable: number;
+    lastUpdated: string;
 }
 
 // Bike Inventory Service functions
