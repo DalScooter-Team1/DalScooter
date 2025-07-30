@@ -2,23 +2,25 @@ import React, { useState, useEffect } from 'react';
 import { bikeInventoryService } from '../Services/bikeInventoryService';
 import type { BikeAvailabilityResponse } from '../Services/bikeInventoryService';
 
-// Interface for the bike availability data
-interface BikeAvailability {
+// Interface for individual bike data
+interface Bike {
+  bikeId: string;
   bikeType: string;
-  availableCount: number;
+  hourlyRate: number;
   status: string;
-  pricing: {
-    minHourlyRate: number;
-    maxHourlyRate: number;
-    avgHourlyRate: number;
-  };
   features: {
-    maxSpeed: string;
-    batteryLife: string;
-    weightCapacity: string;
-    specialFeatures: string[];
+    batteryLife: number;
+    maxSpeed: number;
+    weight: number;
+    heightAdjustment: boolean;
   };
-  sampleBikes: any[];
+  location: {
+    address: string;
+    latitude: number;
+    longitude: number;
+  };
+  createdAt: string;
+  updatedAt: string;
 }
 
 interface BikeAvailabilitySectionProps {
@@ -30,11 +32,11 @@ const BikeAvailabilitySection: React.FC<BikeAvailabilitySectionProps> = ({
   title = "Available Bikes",
   showHeader = true 
 }) => {
-  const [bikeAvailability, setBikeAvailability] = useState<BikeAvailability[]>([]);
+  const [bikes, setBikes] = useState<Bike[]>([]);
   const [totalAvailable, setTotalAvailable] = useState(0);
   const [lastUpdated, setLastUpdated] = useState("");
   const [loading, setLoading] = useState(true);
-  const [selectedBike, setSelectedBike] = useState<any>(null);
+  const [selectedBike, setSelectedBike] = useState<Bike | null>(null);
   const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
@@ -43,8 +45,8 @@ const BikeAvailabilitySection: React.FC<BikeAvailabilitySectionProps> = ({
         setLoading(true);
         const response = await bikeInventoryService.getAvailableBikes();
         console.log(response);
-        if (response.success && response.bikeAvailability) {
-          setBikeAvailability(response.bikeAvailability);
+        if (response.success && response.bikes) {
+          setBikes(response.bikes);
           setTotalAvailable(response.totalAvailable);
           setLastUpdated(response.lastUpdated);
         }
@@ -67,7 +69,7 @@ const BikeAvailabilitySection: React.FC<BikeAvailabilitySectionProps> = ({
     });
   };
 
-  const handleBikeClick = (bike: any) => {
+  const handleBikeClick = (bike: Bike) => {
     setSelectedBike(bike);
     setShowModal(true);
   };
@@ -95,132 +97,67 @@ const BikeAvailabilitySection: React.FC<BikeAvailabilitySectionProps> = ({
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-500"></div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {bikeAvailability.length > 0 ? (
-            bikeAvailability.map((bike, index) => (
+        <div className="space-y-4">
+          {bikes.length > 0 ? (
+            bikes.map((bike) => (
               <div
-                key={index}
-                className={`bg-white rounded-xl shadow-sm border transition-all duration-200 hover:shadow-md ${
-                  bike.status === 'available' ? 'border-green-200' : 'border-gray-200'
-                }`}
+                key={bike.bikeId}
+                onClick={() => handleBikeClick(bike)}
+                className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition-all duration-200 cursor-pointer"
               >
-                {/* Card Header */}
-                <div className="p-6 border-b border-gray-100">
-                  <div className="flex justify-between items-start mb-3">
-                    <div className="flex items-center space-x-3">
-                      <div className="p-2 bg-gradient-to-r from-amber-400 to-yellow-500 rounded-lg animate-pulse">
+                <div className="flex justify-between items-start">
+                  <div className="flex-1">
+                    <div className="flex items-center space-x-3 mb-2">
+                      <div className="p-2 bg-gradient-to-r from-amber-400 to-yellow-500 rounded-lg">
                         {bike.bikeType === 'Gyroscooter' && (
-                          <svg className="w-6 h-6 text-white animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                            <circle cx="8" cy="18" r="2" className="animate-spin" style={{ animationDuration: '3s' }} />
-                            <circle cx="16" cy="18" r="2" className="animate-spin" style={{ animationDuration: '3s' }} />
                           </svg>
                         )}
                         {bike.bikeType === 'eBikes' && (
-                          <svg className="w-6 h-6 text-white animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            <circle cx="12" cy="12" r="3" className="animate-ping" style={{ animationDuration: '2s' }} />
                           </svg>
                         )}
                         {bike.bikeType === 'Segway' && (
-                          <svg className="w-6 h-6 text-white animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
-                            <rect x="8" y="8" width="8" height="8" rx="2" className="animate-pulse" />
-                          </svg>
-                        )}
-                        {!['Gyroscooter', 'eBikes', 'Segway'].includes(bike.bikeType) && (
-                          <svg className="w-6 h-6 text-white animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                            <circle cx="10" cy="18" r="2" className="animate-spin" style={{ animationDuration: '2s' }} />
-                            <circle cx="18" cy="18" r="2" className="animate-spin" style={{ animationDuration: '2s' }} />
                           </svg>
                         )}
                       </div>
-                      <h4 className="text-lg font-semibold text-gray-900">{bike.bikeType}</h4>
+                      <div>
+                        <h4 className="font-semibold text-gray-900">{bike.bikeId}</h4>
+                        <p className="text-sm text-gray-600">{bike.bikeType}</p>
+                      </div>
                     </div>
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                      bike.status === 'available' 
-                        ? 'bg-amber-100 text-amber-800 border border-amber-300' 
-                        : 'bg-gray-100 text-gray-400 border border-gray-200'
-                    }`}>
-                      {bike.availableCount} available
-                    </span>
-                  </div>
-                  <div className="text-2xl font-bold text-amber-600">
-                    ${bike.pricing.avgHourlyRate}/hr
+                    <div className="flex items-center justify-between">
+                      <div className="text-sm text-gray-600">
+                        <p>{bike.location.address}</p>
+                        <p>Battery: {bike.features.batteryLife}%</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-lg font-bold text-amber-600">${bike.hourlyRate}/hr</p>
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          bike.status === 'available' 
+                            ? 'bg-green-100 text-green-800' 
+                            : 'bg-gray-100 text-gray-600'
+                        }`}>
+                          {bike.status}
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 </div>
-
-                {/* Features */}
-                {bike.features.specialFeatures.length > 0 && (
-                  <div className="p-6 border-b border-gray-100">
-                    <div className="flex flex-wrap gap-2">
-                      {bike.features.specialFeatures.slice(0, 3).map((feature, featureIndex) => (
-                        <span
-                          key={featureIndex}
-                          className="px-2 py-1 bg-amber-100 text-amber-800 text-xs rounded-md border border-amber-200"
-                        >
-                          {feature}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Sample Bikes */}
-                {bike.sampleBikes && bike.sampleBikes.length > 0 && (
-                  <div className="p-6">
-                    <p className="text-sm font-medium text-gray-700 mb-3">Available Bikes</p>
-                    <div className="space-y-2">
-                      {bike.sampleBikes.slice(0, 2).map((sampleBike, bikeIndex) => (
-                        <div
-                          key={bikeIndex}
-                          onClick={() => handleBikeClick(sampleBike)}
-                          className="flex justify-between items-center p-3 bg-amber-50 rounded-lg border border-amber-100 cursor-pointer hover:bg-amber-100 transition-colors"
-                        >
-                          <div>
-                            <p className="text-sm font-medium text-gray-800">
-                              {sampleBike.bikeId}
-                            </p>
-                            <p className="text-xs text-gray-600">
-                              {sampleBike.location.address}
-                            </p>
-                          </div>
-                          <div className="text-right">
-                            <span className={`px-2 py-1 rounded-full text-xs font-medium border ${
-                              sampleBike.status === 'available' 
-                                ? 'bg-amber-200 text-amber-900 border-amber-300' 
-                                : 'bg-gray-200 text-gray-400 border-gray-300'
-                            }`}>
-                              {sampleBike.status}
-                            </span>
-                          </div>
-                        </div>
-                      ))}
-                      {bike.sampleBikes.length > 2 && (
-                        <p className="text-xs text-amber-600 text-center">
-                          +{bike.sampleBikes.length - 2} more bikes
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {bike.sampleBikes && bike.sampleBikes.length === 0 && bike.status === 'available' && (
-                  <div className="p-6 text-center">
-                    <p className="text-sm text-gray-500">No bikes currently available</p>
-                  </div>
-                )}
               </div>
             ))
           ) : (
-            <div className="col-span-full text-center py-12">
+            <div className="text-center py-12">
               <div className="text-gray-400 mb-4">
                 <svg className="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
               </div>
-              <p className="text-gray-500">No bike information available at this time.</p>
+              <p className="text-gray-500">No bikes available at this time.</p>
             </div>
           )}
         </div>
