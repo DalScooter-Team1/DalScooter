@@ -150,27 +150,27 @@ const LeftBar: React.FC<LeftBarProps> = ({ activeSection, onSectionChange }) => 
   return (
     <div className={`bg-white border-r border-gray-200 text-gray-900 transition-all duration-500 h-screen flex flex-col shadow-xl ${isCollapsed ? 'w-20' : 'w-80'}`}>
       {/* Header */}
-      <div className="p-6 border-b border-gray-200 bg-gradient-to-r from-blue-600 to-purple-600">
+      <div className="p-6 border-b border-gray-200 bg-white">
         <div className="flex items-center justify-between">
           {!isCollapsed && (
             <div className="flex items-center space-x-4">
               <div className="relative">
-                <div className="w-12 h-12 bg-white bg-opacity-20 rounded-2xl flex items-center justify-center backdrop-blur-sm">
+                <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
                   <span className="text-xl font-bold text-white">DS</span>
                 </div>
                 <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-400 rounded-full border-2 border-white animate-pulse"></div>
               </div>
               <div>
-                <span className="text-xl font-bold text-white">DalScooter</span>
-                <p className="text-blue-100 text-sm">Admin Portal</p>
+                <span className="text-xl font-bold text-gray-900">DalScooter</span>
+                <p className="text-gray-600 text-sm">Admin Portal</p>
               </div>
             </div>
           )}
           <button
             onClick={() => setIsCollapsed(!isCollapsed)}
-            className="p-2 rounded-xl hover:bg-white hover:bg-opacity-20 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-blue-600 transform hover:scale-105"
+            className="p-2 rounded-xl hover:bg-gray-100 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transform hover:scale-105"
           >
-            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </button>
