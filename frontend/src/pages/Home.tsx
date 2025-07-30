@@ -52,7 +52,6 @@ function Home() {
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleString('en-CA', {
-      year: 'numeric',
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
@@ -61,96 +60,79 @@ function Home() {
   };
 
   return (
-    <div className="flex h-screen">
-      {/* Left Panel with Image */}
-      <div className="hidden md:block w-1/2 relative">
-        <img
-          src={dalImage}
-          alt="Dalhousie University"
-          className="w-full h-full object-cover"
-        />
-        <div
-          className="absolute inset-0 bg-gradient-to-r from-transparent via-black/50 to-black/70 pointer-events-none text-white p-8 flex flex-col space-y-3"
-          style={{ justifyContent: "center", alignItems: "flex-end" }}
-        >
-          <h1 className="text-4xl font-bold">DALScooter</h1>
-          <p className="text-xl">Sustainable Campus Mobility</p>
-          <ul className="list-disc ml-5 mt-2 space-y-1">
-            <li>Easy campus transportation</li>
-            <li>Eco-friendly & sustainable</li>
-            <li>Convenient for students & faculty</li>
-          </ul>
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-white shadow-sm border-b">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center py-4">
+            <div className="flex items-center space-x-4">
+              <div className="w-10 h-10 bg-gradient-to-r from-amber-400 to-yellow-500 rounded-lg flex items-center justify-center">
+                <span className="text-white font-bold text-lg">D</span>
+              </div>
+              <h1 className="text-2xl font-bold text-gray-900">DALScooter</h1>
+            </div>
+            <div className="flex space-x-4">
+              <Link to="/login" className="text-gray-600 hover:text-amber-600 transition-colors">
+                Login
+              </Link>
+              <Link to="/register" className="bg-gradient-to-r from-amber-400 to-yellow-500 text-white px-4 py-2 rounded-lg hover:from-amber-500 hover:to-yellow-600 transition-all">
+                Register
+              </Link>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Right Panel with Bikes */}
-      <div className="w-1/2 p-10 flex flex-col overflow-y-auto">
-        <div className="flex justify-end space-x-4 mb-4">
-          <Link to="/login" className="text-blue-600 hover:underline">
-            Login
-          </Link>
-          <Link to="/register" className="text-blue-600 hover:underline">
-            Register
-          </Link>
-        </div>
-        
-        <div className="mb-6">
-          <h2 className="text-3xl font-semibold mb-2">Available Bikes</h2>
-          <p className="text-gray-600 text-sm">
-            Total Available: {totalAvailable} • Last Updated: {lastUpdated ? formatDate(lastUpdated) : 'N/A'}
-          </p>
+      {/* Main Content - Bike Availability Section */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="mb-8">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-2xl font-bold text-gray-900">Available Bikes</h3>
+            <div className="text-sm text-gray-600">
+              {totalAvailable} available • Updated {lastUpdated ? formatDate(lastUpdated) : 'N/A'}
+            </div>
+          </div>
         </div>
 
         {loading ? (
           <div className="flex justify-center items-center h-32">
-            <p className="text-gray-500">Loading bike availability...</p>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-500"></div>
           </div>
         ) : (
-          <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {bikeAvailability.length > 0 ? (
               bikeAvailability.map((bike, index) => (
                 <div
                   key={index}
-                  className={`border rounded-lg p-6 shadow-sm ${
-                    bike.status === 'available' ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200'
+                  className={`bg-white rounded-xl shadow-sm border transition-all duration-200 hover:shadow-md ${
+                    bike.status === 'available' ? 'border-green-200' : 'border-gray-200'
                   }`}
                 >
-                  <div className="flex justify-between items-start mb-4">
-                    <div>
-                      <h3 className="text-xl font-semibold text-gray-800">{bike.bikeType}</h3>
-                      <div className="flex items-center space-x-2 mt-1">
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          bike.status === 'available' 
-                            ? 'bg-green-100 text-green-800' 
-                            : 'bg-gray-100 text-gray-800'
-                        }`}>
-                          {bike.status === 'available' ? 'Available' : 'Unavailable'}
-                        </span>
-                        <span className="text-sm text-gray-600">
-                          {bike.availableCount} bikes
-                        </span>
-                      </div>
+                  {/* Card Header */}
+                  <div className="p-6 border-b border-gray-100">
+                    <div className="flex justify-between items-start mb-3">
+                      <h4 className="text-lg font-semibold text-gray-900">{bike.bikeType}</h4>
+                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                        bike.status === 'available' 
+                          ? 'bg-amber-100 text-amber-800 border border-amber-300' 
+                          : 'bg-gray-100 text-gray-400 border border-gray-200'
+                      }`}>
+                        {bike.availableCount} available
+                      </span>
                     </div>
-                    <div className="text-right">
-                      <p className="text-2xl font-bold text-green-600">
-                        ${bike.pricing.avgHourlyRate}/hr
-                      </p>
-                      {bike.pricing.minHourlyRate !== bike.pricing.maxHourlyRate && (
-                        <p className="text-sm text-gray-500">
-                          ${bike.pricing.minHourlyRate} - ${bike.pricing.maxHourlyRate}/hr
-                        </p>
-                      )}
+                    <div className="text-2xl font-bold text-amber-600">
+                      ${bike.pricing.avgHourlyRate}/hr
                     </div>
                   </div>
 
+                  {/* Features */}
                   {bike.features.specialFeatures.length > 0 && (
-                    <div>
-                      <p className="text-sm font-medium text-gray-700 mb-2">Features:</p>
+                    <div className="p-6 border-b border-gray-100">
                       <div className="flex flex-wrap gap-2">
-                        {bike.features.specialFeatures.map((feature, featureIndex) => (
+                        {bike.features.specialFeatures.slice(0, 3).map((feature, featureIndex) => (
                           <span
                             key={featureIndex}
-                            className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full"
+                            className="px-2 py-1 bg-amber-100 text-amber-800 text-xs rounded-md border border-amber-200"
                           >
                             {feature}
                           </span>
@@ -159,84 +141,127 @@ function Home() {
                     </div>
                   )}
 
-                  {/* Sample Bikes Section */}
+                  {/* Sample Bikes */}
                   {bike.sampleBikes && bike.sampleBikes.length > 0 && (
-                    <div className="mt-4 pt-4 border-t border-gray-200">
-                      <p className="text-sm font-medium text-gray-700 mb-3">Available Bikes:</p>
-                      <div className="space-y-3">
-                        {bike.sampleBikes.map((sampleBike, bikeIndex) => (
+                    <div className="p-6">
+                      <p className="text-sm font-medium text-gray-700 mb-3">Available Bikes</p>
+                      <div className="space-y-2">
+                        {bike.sampleBikes.slice(0, 2).map((sampleBike, bikeIndex) => (
                           <div
                             key={bikeIndex}
-                            className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm"
+                            className="flex justify-between items-center p-3 bg-amber-50 rounded-lg border border-amber-100"
                           >
-                            <div className="flex justify-between items-start mb-2">
-                              <div>
-                                <p className="font-medium text-gray-800 text-sm">
-                                  Bike ID: {sampleBike.bikeId}
-                                </p>
-                                <p className="text-xs text-gray-600">
-                                  Access Code: {sampleBike.accessCode}
-                                </p>
-                              </div>
-                              <div className="text-right">
-                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                  sampleBike.status === 'available' 
-                                    ? 'bg-green-100 text-green-800' 
-                                    : 'bg-red-100 text-red-800'
-                                }`}>
-                                  {sampleBike.status}
-                                </span>
-                              </div>
+                            <div>
+                              <p className="text-sm font-medium text-gray-800">
+                                {sampleBike.bikeId}
+                              </p>
+                              <p className="text-xs text-gray-600">
+                                {sampleBike.location.address}
+                              </p>
                             </div>
-                            
-                            <div className="grid grid-cols-2 gap-3 text-xs">
-                              <div>
-                                <p className="text-gray-600">Location:</p>
-                                <p className="text-gray-800 font-medium">{sampleBike.location.address}</p>
-                              </div>
-                              <div>
-                                <p className="text-gray-600">Rate:</p>
-                                <p className="text-gray-800 font-medium">${sampleBike.hourlyRate}/hr</p>
-                              </div>
-                              <div>
-                                <p className="text-gray-600">Battery:</p>
-                                <p className="text-gray-800 font-medium">{sampleBike.features.batteryLife}%</p>
-                              </div>
-                              <div>
-                                <p className="text-gray-600">Max Speed:</p>
-                                <p className="text-gray-800 font-medium">{sampleBike.features.maxSpeed} km/h</p>
-                              </div>
+                            <div className="text-right">
+                              
+                              <span className={`px-2 py-1 rounded-full text-xs font-medium border ${
+                                sampleBike.status === 'available' 
+                                  ? 'bg-amber-200 text-amber-900 border-amber-300' 
+                                  : 'bg-gray-200 text-gray-400 border-gray-300'
+                              }`}>
+                                {sampleBike.status}
+                              </span>
                             </div>
-
-                            {sampleBike.features.heightAdjustment && (
-                              <div className="mt-2">
-                                <span className="px-2 py-1 bg-purple-100 text-purple-800 text-xs rounded-full">
-                                  Height Adjustable
-                                </span>
-                              </div>
-                            )}
                           </div>
                         ))}
+                        {bike.sampleBikes.length > 2 && (
+                          <p className="text-xs text-amber-600 text-center">
+                            +{bike.sampleBikes.length - 2} more bikes
+                          </p>
+                        )}
                       </div>
                     </div>
                   )}
 
                   {bike.sampleBikes && bike.sampleBikes.length === 0 && bike.status === 'available' && (
-                    <div className="mt-4 pt-4 border-t border-gray-200">
-                      <p className="text-sm text-gray-500 text-center py-2">
-                        No individual bikes currently available
-                      </p>
+                    <div className="p-6 text-center">
+                      <p className="text-sm text-gray-500">No bikes currently available</p>
                     </div>
                   )}
                 </div>
               ))
             ) : (
-              <div className="text-center py-8">
+              <div className="col-span-full text-center py-12">
+                <div className="text-gray-400 mb-4">
+                  <svg className="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                </div>
                 <p className="text-gray-500">No bike information available at this time.</p>
               </div>
             )}
           </div>
         )}
+      </div>
+
+      {/* Hero Section with Animated Illustration at Bottom */}
+      <div className="relative bg-gradient-to-r from-amber-400 to-yellow-500 text-gray-800">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <div>
+              <h2 className="text-4xl font-bold mb-4">Sustainable Campus Mobility</h2>
+              <p className="text-xl text-amber-800 mb-6">
+                Easy, eco-friendly transportation for students and faculty at Dalhousie University
+              </p>
+              <div className="flex space-x-6 text-sm">
+                <div className="flex items-center space-x-2">
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <span>Easy campus transportation</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <span>Eco-friendly & sustainable</span>
+                </div>
+              </div>
+            </div>
+            <div className="flex justify-center items-center">
+              {/* Animated SVG Illustration */}
+              <svg
+                width="320"
+                height="200"
+                viewBox="0 0 320 200"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                className="animate-float"
+              >
+                <style>{`
+                  .animate-float { animation: float 3s ease-in-out infinite; }
+                  @keyframes float {
+                    0%, 100% { transform: translateY(0); }
+                    50% { transform: translateY(-16px); }
+                  }
+                  .wheel-spin { animation: spin 2s linear infinite; transform-origin: 50% 50%; }
+                  @keyframes spin {
+                    100% { transform: rotate(360deg); }
+                  }
+                `}</style>
+                {/* Scooter Body */}
+                <rect x="80" y="120" width="120" height="16" rx="8" fill="#fff8e1" stroke="#f59e42" strokeWidth="3" />
+                <rect x="180" y="80" width="12" height="40" rx="6" fill="#f59e42" />
+                <rect x="90" y="100" width="60" height="12" rx="6" fill="#fbbf24" />
+                {/* Handlebar */}
+                <rect x="185" y="60" width="2" height="20" rx="1" fill="#f59e42" />
+                <rect x="180" y="58" width="12" height="6" rx="3" fill="#fbbf24" />
+                {/* Wheels */}
+                <circle cx="90" cy="140" r="18" fill="#fff8e1" stroke="#f59e42" strokeWidth="4" className="wheel-spin" />
+                <circle cx="190" cy="140" r="18" fill="#fff8e1" stroke="#f59e42" strokeWidth="4" className="wheel-spin" />
+                {/* Headlight */}
+                <ellipse cx="192" cy="86" rx="4" ry="2" fill="#fffde7" />
+                {/* Cartoon Sparkles */}
+                <circle cx="220" cy="60" r="3" fill="#fbbf24" opacity="0.7" />
+                <circle cx="250" cy="100" r="2" fill="#f59e42" opacity="0.5" />
+                <circle cx="120" cy="60" r="2.5" fill="#fbbf24" opacity="0.6" />
+              </svg>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
