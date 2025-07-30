@@ -45,7 +45,7 @@ resource "aws_iam_role_policy" "booking_cleanup_policy" {
 
 # Lambda Function (cleanup)
 resource "aws_lambda_function" "booking_cleanup" {
-  function_name = "booking-cleanup-handler"
+  function_name    = "booking-cleanup-handler"
   filename         = "booking_cleanup.zip" # zipped code
   handler          = "booking_cleanup.lambda_handler"
   runtime          = "python3.9"
