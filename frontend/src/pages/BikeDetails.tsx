@@ -96,12 +96,14 @@ const BikeDetails: React.FC = () => {
         };
         setBike(mockBike);
         
+        const SERVER = import.meta.env.VITE_SERVER || 'https://j5kvxocoah.execute-api.us-east-1.amazonaws.com/prod';
         // Simple API call for feedbacks
         if (bikeId) {
           try {
-            const response = await fetch(`https://j5kvxocoah.execute-api.us-east-1.amazonaws.com/prod/feedback/${bikeId}`);
+            const response = await fetch(`${SERVER}/feedback/${bikeId}`);
             if (response.ok) {
               const data = await response.json();
+              console.log('Feedbacks fetched:', data);
               if (data.success && data.feedbacks) {
                 // Convert API data to display format
                 const displayFeedbacks = data.feedbacks.map((feedback: any) => ({
