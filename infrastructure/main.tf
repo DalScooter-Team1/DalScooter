@@ -114,6 +114,11 @@ module "apis" {
   post_feedback_lambda_invoke_arn    = module.lambda.post_feedback_lambda_invoke_arn
   post_feedback_lambda_function_name = module.lambda.post_feedback_lambda_function_name
 
+  # Get Feedback Lambda references
+  get_feedback_lambda_arn           = module.lambda.get_feedback_lambda_arn
+  get_feedback_lambda_invoke_arn    = module.lambda.get_feedback_lambda_invoke_arn
+  get_feedback_lambda_function_name = module.lambda.get_feedback_lambda_function_name
+
   # Bike Inventory Lambda references
   bike_management_lambda_arn               = module.lambda.bike_management_lambda_arn
   bike_management_lambda_invoke_arn        = module.lambda.bike_management_lambda_invoke_arn
@@ -138,16 +143,16 @@ module "apis" {
 # API GATEWAY OUTPUTS
 # ================================
 
-output "api_gateway_url" {
-  description = "API Gateway invoke URL"
-  value       = module.apis.api_gateway_invoke_url
+ 
+ output "cognito_user_pool_id" {
+   description = "value of Cognito client ID"
+   value       = aws_cognito_user_pool.pool.id
+ }
+ 
+output "cognito_client_id" {
+  description = "value of Cognito user pool ID"
+  value       = aws_cognito_user_pool_client.client.id
 }
-
-output "api_gateway_id" {
-  description = "API Gateway ID"
-  value       = module.apis.api_gateway_id
-}
-
 output "api_gateway_deployment_invoke_url" {
   description = "API Gateway deployment invoke URL (for Frontend.tf compatibility)"
   value       = module.apis.api_gateway_deployment_invoke_url

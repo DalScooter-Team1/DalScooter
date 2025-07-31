@@ -3,8 +3,15 @@ import boto3
 import os
 import uuid
 import secrets
+import base64
+import traceback
 from datetime import datetime, timedelta
 from decimal import Decimal
+import logging
+
+# Configure logging - disabled for debugging
+# logger = logging.getLogger()
+# logger.setLevel(logging.INFO)
 
 # AWS clients
 dynamodb = boto3.resource('dynamodb')
@@ -53,7 +60,6 @@ def verify_franchise_user(event):
                 payload += '=' * (4 - padding)
                 
             # Decode from base64
-            import base64
             decoded_bytes = base64.urlsafe_b64decode(payload)
             payload_json = json.loads(decoded_bytes.decode('utf-8'))
             
@@ -97,6 +103,7 @@ def lambda_handler(event, context):
         # Verify franchise user authentication for admin operations
         is_authorized, auth_error = verify_franchise_user(event)
         if not is_authorized:
+            print(f"Authorization failed: {auth_error}")
             return {
                 'statusCode': 401,
                 'headers': get_cors_headers(),
@@ -107,6 +114,7 @@ def lambda_handler(event, context):
             }
         
         method = event['httpMethod']
+        print(f"Processing {method} request")
         
         if method == 'GET':
             return handle_get_bikes(event)
@@ -128,6 +136,8 @@ def lambda_handler(event, context):
             
     except Exception as e:
         print(f"Error in bike inventory handler: {str(e)}")
+        import traceback
+        print(f"Traceback: {traceback.format_exc()}")
         return {
             'statusCode': 500,
             'headers': get_cors_headers(),
@@ -146,28 +156,43 @@ def handle_get_bikes(event):
         status = query_params.get('status')
         franchise_id = query_params.get('franchiseId')
         
-        # Build query based on parameters
+        # Build query based on parameters with active filter
         if bike_type:
             response = bikes_table.query(
                 IndexName='bikeType-index',
                 KeyConditionExpression='bikeType = :bikeType',
-                ExpressionAttributeValues={':bikeType': bike_type}
+                FilterExpression='isActive = :isActive',
+                ExpressionAttributeValues={
+                    ':bikeType': bike_type,
+                    ':isActive': True
+                }
             )
         elif status:
             response = bikes_table.query(
                 IndexName='status-index',
                 KeyConditionExpression='#status = :status',
+                FilterExpression='isActive = :isActive',
                 ExpressionAttributeNames={'#status': 'status'},
-                ExpressionAttributeValues={':status': status}
+                ExpressionAttributeValues={
+                    ':status': status,
+                    ':isActive': True
+                }
             )
         elif franchise_id:
             response = bikes_table.query(
                 IndexName='franchiseId-index',
                 KeyConditionExpression='franchiseId = :franchiseId',
-                ExpressionAttributeValues={':franchiseId': franchise_id}
+                FilterExpression='isActive = :isActive',
+                ExpressionAttributeValues={
+                    ':franchiseId': franchise_id,
+                    ':isActive': True
+                }
             )
         else:
-            response = bikes_table.scan()
+            response = bikes_table.scan(
+                FilterExpression='isActive = :isActive',
+                ExpressionAttributeValues={':isActive': True}
+            )
         
         bikes = response.get('Items', [])
         
@@ -289,6 +314,8 @@ def handle_update_bike(event):
         path_params = event.get('pathParameters') or {}
         bike_id = path_params.get('bikeId')
         
+        print(f"Update request for bike ID: {bike_id}")
+        
         if not bike_id:
             return {
                 'statusCode': 400,
@@ -298,31 +325,240 @@ def handle_update_bike(event):
                     'message': 'Missing bike ID in path'
                 })
             }
+
+        # Parse and validate request body
+        try:
+            body = json.loads(event['body'])
+            print(f"Update request body: {json.dumps(body, indent=2)}")
+        except json.JSONDecodeError as e:
+            print(f"JSON decode error: {str(e)}")
+            return {
+                'statusCode': 400,
+                'headers': get_cors_headers(),
+                'body': json.dumps({
+                    'success': False,
+                    'message': f'Invalid JSON in request body: {str(e)}'
+                })
+            }
         
-        body = json.loads(event['body'])
+        # Check if bike exists and is active before updating
+        try:
+            existing_bike_response = bikes_table.get_item(Key={'bikeId': bike_id})
+            print(f"DynamoDB get_item response: {existing_bike_response}")
+        except Exception as e:
+            print(f"Error fetching bike from DynamoDB: {str(e)}")
+            return {
+                'statusCode': 500,
+                'headers': get_cors_headers(),
+                'body': json.dumps({
+                    'success': False,
+                    'message': f'Database error: {str(e)}'
+                })
+            }
+            
+        if 'Item' not in existing_bike_response:
+            return {
+                'statusCode': 404,
+                'headers': get_cors_headers(),
+                'body': json.dumps({
+                    'success': False,
+                    'message': 'Bike not found'
+                })
+            }
+            
+        existing_bike = existing_bike_response['Item']
+        if not existing_bike.get('isActive', True):
+            return {
+                'statusCode': 404,
+                'headers': get_cors_headers(),
+                'body': json.dumps({
+                    'success': False,
+                    'message': 'Bike not found or has been deleted'
+                })
+            }
         
-        # Build update expression
-        update_expression = "SET updatedAt = :updatedAt"
-        expression_values = {':updatedAt': datetime.utcnow().isoformat()}
+        # Build update expression step by step
+        update_parts = []
+        expression_values = {}
         
-        # Add updateable fields
-        updateable_fields = ['accessCode', 'hourlyRate', 'status', 'features', 'location']
-        for field in updateable_fields:
-            if field in body:
-                if field == 'hourlyRate':
-                    update_expression += f", {field} = :{field}"
-                    expression_values[f':{field}'] = Decimal(str(body[field]))
+        # Always update the timestamp
+        update_parts.append("updatedAt = :updatedAt")
+        expression_values[':updatedAt'] = datetime.utcnow().isoformat()
+        
+        # Process each field individually with validation
+        if 'accessCode' in body:
+            access_code = str(body['accessCode']).strip()
+            if not access_code:
+                return {
+                    'statusCode': 400,
+                    'headers': get_cors_headers(),
+                    'body': json.dumps({
+                        'success': False,
+                        'message': 'Access code cannot be empty'
+                    })
+                }
+            update_parts.append("accessCode = :accessCode")
+            expression_values[':accessCode'] = access_code
+            
+        if 'hourlyRate' in body:
+            try:
+                rate = float(body['hourlyRate'])
+                if rate <= 0:
+                    return {
+                        'statusCode': 400,
+                        'headers': get_cors_headers(),
+                        'body': json.dumps({
+                            'success': False,
+                            'message': 'Hourly rate must be greater than 0'
+                        })
+                    }
+                update_parts.append("hourlyRate = :hourlyRate")
+                expression_values[':hourlyRate'] = Decimal(str(rate))
+            except (ValueError, TypeError) as e:
+                return {
+                    'statusCode': 400,
+                    'headers': get_cors_headers(),
+                    'body': json.dumps({
+                        'success': False,
+                        'message': f'Invalid hourly rate: {str(e)}'
+                    })
+                }
+                
+        if 'status' in body:
+            valid_statuses = ['available', 'rented', 'maintenance', 'out_of_service']
+            if body['status'] not in valid_statuses:
+                return {
+                    'statusCode': 400,
+                    'headers': get_cors_headers(),
+                    'body': json.dumps({
+                        'success': False,
+                        'message': f'Invalid status. Must be one of: {", ".join(valid_statuses)}'
+                    })
+                }
+            update_parts.append("#status = :status")
+            expression_values[':status'] = body['status']
+            
+        if 'features' in body:
+            try:
+                features_data = body['features']
+                if isinstance(features_data, dict):
+                    features = {}
+                    # Handle each feature field
+                    if 'heightAdjustment' in features_data:
+                        features['heightAdjustment'] = bool(features_data['heightAdjustment'])
+                    if 'batteryLife' in features_data:
+                        features['batteryLife'] = Decimal(str(features_data['batteryLife']))
+                    if 'maxSpeed' in features_data:
+                        features['maxSpeed'] = Decimal(str(features_data['maxSpeed']))
+                    if 'weight' in features_data:
+                        features['weight'] = Decimal(str(features_data['weight']))
                 else:
-                    update_expression += f", {field} = :{field}"
-                    expression_values[f':{field}'] = body[field]
+                    features = features_data
+                    
+                update_parts.append("features = :features")
+                expression_values[':features'] = features
+            except (ValueError, TypeError) as e:
+                return {
+                    'statusCode': 400,
+                    'headers': get_cors_headers(),
+                    'body': json.dumps({
+                        'success': False,
+                        'message': f'Invalid features data: {str(e)}'
+                    })
+                }
+                
+        if 'location' in body:
+            try:
+                location_data = body['location']
+                if isinstance(location_data, dict):
+                    location = {}
+                    
+                    # Start with existing location data
+                    existing_location = existing_bike.get('location', {})
+                    if existing_location:
+                        location.update(existing_location)
+                    
+                    # Update with new data
+                    if 'address' in location_data:
+                        location['address'] = str(location_data['address'])
+                    if 'latitude' in location_data:
+                        location['latitude'] = Decimal(str(location_data['latitude']))
+                    if 'longitude' in location_data:
+                        location['longitude'] = Decimal(str(location_data['longitude']))
+                        
+                    # Ensure we have required fields
+                    if 'latitude' not in location:
+                        location['latitude'] = Decimal('44.6360')  # Default Halifax latitude
+                    if 'longitude' not in location:
+                        location['longitude'] = Decimal('-63.5909')  # Default Halifax longitude
+                    if 'address' not in location:
+                        location['address'] = 'Dalhousie University, Halifax, NS'
+                else:
+                    location = location_data
+                    
+                update_parts.append("#location = :location")
+                expression_values[':location'] = location
+            except (ValueError, TypeError) as e:
+                return {
+                    'statusCode': 400,
+                    'headers': get_cors_headers(),
+                    'body': json.dumps({
+                        'success': False,
+                        'message': f'Invalid location data: {str(e)}'
+                    })
+                }
         
-        # Update the bike
-        response = bikes_table.update_item(
-            Key={'bikeId': bike_id},
-            UpdateExpression=update_expression,
-            ExpressionAttributeValues=expression_values,
-            ReturnValues='ALL_NEW'
-        )
+        # Validate that we have something to update besides timestamp
+        if len(update_parts) == 1:  # Only updatedAt
+            return {
+                'statusCode': 400,
+                'headers': get_cors_headers(),
+                'body': json.dumps({
+                    'success': False,
+                    'message': 'No valid fields provided for update'
+                })
+            }
+        
+        # Build the final update expression
+        update_expression = "SET " + ", ".join(update_parts)
+        
+        # Handle reserved keywords
+        expression_attribute_names = {}
+        if '#status' in update_expression:
+            expression_attribute_names['#status'] = 'status'
+        if '#location' in update_expression:
+            expression_attribute_names['#location'] = 'location'
+        
+        print(f"Update expression: {update_expression}")
+        print(f"Expression values: {json.dumps(expression_values, default=str)}")
+        print(f"Expression attribute names: {expression_attribute_names}")
+        
+        # Update the bike in DynamoDB
+        try:
+            update_params = {
+                'Key': {'bikeId': bike_id},
+                'UpdateExpression': update_expression,
+                'ExpressionAttributeValues': expression_values,
+                'ReturnValues': 'ALL_NEW'
+            }
+            
+            if expression_attribute_names:
+                update_params['ExpressionAttributeNames'] = expression_attribute_names
+                
+            response = bikes_table.update_item(**update_params)
+            print(f"DynamoDB update successful")
+            
+        except Exception as dynamo_error:
+            print(f"DynamoDB error: {str(dynamo_error)}")
+            print(f"DynamoDB error traceback: {traceback.format_exc()}")
+            return {
+                'statusCode': 500,
+                'headers': get_cors_headers(),
+                'body': json.dumps({
+                    'success': False,
+                    'message': f'Database update failed: {str(dynamo_error)}'
+                })
+            }
         
         return {
             'statusCode': 200,
@@ -334,17 +570,9 @@ def handle_update_bike(event):
             }, default=decimal_default)
         }
         
-    except json.JSONDecodeError:
-        return {
-            'statusCode': 400,
-            'headers': get_cors_headers(),
-            'body': json.dumps({
-                'success': False,
-                'message': 'Invalid JSON in request body'
-            })
-        }
     except Exception as e:
         print(f"Error updating bike: {str(e)}")
+        print(f"Error traceback: {traceback.format_exc()}")
         return {
             'statusCode': 500,
             'headers': get_cors_headers(),
@@ -361,6 +589,8 @@ def handle_delete_bike(event):
         path_params = event.get('pathParameters') or {}
         bike_id = path_params.get('bikeId')
         
+        print(f"Delete request for bike ID: {bike_id}")
+        
         if not bike_id:
             return {
                 'statusCode': 400,
@@ -370,7 +600,7 @@ def handle_delete_bike(event):
                     'message': 'Missing bike ID in path'
                 })
             }
-        
+
         # Check if bike exists before deleting
         response = bikes_table.get_item(Key={'bikeId': bike_id})
         if 'Item' not in response:
@@ -382,16 +612,23 @@ def handle_delete_bike(event):
                     'message': 'Bike not found'
                 })
             }
+            
+        bike = response['Item']
+        print(f"Found bike: {json.dumps(bike, default=str)}")
         
-        # Soft delete by setting isActive to False
-        bikes_table.update_item(
-            Key={'bikeId': bike_id},
-            UpdateExpression='SET isActive = :isActive, updatedAt = :updatedAt',
-            ExpressionAttributeValues={
-                ':isActive': False,
-                ':updatedAt': datetime.utcnow().isoformat()
+        # Check if bike is currently rented/active
+        if bike.get('status') == 'rented':
+            return {
+                'statusCode': 400,
+                'headers': get_cors_headers(),
+                'body': json.dumps({
+                    'success': False,
+                    'message': 'Cannot delete bike that is currently rented'
+                })
             }
-        )
+        
+        # Hard delete by removing the item from the database
+        bikes_table.delete_item(Key={'bikeId': bike_id})
         
         return {
             'statusCode': 200,

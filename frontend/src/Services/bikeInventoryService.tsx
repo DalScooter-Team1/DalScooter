@@ -162,23 +162,7 @@ export interface DiscountCodeListResponse {
 
 export interface BikeAvailabilityResponse {
     success: boolean;
-    bikeAvailability: {
-        bikeType: string;
-        availableCount: number;
-        status: string;
-        pricing: {
-            minHourlyRate: number;
-            maxHourlyRate: number;
-            avgHourlyRate: number;
-        };
-        features: {
-            maxSpeed: string;
-            batteryLife: string;
-            weightCapacity: string;
-            specialFeatures: string[];
-        };
-        sampleBikes: BikeBackendResponse[];
-    }[];
+    bikes: BikeBackendResponse[];
     totalAvailable: number;
     lastUpdated: string;
 }
