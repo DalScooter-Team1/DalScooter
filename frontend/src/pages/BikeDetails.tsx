@@ -1,3 +1,4 @@
+// To do : Instead of mock bike details, pass the bike data from the previous page.
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { bikeInventoryService } from '../Services/bikeInventoryService';
