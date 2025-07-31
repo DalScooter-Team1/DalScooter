@@ -1,5 +1,7 @@
 // To do : Instead of mock bike details, pass the bike data from the previous page.
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
+
 import { useParams, useNavigate } from 'react-router-dom';
 import { bikeInventoryService } from '../Services/bikeInventoryService';
 
@@ -32,8 +34,11 @@ interface Feedback {
   date: string;
 }
 
+ 
+ 
 const BikeDetails: React.FC = () => {
   const { bikeId } = useParams<{ bikeId: string }>();
+   const location = useLocation();
   const navigate = useNavigate();
   const [bike, setBike] = useState<Bike | null>(null);
   const [feedbacks, setFeedbacks] = useState<Feedback[]>([]);
@@ -42,62 +47,20 @@ const BikeDetails: React.FC = () => {
   const [bookingLoading, setBookingLoading] = useState(false);
   const [bookingSuccess, setBookingSuccess] = useState(false);
   const [selectedSentiment, setSelectedSentiment] = useState<'all' | 'positive' | 'neutral' | 'negative'>('all');
-
-  // Simple demo feedback data
-  const demoFeedbacks: Feedback[] = [
-    {
-      id: '1',
-      user: 'Sarah M.',
-      rating: 5,
-      comment: 'Amazing ride! The bike was in perfect condition and the battery lasted the entire trip. Highly recommend!',
-      sentiment: 'positive',
-      date: '2024-01-15'
-    },
-    {
-      id: '2',
-      user: 'Mike R.',
-      rating: 4,
-      comment: 'Great experience overall. The bike was clean and easy to use. Would book again.',
-      sentiment: 'positive',
-      date: '2024-01-14'
-    },
-    {
-      id: '3',
-      user: 'Emma L.',
-      rating: 3,
-      comment: 'The bike was okay, but the seat could be more comfortable for longer rides.',
-      sentiment: 'neutral',
-      date: '2024-01-13'
-    }
-  ];
+  
 
   useEffect(() => {
+    
     const fetchBikeDetails = async () => {
       try {
         setLoading(true);
-        // Simulate API call - replace with actual service call
-        const mockBike: Bike = {
-          bikeId: bikeId || 'GYR-CF201CD8',
-          bikeType: 'Gyroscooter',
-          hourlyRate: 15,
-          status: 'available',
-          features: {
-            batteryLife: 85,
-            maxSpeed: 25,
-            weight: 12.5,
-            heightAdjustment: true,
-          },
-          location: {
-            address: '123 Main Street, Halifax, NS B3J 2K9',
-            latitude: 44.6488,
-            longitude: -63.5752,
-          },
-          createdAt: '2024-01-01T10:00:00Z',
-          updatedAt: '2024-01-15T14:30:00Z',
-        };
-        setBike(mockBike);
+        const SERVER = import.meta.env.VITE_SERVER 
+
+       
+        const current_bike = location.state?.bike || null;
         
-        const SERVER = import.meta.env.VITE_SERVER || 'https://j5kvxocoah.execute-api.us-east-1.amazonaws.com/prod';
+        setBike(current_bike);
+
         // Simple API call for feedbacks
         if (bikeId) {
           try {
@@ -118,15 +81,11 @@ const BikeDetails: React.FC = () => {
                   date: new Date(feedback.timestamp).toLocaleDateString()
                 }));
                 setFeedbacks(displayFeedbacks);
-              } else {
-                setFeedbacks(demoFeedbacks);
-              }
-            } else {
-              setFeedbacks(demoFeedbacks);
-            }
+              }  
+            }  
           } catch (error) {
             console.error('Error fetching feedbacks:', error);
-            setFeedbacks(demoFeedbacks);
+             
           }
         }
       } catch (error) {
@@ -435,7 +394,7 @@ const BikeDetails: React.FC = () => {
               )}
 
               {/* Sentiment Filter Tabs */}
-              {feedbacks.length > 0 && (
+              {/* {feedbacks.length > 0 && (
                 <div className="mb-6">
                   <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg">
                     {[
@@ -461,7 +420,7 @@ const BikeDetails: React.FC = () => {
                     ))}
                   </div>
                 </div>
-              )}
+              )} */}
 
               {/* Reviews List */}
               <div className="space-y-6">

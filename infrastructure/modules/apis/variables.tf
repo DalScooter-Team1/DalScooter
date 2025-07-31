@@ -57,6 +57,7 @@ variable "get_customers_lambda_arn" {
   type        = string
 }
 
+
 variable "get_customers_lambda_invoke_arn" {
   description = "Invoke ARN of the get customers Lambda function"
   type        = string
@@ -175,6 +176,10 @@ variable "bike_management_lambda_arn" {
   type        = string
 }
 
+variable "booking_request_lambda_invoke_arn" {
+  description = "Invoke ARN of the booking request Lambda function"
+  type        = string
+}
 variable "bike_management_lambda_invoke_arn" {
   description = "Invoke ARN of the bike management Lambda function"
   type        = string
@@ -213,4 +218,10 @@ variable "discount_management_lambda_invoke_arn" {
 variable "discount_management_lambda_function_name" {
   description = "Name of the discount management Lambda function"
   type        = string
+}
+
+
+variable "booking_request_lambda_function_name" {
+  description = "Function name of the booking request Lambda"
+  type        = string  
 }

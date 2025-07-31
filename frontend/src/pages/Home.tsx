@@ -17,10 +17,10 @@ function Home() {
               <h1 className="text-2xl font-bold text-gray-900">DALScooter</h1>
             </div>
             <div className="flex space-x-4">
-              <Link to="/login" className="text-gray-600 hover:text-amber-600 transition-colors">
+              <Link to="/login" className="bg-black text-white px-4 py-2 rounded-lg hover:bg-yellow-500 hover:text-black transition-all duration-200">
                 Login
               </Link>
-              <Link to="/register" className="bg-gradient-to-r from-amber-400 to-yellow-500 text-white px-4 py-2 rounded-lg hover:from-amber-500 hover:to-yellow-600 transition-all">
+              <Link to="/register" className="bg-black text-white px-4 py-2 rounded-lg hover:bg-yellow-500 hover:text-black transition-all duration-200">
                 Register
               </Link>
             </div>
