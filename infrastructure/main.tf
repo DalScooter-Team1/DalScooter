@@ -51,6 +51,12 @@ module "lambda" {
   discount_codes_table_arn       = aws_dynamodb_table.discount_codes.arn
   user_discount_usage_table_name = aws_dynamodb_table.user_discount_usage.name
   user_discount_usage_table_arn  = aws_dynamodb_table.user_discount_usage.arn
+
+  #booking related variables
+  booking_table_name = aws_dynamodb_table.booking_table.name
+  booking_table_arn  = aws_dynamodb_table.booking_table.arn
+  sqs_queue_arn      = aws_sqs_queue.booking_queue.arn
+  sqs_queue_url      = aws_sqs_queue.booking_queue.id
 }
 
 
