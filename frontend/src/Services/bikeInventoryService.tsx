@@ -120,7 +120,8 @@ export interface BikeUpdateRequest {
 }
 
 export interface DiscountCode {
-    code: string;
+    codeId: string;  // UUID identifier for backend operations
+    code: string;    // Human-readable discount code
     discount_percentage: number;
     expiry_date: string;
     is_active: boolean;
@@ -277,34 +278,22 @@ export const bikeInventoryService = {
         return response.data;
     },
 
-    // Get discount code by code
-    getDiscountCode: async (code: string): Promise<BikeInventoryResponse<DiscountCode>> => {
-        const response = await bikeInventoryAPI.get(`/discount-codes/${code}`);
-        return response.data;
-    },
-
     // Create a new discount code
     createDiscountCode: async (discountData: DiscountCodeCreateRequest): Promise<BikeInventoryResponse<DiscountCode>> => {
-        // Convert expiryHours to expiryDays for backend compatibility
-        const backendData = {
-            ...discountData,
-            expiryDays: Math.ceil(discountData.expiryHours / 24) // Convert hours to days, round up
-        };
-        delete (backendData as any).expiryHours; // Remove the frontend field
-
-        const response = await bikeInventoryAPI.post('/discount-codes', backendData);
+        // Send the data as-is since backend now expects discountPercentage and expiryHours
+        const response = await bikeInventoryAPI.post('/discount-codes', discountData);
         return response.data;
     },
 
     // Update an existing discount code
-    updateDiscountCode: async (code: string, discountData: DiscountCodeUpdateRequest): Promise<BikeInventoryResponse<DiscountCode>> => {
-        const response = await bikeInventoryAPI.put(`/discount-codes/${code}`, discountData);
+    updateDiscountCode: async (codeId: string, discountData: DiscountCodeUpdateRequest): Promise<BikeInventoryResponse<DiscountCode>> => {
+        const response = await bikeInventoryAPI.put(`/discount-codes/${codeId}`, discountData);
         return response.data;
     },
 
     // Deactivate a discount code
-    deactivateDiscountCode: async (code: string): Promise<BikeInventoryResponse> => {
-        const response = await bikeInventoryAPI.delete(`/discount-codes/${code}`);
+    deactivateDiscountCode: async (codeId: string): Promise<BikeInventoryResponse> => {
+        const response = await bikeInventoryAPI.delete(`/discount-codes/${codeId}`);
         return response.data;
     },
 
