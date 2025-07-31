@@ -149,12 +149,12 @@ module "apis" {
 # API GATEWAY OUTPUTS
 # ================================
 
- 
- output "cognito_user_pool_id" {
-   description = "value of Cognito client ID"
-   value       = aws_cognito_user_pool.pool.id
- }
- 
+
+output "cognito_user_pool_id" {
+  description = "value of Cognito client ID"
+  value       = aws_cognito_user_pool.pool.id
+}
+
 output "cognito_client_id" {
   description = "value of Cognito user pool ID"
   value       = aws_cognito_user_pool_client.client.id
@@ -162,4 +162,38 @@ output "cognito_client_id" {
 output "api_gateway_deployment_invoke_url" {
   description = "API Gateway deployment invoke URL (for Frontend.tf compatibility)"
   value       = module.apis.api_gateway_deployment_invoke_url
+}
+
+# ================================
+# RDS OUTPUTS
+# ================================
+
+output "rds_endpoint" {
+  description = "RDS instance endpoint"
+  value       = aws_db_instance.dalscooter_rds.endpoint
+}
+
+output "rds_port" {
+  description = "RDS instance port"
+  value       = aws_db_instance.dalscooter_rds.port
+}
+
+output "rds_database_name" {
+  description = "RDS database name"
+  value       = aws_db_instance.dalscooter_rds.db_name
+}
+
+output "rds_username" {
+  description = "RDS master username"
+  value       = aws_db_instance.dalscooter_rds.username
+}
+
+output "vpc_id" {
+  description = "VPC ID for the RDS instance"
+  value       = aws_vpc.dalscooter_vpc.id
+}
+
+output "subnet_ids" {
+  description = "Subnet IDs for the RDS instance"
+  value       = [aws_subnet.dalscooter_public_subnet_1.id, aws_subnet.dalscooter_public_subnet_2.id]
 }

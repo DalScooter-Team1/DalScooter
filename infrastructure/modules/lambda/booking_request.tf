@@ -62,7 +62,7 @@ resource "aws_lambda_function" "booking_request" {
   function_name = "booking-request"
   filename      = data.archive_file.booking_request_zip.output_path
   handler       = "booking_request.handler"
-  runtime       = "python3.11"
+  runtime       = "python3.9"
   role          = aws_iam_role.booking_request_lambda_role.arn
 
   environment {
@@ -77,7 +77,7 @@ resource "aws_lambda_function" "booking_request" {
   memory_size      = 256
 }
 
- 
+
 
 variable "booking_table_name" {
   description = "DynamoDB table name for bookings"
