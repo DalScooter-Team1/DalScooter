@@ -258,7 +258,7 @@ const BikeInventoryManagement: React.FC<BikeInventoryManagementProps> = () => {
         try {
             let response;
             if (editingDiscount) {
-                response = await bikeInventoryService.updateDiscountCode(editingDiscount.code, {
+                response = await bikeInventoryService.updateDiscountCode(editingDiscount.codeId, {
                     discountPercentage: discountForm.discountPercentage,
                     expiryHours: discountForm.expiryHours,
                 });
@@ -304,14 +304,14 @@ const BikeInventoryManagement: React.FC<BikeInventoryManagementProps> = () => {
         setShowDiscountForm(true);
     };
 
-    const handleDeactivateDiscount = async (code: string) => {
+    const handleDeactivateDiscount = async (codeId: string) => {
         if (!window.confirm('Are you sure you want to deactivate this discount code?')) {
             return;
         }
 
         setLoading(true);
         try {
-            const response = await bikeInventoryService.deactivateDiscountCode(code);
+            const response = await bikeInventoryService.deactivateDiscountCode(codeId);
             if (response.success) {
                 setSuccessMessage('Discount code deactivated successfully!');
                 fetchDiscountCodes();
@@ -373,8 +373,8 @@ const BikeInventoryManagement: React.FC<BikeInventoryManagementProps> = () => {
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                     {bikes.map((bike, index) => (
-                        <div 
-                            key={bike.bike_id} 
+                        <div
+                            key={bike.bike_id}
                             className="bg-white rounded-3xl shadow-lg border border-gray-100 p-8 hover:shadow-2xl transition-all duration-300 transform hover:scale-105"
                             style={{ animationDelay: `${index * 100}ms` }}
                         >
@@ -383,11 +383,10 @@ const BikeInventoryManagement: React.FC<BikeInventoryManagementProps> = () => {
                                     <h4 className="text-2xl font-bold text-gray-900">{bike.bike_type}</h4>
                                     <p className="text-gray-600">{bike.bike_id}</p>
                                 </div>
-                                <span className={`px-4 py-2 text-sm font-semibold rounded-2xl border ${
-                                    bike.availability 
-                                        ? 'bg-green-100 text-green-800 border-green-200' 
-                                        : 'bg-red-100 text-red-800 border-red-200'
-                                }`}>
+                                <span className={`px-4 py-2 text-sm font-semibold rounded-2xl border ${bike.availability
+                                    ? 'bg-green-100 text-green-800 border-green-200'
+                                    : 'bg-red-100 text-red-800 border-red-200'
+                                    }`}>
                                     {bike.availability ? 'Available' : 'Unavailable'}
                                 </span>
                             </div>
@@ -679,8 +678,8 @@ const BikeInventoryManagement: React.FC<BikeInventoryManagementProps> = () => {
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                     {discountCodes.map((discount, index) => (
-                        <div 
-                            key={discount.code} 
+                        <div
+                            key={discount.code}
                             className="bg-white rounded-3xl shadow-lg border border-gray-100 p-8 hover:shadow-2xl transition-all duration-300 transform hover:scale-105"
                             style={{ animationDelay: `${index * 100}ms` }}
                         >
@@ -689,11 +688,10 @@ const BikeInventoryManagement: React.FC<BikeInventoryManagementProps> = () => {
                                     <h4 className="text-2xl font-bold text-gray-900">{discount.code}</h4>
                                     <p className="text-gray-600">{discount.discount_percentage}% off</p>
                                 </div>
-                                <span className={`px-4 py-2 text-sm font-semibold rounded-2xl border ${
-                                    discount.is_active 
-                                        ? 'bg-green-100 text-green-800 border-green-200' 
-                                        : 'bg-red-100 text-red-800 border-red-200'
-                                }`}>
+                                <span className={`px-4 py-2 text-sm font-semibold rounded-2xl border ${discount.is_active
+                                    ? 'bg-green-100 text-green-800 border-green-200'
+                                    : 'bg-red-100 text-red-800 border-red-200'
+                                    }`}>
                                     {discount.is_active ? 'Active' : 'Inactive'}
                                 </span>
                             </div>
@@ -717,7 +715,7 @@ const BikeInventoryManagement: React.FC<BikeInventoryManagementProps> = () => {
                                     Edit
                                 </button>
                                 <button
-                                    onClick={() => handleDeactivateDiscount(discount.code)}
+                                    onClick={() => handleDeactivateDiscount(discount.codeId)}
                                     className="flex-1 bg-gradient-to-r from-red-600 to-red-700 text-white px-6 py-4 text-sm rounded-2xl hover:from-red-700 hover:to-red-800 transition-all duration-200 transform hover:scale-105 shadow-lg font-semibold"
                                 >
                                     Deactivate
@@ -753,6 +751,20 @@ const BikeInventoryManagement: React.FC<BikeInventoryManagementProps> = () => {
                             <form onSubmit={handleDiscountSubmit} className="space-y-8">
                                 <div>
                                     <label className="block text-lg font-semibold text-gray-700 mb-3">
+                                        Discount Code
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={discountForm.code}
+                                        onChange={(e) => setDiscountForm({ ...discountForm, code: e.target.value })}
+                                        className="w-full border border-gray-300 rounded-2xl px-6 py-4 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 text-lg"
+                                        placeholder="Enter discount code"
+                                        required
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-lg font-semibold text-gray-700 mb-3">
                                         Discount Percentage (5-15%)
                                     </label>
                                     <input
@@ -763,27 +775,24 @@ const BikeInventoryManagement: React.FC<BikeInventoryManagementProps> = () => {
                                         onChange={(e) => setDiscountForm({ ...discountForm, discountPercentage: parseInt(e.target.value) })}
                                         className="w-full border border-gray-300 rounded-2xl px-6 py-4 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 text-lg"
                                         required
-                                        disabled={!!editingDiscount}
                                     />
                                 </div>
 
-                                {!editingDiscount && (
-                                    <div>
-                                        <label className="block text-lg font-semibold text-gray-700 mb-3">
-                                            Expiry (0-2 days from now)
-                                        </label>
-                                        <select
-                                            value={discountForm.expiryHours}
-                                            onChange={(e) => setDiscountForm({ ...discountForm, expiryHours: parseInt(e.target.value) })}
-                                            className="w-full border border-gray-300 rounded-2xl px-6 py-4 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 text-lg"
-                                            required
-                                        >
-                                            <option value={0}>Expires immediately</option>
-                                            <option value={24}>1 day</option>
-                                            <option value={48}>2 days</option>
-                                        </select>
-                                    </div>
-                                )}
+                                <div>
+                                    <label className="block text-lg font-semibold text-gray-700 mb-3">
+                                        {editingDiscount ? 'Expiry Hours (Current Setting)' : 'Expiry (0-2 days from now)'}
+                                    </label>
+                                    <select
+                                        value={discountForm.expiryHours}
+                                        onChange={(e) => setDiscountForm({ ...discountForm, expiryHours: parseInt(e.target.value) })}
+                                        className="w-full border border-gray-300 rounded-2xl px-6 py-4 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 text-lg"
+                                        required
+                                    >
+                                        <option value={0}>Expires immediately</option>
+                                        <option value={24}>1 day</option>
+                                        <option value={48}>2 days</option>
+                                    </select>
+                                </div>
 
                                 <div className="flex space-x-6 pt-8">
                                     <button
@@ -818,11 +827,10 @@ const BikeInventoryManagement: React.FC<BikeInventoryManagementProps> = () => {
                 <nav className="-mb-px flex space-x-8">
                     <button
                         onClick={() => setActiveTab('bikes')}
-                        className={`py-4 px-6 border-b-2 font-semibold text-lg rounded-t-2xl transition-all duration-200 ${
-                            activeTab === 'bikes'
-                                ? 'border-blue-500 text-blue-600 bg-blue-50'
-                                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                        }`}
+                        className={`py-4 px-6 border-b-2 font-semibold text-lg rounded-t-2xl transition-all duration-200 ${activeTab === 'bikes'
+                            ? 'border-blue-500 text-blue-600 bg-blue-50'
+                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                            }`}
                     >
                         <div className="flex items-center space-x-3">
                             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -833,11 +841,10 @@ const BikeInventoryManagement: React.FC<BikeInventoryManagementProps> = () => {
                     </button>
                     <button
                         onClick={() => setActiveTab('discounts')}
-                        className={`py-4 px-6 border-b-2 font-semibold text-lg rounded-t-2xl transition-all duration-200 ${
-                            activeTab === 'discounts'
-                                ? 'border-green-500 text-green-600 bg-green-50'
-                                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                        }`}
+                        className={`py-4 px-6 border-b-2 font-semibold text-lg rounded-t-2xl transition-all duration-200 ${activeTab === 'discounts'
+                            ? 'border-green-500 text-green-600 bg-green-50'
+                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                            }`}
                     >
                         <div className="flex items-center space-x-3">
                             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
