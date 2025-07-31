@@ -35,12 +35,13 @@ const BikeDetails: React.FC = () => {
   const { bikeId } = useParams<{ bikeId: string }>();
   const navigate = useNavigate();
   const [bike, setBike] = useState<Bike | null>(null);
+  const [feedbacks, setFeedbacks] = useState<Feedback[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedHours, setSelectedHours] = useState(1);
   const [bookingLoading, setBookingLoading] = useState(false);
   const [bookingSuccess, setBookingSuccess] = useState(false);
 
-  // Demo feedback data
+  // Simple demo feedback data
   const demoFeedbacks: Feedback[] = [
     {
       id: '1',
@@ -65,22 +66,6 @@ const BikeDetails: React.FC = () => {
       comment: 'The bike was okay, but the seat could be more comfortable for longer rides.',
       sentiment: 'neutral',
       date: '2024-01-13'
-    },
-    {
-      id: '4',
-      user: 'David K.',
-      rating: 2,
-      comment: 'Battery was low when I picked it up. Had to return early. Disappointing experience.',
-      sentiment: 'negative',
-      date: '2024-01-12'
-    },
-    {
-      id: '5',
-      user: 'Lisa P.',
-      rating: 5,
-      comment: 'Perfect for my daily commute! Fast, reliable, and the app made booking super easy.',
-      sentiment: 'positive',
-      date: '2024-01-11'
     }
   ];
 
@@ -109,6 +94,37 @@ const BikeDetails: React.FC = () => {
           updatedAt: '2024-01-15T14:30:00Z',
         };
         setBike(mockBike);
+        
+        // Simple API call for feedbacks
+        if (bikeId) {
+          try {
+            const response = await fetch(`https://j5kvxocoah.execute-api.us-east-1.amazonaws.com/prod/feedback/${bikeId}`);
+            if (response.ok) {
+              const data = await response.json();
+              if (data.success && data.feedbacks) {
+                // Convert API data to display format
+                const displayFeedbacks = data.feedbacks.map((feedback: any) => ({
+                  id: feedback.uuid,
+                  user: feedback.first_name && feedback.last_name 
+                    ? `${feedback.first_name} ${feedback.last_name}`
+                    : feedback.email.split('@')[0],
+                  rating: feedback.polarity === 'POSITIVE' ? 5 : feedback.polarity === 'NEGATIVE' ? 2 : 3,
+                  comment: feedback.feedback_text,
+                  sentiment: feedback.polarity?.toLowerCase() || 'neutral',
+                  date: new Date(feedback.timestamp).toLocaleDateString()
+                }));
+                setFeedbacks(displayFeedbacks);
+              } else {
+                setFeedbacks(demoFeedbacks);
+              }
+            } else {
+              setFeedbacks(demoFeedbacks);
+            }
+          } catch (error) {
+            console.error('Error fetching feedbacks:', error);
+            setFeedbacks(demoFeedbacks);
+          }
+        }
       } catch (error) {
         console.error("Error fetching bike details:", error);
       } finally {
@@ -337,7 +353,7 @@ const BikeDetails: React.FC = () => {
             <div className="bg-white rounded-2xl shadow-lg p-8">
               <h2 className="text-2xl font-bold text-gray-900 mb-6">Customer Reviews</h2>
               <div className="space-y-6">
-                {demoFeedbacks.map((feedback) => (
+                {feedbacks.map((feedback) => (
                   <div key={feedback.id} className="border border-gray-200 rounded-xl p-6">
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex items-center space-x-3">
@@ -363,7 +379,7 @@ const BikeDetails: React.FC = () => {
                                 </svg>
                               ))}
                             </div>
-                            <span className="text-sm text-gray-500">{formatDate(feedback.date)}</span>
+                            <span className="text-sm text-gray-500">{feedback.date}</span>
                           </div>
                         </div>
                       </div>

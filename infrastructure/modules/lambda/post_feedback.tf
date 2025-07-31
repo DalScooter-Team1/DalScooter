@@ -117,6 +117,37 @@ resource "aws_lambda_function" "post_feedback_lambda" {
 }
 
 # ================================
+# GET FEEDBACK LAMBDA
+# ================================
+
+# Create a zip file for the Get Feedback Lambda function
+data "archive_file" "get_feedback_zip" {
+  type        = "zip"
+  source_file = "${path.module}/../../../backend/Feedback/get_feedback.py"
+  output_path = "${path.module}/../../packages/get_feedback.zip"
+}
+
+# Get Feedback Lambda Function
+resource "aws_lambda_function" "get_feedback_lambda" {
+  function_name    = "dalscooter-get-feedback-lambda"
+  role             = aws_iam_role.post_feedback_lambda_role.arn
+  handler          = "get_feedback.lambda_handler"
+  runtime          = "python3.9"
+  filename         = data.archive_file.get_feedback_zip.output_path
+  source_code_hash = data.archive_file.get_feedback_zip.output_base64sha256
+  timeout          = 30
+  environment {
+    variables = {
+      FEEDBACK_TABLE = aws_dynamodb_table.feedback_table.name
+    }
+  }
+  tags = {
+    Name = "DalScooter Get Feedback Lambda"
+  }
+  depends_on = [aws_iam_role_policy.post_feedback_lambda_policy]
+}
+
+# ================================
 # DYNAMODB STREAM PROCESSOR
 # ================================
 # This lambda function processes DynamoDB stream events and sends UUID to SQS
@@ -159,12 +190,14 @@ resource "aws_iam_role_policy" "stream_processor_lambda_policy" {
       {
         Effect = "Allow"
         Action = [
-          "dynamodb:DescribeStream",
-          "dynamodb:GetRecords",
-          "dynamodb:GetShardIterator",
-          "dynamodb:ListStreams"
+          "dynamodb:GetItem",
+          "dynamodb:PutItem",
+          "dynamodb:UpdateItem",
+          "dynamodb:DeleteItem",
+          "dynamodb:Query",
+          "dynamodb:Scan"
         ]
-        Resource = "${aws_dynamodb_table.feedback_table.stream_arn}"
+        Resource = aws_dynamodb_table.feedback_table.arn
       },
       {
         Effect = "Allow"
@@ -192,35 +225,29 @@ resource "aws_lambda_function" "stream_processor_lambda" {
   runtime          = "python3.9"
   filename         = data.archive_file.stream_processor_zip.output_path
   source_code_hash = data.archive_file.stream_processor_zip.output_base64sha256
-  timeout          = 60
+  timeout          = 30
 
   environment {
     variables = {
+      FEEDBACK_TABLE = aws_dynamodb_table.feedback_table.name
       FEEDBACK_QUEUE_URL = var.feedback_queue_url
     }
   }
 
   tags = {
-    Name = "DalScooter Feedback Stream Processor"
+    Name = "DalScooter Feedback Stream Processor Lambda"
   }
 
   depends_on = [aws_iam_role_policy.stream_processor_lambda_policy]
 }
 
-# DynamoDB Stream Event Source Mapping
+# DynamoDB Stream Event Source Mapping for Stream Processor Lambda
 resource "aws_lambda_event_source_mapping" "feedback_stream_mapping" {
   event_source_arn  = aws_dynamodb_table.feedback_table.stream_arn
   function_name     = aws_lambda_function.stream_processor_lambda.arn
   starting_position = "LATEST"
-  batch_size        = 10
-
-  filter_criteria {
-    filter {
-      pattern = jsonencode({
-        eventName = ["INSERT"] # Only trigger on new records
-      })
-    }
-  }
+  batch_size        = 1
+  enabled           = true
 }
 
 # ================================
@@ -269,6 +296,7 @@ resource "aws_iam_role_policy" "analyse_feedback_lambda_policy" {
           "dynamodb:GetItem",
           "dynamodb:PutItem",
           "dynamodb:UpdateItem",
+          "dynamodb:DeleteItem",
           "dynamodb:Query",
           "dynamodb:Scan"
         ]
@@ -277,9 +305,7 @@ resource "aws_iam_role_policy" "analyse_feedback_lambda_policy" {
       {
         Effect = "Allow"
         Action = [
-          "comprehend:DetectSentiment",
-          "comprehend:DetectEntities",
-          "comprehend:DetectKeyPhrases"
+          "comprehend:DetectSentiment"
         ]
         Resource = "*"
       },
@@ -378,4 +404,17 @@ output "analyse_feedback_lambda_function_name" {
 
 output "analyse_feedback_sqs_event_source_mapping_uuid" {
   value = aws_lambda_event_source_mapping.analyse_feedback_sqs_mapping.uuid
+}
+
+# Get Feedback Lambda outputs
+output "get_feedback_lambda_arn" {
+  value = aws_lambda_function.get_feedback_lambda.arn
+}
+
+output "get_feedback_lambda_invoke_arn" {
+  value = aws_lambda_function.get_feedback_lambda.invoke_arn
+}
+
+output "get_feedback_lambda_function_name" {
+  value = aws_lambda_function.get_feedback_lambda.function_name
 }

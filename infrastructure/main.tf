@@ -114,6 +114,11 @@ module "apis" {
   post_feedback_lambda_invoke_arn    = module.lambda.post_feedback_lambda_invoke_arn
   post_feedback_lambda_function_name = module.lambda.post_feedback_lambda_function_name
 
+  # Get Feedback Lambda references
+  get_feedback_lambda_arn           = module.lambda.get_feedback_lambda_arn
+  get_feedback_lambda_invoke_arn    = module.lambda.get_feedback_lambda_invoke_arn
+  get_feedback_lambda_function_name = module.lambda.get_feedback_lambda_function_name
+
   # Bike Inventory Lambda references
   bike_management_lambda_arn               = module.lambda.bike_management_lambda_arn
   bike_management_lambda_invoke_arn        = module.lambda.bike_management_lambda_invoke_arn

@@ -153,6 +153,22 @@ variable "post_feedback_lambda_function_name" {
   type        = string
 }
 
+# Get Feedback Lambda Variables
+variable "get_feedback_lambda_arn" {
+  description = "ARN of the get feedback Lambda function"
+  type        = string
+}
+
+variable "get_feedback_lambda_invoke_arn" {
+  description = "Invoke ARN of the get feedback Lambda function"
+  type        = string
+}
+
+variable "get_feedback_lambda_function_name" {
+  description = "Function name of the get feedback Lambda"
+  type        = string
+}
+
 # Bike Inventory Lambda Variables
 variable "bike_management_lambda_arn" {
   description = "ARN of the bike management Lambda function"
