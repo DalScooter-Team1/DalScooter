@@ -40,18 +40,29 @@ resource "aws_sqs_queue" "booking_queue" {
   delay_seconds               = 0
 }
 
+data "archive_file" "booking_request" {
+  type        = "zip"
+  source_file  = "${path.module}/../backend/BookingQueue/BookingRequest/booking_request.py"
+  output_path = "${path.module}/packages/booking_req.zip"
+}
+
+data "archive_file" "booking_approval" {
+  type        = "zip"
+  source_file  = "${path.module}/../backend/BookingQueue/BookingApproval/booking_approval.py"
+  output_path = "${path.module}/packages/booking_approve.zip"
+}
 # BookingRequest Lambda 
 resource "aws_lambda_function" "booking_request" {
   function_name = "booking-request"
   handler       = "booking_request.handler"
   runtime       = "python3.9"
-  filename      = "${path.module}/BookingRequest/booking_req.zip"
+  filename      = data.archive_file.booking_request.output_path
   role          = aws_iam_role.lambda_exec_role.arn
 
   environment {
     variables = {
       SQS_QUEUE_URL       = aws_sqs_queue.booking_queue.id
-      BOOKING_TABLE_NAME  = "Bookings"
+      BOOKING_TABLE_NAME  = aws_dynamodb_table.booking_table.name
     }
   }
 
@@ -61,17 +72,20 @@ resource "aws_lambda_function" "booking_request" {
   ]
 }
 
+
+
+
 # BookingApproval Lambda 
 resource "aws_lambda_function" "booking_approval" {
   function_name = "booking-approval"
   handler       = "booking_approval.handler"
   runtime       = "python3.9"
-  filename      = "${path.module}/BookingApproval/booking_approve.zip"
+  filename      =  data.archive_file.booking_approval.output_path
   role          = aws_iam_role.lambda_exec_role.arn
 
   environment {
     variables = {
-      BOOKING_TABLE_NAME = "Bookings"
+      BOOKING_TABLE_NAME = aws_dynamodb_table.booking_table.name
     }
   }
 
