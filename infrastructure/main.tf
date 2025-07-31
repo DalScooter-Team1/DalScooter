@@ -138,6 +138,7 @@ module "apis" {
 
   #booking related variables
   booking_request_lambda_invoke_arn           =  aws_lambda_function.booking_request.invoke_arn
+  booking_request_lambda_function_name          =  aws_lambda_function.booking_request.function_name
 }
 
 
