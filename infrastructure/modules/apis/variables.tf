@@ -175,6 +175,10 @@ variable "bike_management_lambda_arn" {
   type        = string
 }
 
+variable "booking_request_lambda_invoke_arn" {
+  description = "Invoke ARN of the booking request Lambda function"
+  type        = string
+}
 variable "bike_management_lambda_invoke_arn" {
   description = "Invoke ARN of the bike management Lambda function"
   type        = string
