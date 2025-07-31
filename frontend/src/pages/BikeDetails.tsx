@@ -40,6 +40,7 @@ const BikeDetails: React.FC = () => {
   const [selectedHours, setSelectedHours] = useState(1);
   const [bookingLoading, setBookingLoading] = useState(false);
   const [bookingSuccess, setBookingSuccess] = useState(false);
+  const [selectedSentiment, setSelectedSentiment] = useState<'all' | 'positive' | 'neutral' | 'negative'>('all');
 
   // Simple demo feedback data
   const demoFeedbacks: Feedback[] = [
@@ -206,6 +207,27 @@ const BikeDetails: React.FC = () => {
     });
   };
 
+  // Helper functions for feedback filtering and statistics
+  const getFilteredFeedbacks = () => {
+    if (selectedSentiment === 'all') return feedbacks;
+    return feedbacks.filter(feedback => feedback.sentiment === selectedSentiment);
+  };
+
+  const getFeedbackStats = () => {
+    const total = feedbacks.length;
+    const positive = feedbacks.filter(f => f.sentiment === 'positive').length;
+    const neutral = feedbacks.filter(f => f.sentiment === 'neutral').length;
+    const negative = feedbacks.filter(f => f.sentiment === 'negative').length;
+    
+    return { total, positive, neutral, negative };
+  };
+
+  const getAverageRating = () => {
+    if (feedbacks.length === 0) return 0;
+    const totalRating = feedbacks.reduce((sum, feedback) => sum + feedback.rating, 0);
+    return (totalRating / feedbacks.length).toFixed(1);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -351,48 +373,153 @@ const BikeDetails: React.FC = () => {
 
             {/* Customer Reviews */}
             <div className="bg-white rounded-2xl shadow-lg p-8">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">Customer Reviews</h2>
-              <div className="space-y-6">
-                {feedbacks.map((feedback) => (
-                  <div key={feedback.id} className="border border-gray-200 rounded-xl p-6">
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center">
-                          <span className="text-amber-600 font-semibold">
-                            {feedback.user.charAt(0)}
-                          </span>
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-gray-900">Customer Reviews</h2>
+                {feedbacks.length > 0 && (
+                  <div className="flex items-center space-x-4">
+                    <div className="flex items-center space-x-2">
+                      <div className="flex items-center">
+                        {[...Array(5)].map((_, i) => (
+                          <svg
+                            key={i}
+                            className={`w-5 h-5 ${
+                              i < Math.floor(Number(getAverageRating())) ? 'text-yellow-400' : 'text-gray-300'
+                            }`}
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                          </svg>
+                        ))}
+                      </div>
+                      <span className="text-lg font-semibold text-gray-900">{getAverageRating()}</span>
+                      <span className="text-gray-500">({feedbacks.length} reviews)</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Feedback Statistics */}
+              {feedbacks.length > 0 && (
+                <div className="mb-8">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {(() => {
+                      const stats = getFeedbackStats();
+                      return [
+                        { label: 'All', count: stats.total, color: 'bg-blue-100 text-blue-800', border: 'border-blue-200' },
+                        { label: 'Positive', count: stats.positive, color: 'bg-green-100 text-green-800', border: 'border-green-200' },
+                        { label: 'Neutral', count: stats.neutral, color: 'bg-gray-100 text-gray-800', border: 'border-gray-200' },
+                        { label: 'Negative', count: stats.negative, color: 'bg-red-100 text-red-800', border: 'border-red-200' }
+                      ].map((item) => (
+                        <button
+                          key={item.label}
+                          onClick={() => setSelectedSentiment(item.label.toLowerCase() as any)}
+                          className={`p-4 rounded-xl border-2 transition-all duration-200 ${
+                            selectedSentiment === item.label.toLowerCase() || (selectedSentiment === 'all' && item.label === 'All')
+                              ? `${item.color} ${item.border} shadow-md`
+                              : 'bg-white border-gray-200 hover:border-gray-300'
+                          }`}
+                        >
+                          <div className="text-center">
+                            <div className="text-2xl font-bold">{item.count}</div>
+                            <div className="text-sm font-medium">{item.label}</div>
+                          </div>
+                        </button>
+                      ));
+                    })()}
+                  </div>
+                </div>
+              )}
+
+              {/* Sentiment Filter Tabs */}
+              {feedbacks.length > 0 && (
+                <div className="mb-6">
+                  <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg">
+                    {[
+                      { key: 'all', label: 'All Reviews', icon: '📝' },
+                      { key: 'positive', label: 'Positive', icon: '😊' },
+                      { key: 'neutral', label: 'Neutral', icon: '😐' },
+                      { key: 'negative', label: 'Negative', icon: '😞' }
+                    ].map((tab) => (
+                      <button
+                        key={tab.key}
+                        onClick={() => setSelectedSentiment(tab.key as any)}
+                        className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all duration-200 ${
+                          selectedSentiment === tab.key
+                            ? 'bg-white text-gray-900 shadow-sm'
+                            : 'text-gray-600 hover:text-gray-900'
+                        }`}
+                      >
+                        <div className="flex items-center justify-center space-x-2">
+                          <span className="text-lg">{tab.icon}</span>
+                          <span>{tab.label}</span>
                         </div>
-                        <div>
-                          <p className="font-semibold text-gray-900">{feedback.user}</p>
-                          <div className="flex items-center space-x-2">
-                            <div className="flex items-center">
-                              {[...Array(5)].map((_, i) => (
-                                <svg
-                                  key={i}
-                                  className={`w-4 h-4 ${
-                                    i < feedback.rating ? 'text-yellow-400' : 'text-gray-300'
-                                  }`}
-                                  fill="currentColor"
-                                  viewBox="0 0 20 20"
-                                >
-                                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                                </svg>
-                              ))}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Reviews List */}
+              <div className="space-y-6">
+                {getFilteredFeedbacks().length === 0 ? (
+                  <div className="text-center py-12">
+                    <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                      </svg>
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                      No {selectedSentiment === 'all' ? '' : selectedSentiment} Reviews
+                    </h3>
+                    <p className="text-gray-600">
+                      {selectedSentiment === 'all' 
+                        ? 'Be the first to review this bike!' 
+                        : `No ${selectedSentiment} reviews found.`}
+                    </p>
+                  </div>
+                ) : (
+                  getFilteredFeedbacks().map((feedback) => (
+                    <div key={feedback.id} className="border border-gray-200 rounded-xl p-6 hover:shadow-md transition-shadow">
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center">
+                            <span className="text-amber-600 font-semibold">
+                              {feedback.user.charAt(0)}
+                            </span>
+                          </div>
+                          <div>
+                            <p className="font-semibold text-gray-900">{feedback.user}</p>
+                            <div className="flex items-center space-x-2">
+                              <div className="flex items-center">
+                                {[...Array(5)].map((_, i) => (
+                                  <svg
+                                    key={i}
+                                    className={`w-4 h-4 ${
+                                      i < feedback.rating ? 'text-yellow-400' : 'text-gray-300'
+                                    }`}
+                                    fill="currentColor"
+                                    viewBox="0 0 20 20"
+                                  >
+                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                  </svg>
+                                ))}
+                              </div>
+                              <span className="text-sm text-gray-500">{feedback.date}</span>
                             </div>
-                            <span className="text-sm text-gray-500">{feedback.date}</span>
                           </div>
                         </div>
+                        <div className="flex items-center space-x-2">
+                          <span className="text-2xl">{getSentimentIcon(feedback.sentiment)}</span>
+                          <span className={`px-2 py-1 rounded-full text-xs font-semibold border ${getSentimentColor(feedback.sentiment)}`}>
+                            {feedback.sentiment}
+                          </span>
+                        </div>
                       </div>
-                      <div className="flex items-center space-x-2">
-                        <span className="text-2xl">{getSentimentIcon(feedback.sentiment)}</span>
-                        <span className={`px-2 py-1 rounded-full text-xs font-semibold border ${getSentimentColor(feedback.sentiment)}`}>
-                          {feedback.sentiment}
-                        </span>
-                      </div>
+                      <p className="text-gray-700">{feedback.comment}</p>
                     </div>
-                    <p className="text-gray-700">{feedback.comment}</p>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
             </div>
           </div>
