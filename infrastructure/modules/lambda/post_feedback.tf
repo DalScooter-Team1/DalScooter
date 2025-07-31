@@ -115,7 +115,6 @@ resource "aws_lambda_function" "post_feedback_lambda" {
   }
   depends_on = [aws_iam_role_policy.post_feedback_lambda_policy]
 }
-
 # ================================
 # GET FEEDBACK LAMBDA
 # ================================
@@ -146,6 +145,7 @@ resource "aws_lambda_function" "get_feedback_lambda" {
   }
   depends_on = [aws_iam_role_policy.post_feedback_lambda_policy]
 }
+
 
 # ================================
 # DYNAMODB STREAM PROCESSOR
@@ -190,14 +190,12 @@ resource "aws_iam_role_policy" "stream_processor_lambda_policy" {
       {
         Effect = "Allow"
         Action = [
-          "dynamodb:GetItem",
-          "dynamodb:PutItem",
-          "dynamodb:UpdateItem",
-          "dynamodb:DeleteItem",
-          "dynamodb:Query",
-          "dynamodb:Scan"
+          "dynamodb:DescribeStream",
+          "dynamodb:GetRecords",
+          "dynamodb:GetShardIterator",
+          "dynamodb:ListStreams"
         ]
-        Resource = aws_dynamodb_table.feedback_table.arn
+        Resource = "${aws_dynamodb_table.feedback_table.stream_arn}"
       },
       {
         Effect = "Allow"
@@ -225,29 +223,36 @@ resource "aws_lambda_function" "stream_processor_lambda" {
   runtime          = "python3.9"
   filename         = data.archive_file.stream_processor_zip.output_path
   source_code_hash = data.archive_file.stream_processor_zip.output_base64sha256
-  timeout          = 30
+  timeout          = 60
 
   environment {
     variables = {
-      FEEDBACK_TABLE = aws_dynamodb_table.feedback_table.name
+            FEEDBACK_TABLE = aws_dynamodb_table.feedback_table.name
       FEEDBACK_QUEUE_URL = var.feedback_queue_url
     }
   }
 
   tags = {
-    Name = "DalScooter Feedback Stream Processor Lambda"
+    Name = "DalScooter Feedback Stream Processor"
   }
 
   depends_on = [aws_iam_role_policy.stream_processor_lambda_policy]
 }
 
-# DynamoDB Stream Event Source Mapping for Stream Processor Lambda
+# DynamoDB Stream Event Source Mapping
 resource "aws_lambda_event_source_mapping" "feedback_stream_mapping" {
   event_source_arn  = aws_dynamodb_table.feedback_table.stream_arn
   function_name     = aws_lambda_function.stream_processor_lambda.arn
   starting_position = "LATEST"
-  batch_size        = 1
-  enabled           = true
+  batch_size        = 10
+
+  filter_criteria {
+    filter {
+      pattern = jsonencode({
+        eventName = ["INSERT"] # Only trigger on new records
+      })
+    }
+  }
 }
 
 # ================================
@@ -296,7 +301,7 @@ resource "aws_iam_role_policy" "analyse_feedback_lambda_policy" {
           "dynamodb:GetItem",
           "dynamodb:PutItem",
           "dynamodb:UpdateItem",
-          "dynamodb:DeleteItem",
+             "dynamodb:DeleteItem",
           "dynamodb:Query",
           "dynamodb:Scan"
         ]
@@ -305,7 +310,9 @@ resource "aws_iam_role_policy" "analyse_feedback_lambda_policy" {
       {
         Effect = "Allow"
         Action = [
-          "comprehend:DetectSentiment"
+          "comprehend:DetectSentiment",
+          "comprehend:DetectEntities",
+          "comprehend:DetectKeyPhrases"
         ]
         Resource = "*"
       },
@@ -405,8 +412,9 @@ output "analyse_feedback_lambda_function_name" {
 output "analyse_feedback_sqs_event_source_mapping_uuid" {
   value = aws_lambda_event_source_mapping.analyse_feedback_sqs_mapping.uuid
 }
-
-# Get Feedback Lambda outputs
+ 
+ 
+ #Get Feedback Lambda outputs
 output "get_feedback_lambda_arn" {
   value = aws_lambda_function.get_feedback_lambda.arn
 }
@@ -418,3 +426,4 @@ output "get_feedback_lambda_invoke_arn" {
 output "get_feedback_lambda_function_name" {
   value = aws_lambda_function.get_feedback_lambda.function_name
 }
+
