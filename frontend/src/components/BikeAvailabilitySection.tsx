@@ -70,7 +70,7 @@ const BikeAvailabilitySection: React.FC<BikeAvailabilitySectionProps> = ({
   };
 
   const handleBikeClick = (bike: Bike) => {
-    navigate(`/bike/${bike.bikeId}`);
+    navigate(`/bike/${bike.bikeId}`, { state: { bike } });
   };
 
   const getBikeIcon = (bikeType: string) => {
