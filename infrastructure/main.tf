@@ -143,16 +143,16 @@ module "apis" {
 # API GATEWAY OUTPUTS
 # ================================
 
-output "api_gateway_url" {
-  description = "API Gateway invoke URL"
-  value       = module.apis.api_gateway_invoke_url
+ 
+ output "cognito_client_id" {
+   description = "value of Cognito client ID"
+   value       = aws_cognito_user_pool.pool.id
+ }
+ 
+output "cognito_user_pool_id" {
+  description = "value of Cognito user pool ID"
+  value       = aws_cognito_user_pool_client.client.id
 }
-
-output "api_gateway_id" {
-  description = "API Gateway ID"
-  value       = module.apis.api_gateway_id
-}
-
 output "api_gateway_deployment_invoke_url" {
   description = "API Gateway deployment invoke URL (for Frontend.tf compatibility)"
   value       = module.apis.api_gateway_deployment_invoke_url
