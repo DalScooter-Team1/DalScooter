@@ -394,7 +394,7 @@ const BikeDetails: React.FC = () => {
               )}
 
               {/* Sentiment Filter Tabs */}
-              {feedbacks.length > 0 && (
+              {/* {feedbacks.length > 0 && (
                 <div className="mb-6">
                   <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg">
                     {[
@@ -420,7 +420,7 @@ const BikeDetails: React.FC = () => {
                     ))}
                   </div>
                 </div>
-              )}
+              )} */}
 
               {/* Reviews List */}
               <div className="space-y-6">
