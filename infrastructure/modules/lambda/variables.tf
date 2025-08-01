@@ -113,3 +113,14 @@ variable "user_discount_usage_table_arn" {
   description = "ARN of the user discount usage DynamoDB table"
   type        = string
 }
+
+# Booking Table Variables
+variable "booking_table_name" {
+  description = "Name of the booking DynamoDB table"
+  type        = string
+}
+
+variable "booking_table_arn" {
+  description = "ARN of the booking DynamoDB table"
+  type        = string
+}

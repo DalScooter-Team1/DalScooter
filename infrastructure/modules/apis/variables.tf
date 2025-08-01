@@ -180,6 +180,16 @@ variable "booking_request_lambda_invoke_arn" {
   description = "Invoke ARN of the booking request Lambda function"
   type        = string
 }
+
+variable "get_my_bookings_lambda_invoke_arn" {
+  description = "Invoke ARN of the get my bookings Lambda function"
+  type        = string
+}
+
+variable "get_my_bookings_lambda_function_name" {
+  description = "Function name of the get my bookings Lambda"
+  type        = string
+}
 variable "bike_management_lambda_invoke_arn" {
   description = "Invoke ARN of the bike management Lambda function"
   type        = string
