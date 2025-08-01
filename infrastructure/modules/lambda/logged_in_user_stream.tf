@@ -94,13 +94,23 @@ resource "aws_lambda_function" "logged_in_user_stream" {
   handler          = "logged_in_user_stream.lambda_handler"
   runtime          = "python3.9"
   timeout          = 60
+  memory_size      = 512
   source_code_hash = data.archive_file.logged_in_user_stream_zip.output_base64sha256
+
+  # Add MySQL layer if it exists
+  layers = var.mysql_layer_arn != "" ? [var.mysql_layer_arn] : []
 
   environment {
     variables = {
       S3_BUCKET            = var.s3_bucket_name
       S3_FOLDER            = var.s3_folder
       COGNITO_USER_POOL_ID = var.cognito_user_pool_id
+      # MySQL connection variables (optional)
+      MYSQL_HOST           = var.mysql_host
+      MYSQL_PORT           = var.mysql_port
+      MYSQL_DATABASE       = var.mysql_database
+      MYSQL_USERNAME       = var.mysql_username
+      MYSQL_PASSWORD       = var.mysql_password
     }
   }
   depends_on = [aws_iam_role_policy.logged_in_user_stream_lambda_policy]

@@ -63,6 +63,14 @@ module "lambda" {
   rds_database_name = ""
   rds_username      = ""
   rds_password      = ""
+  
+  # MySQL variables for active users directory pipeline
+  mysql_host     = var.mysql_host
+  mysql_port     = var.mysql_port
+  mysql_database = var.mysql_database
+  mysql_username = var.mysql_username
+  mysql_password = var.mysql_password
+  mysql_layer_arn = aws_lambda_layer_version.mysql_layer.arn
   # sqs_queue_arn      = aws_sqs_queue.booking_queue.arn
   # sqs_queue_url      = aws_sqs_queue.booking_queue.id
 }

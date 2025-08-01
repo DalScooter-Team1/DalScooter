@@ -157,3 +157,42 @@ variable "rds_password" {
   type        = string
   sensitive   = true
 }
+
+# MySQL variables for active users directory pipeline
+variable "mysql_host" {
+  description = "MySQL host endpoint"
+  type        = string
+  default     = ""
+}
+
+variable "mysql_port" {
+  description = "MySQL port"
+  type        = string
+  default     = "3306"
+}
+
+variable "mysql_database" {
+  description = "MySQL database name"
+  type        = string
+  default     = ""
+}
+
+variable "mysql_username" {
+  description = "MySQL username"
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
+variable "mysql_password" {
+  description = "MySQL password"
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
+variable "mysql_layer_arn" {
+  description = "ARN of the MySQL Lambda layer"
+  type        = string
+  default     = ""
+}
