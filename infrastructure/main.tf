@@ -154,7 +154,7 @@ module "apis" {
 # ================================
 module "chatbot" {
   source              = "./modules/chatbot"
-  booking_table_name  = "Bookings"
+  booking_table_name  = aws_dynamodb_table.booking_table.name
   submit_concern_lambda_arn = module.apis.submit_concern_lambda_arn
 }
 

@@ -79,7 +79,7 @@ resource "aws_api_gateway_deployment" "registration_deployment" {
     aws_api_gateway_method.my_bookings_get,
     aws_api_gateway_integration.my_bookings_integration,
     aws_api_gateway_method.my_bookings_options,
-    aws_api_gateway_integration.my_bookings_options_integration
+    aws_api_gateway_integration.my_bookings_options_integration,
     aws_api_gateway_integration.discount_codes_options_integration,
     #bot endpoint
     aws_api_gateway_method.bot_post,
