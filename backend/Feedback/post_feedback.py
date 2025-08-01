@@ -60,6 +60,8 @@ def lambda_handler(event, context):
         item = {
             'uuid': str(uuid.uuid4()),  # Generate proper UUID
            'email': body.get('email', 'anonymous'), 
+           'first_name': body.get('first_name', 'anonymous'),
+           'last_name': body.get('last_name', 'anonymous'),
             'feedback_text': feedback_text,
             'bike_type': body.get('bike_type', 'unknown'), 
             'bike_id': body.get('bike_id', 'unknown'),  

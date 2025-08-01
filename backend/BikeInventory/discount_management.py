@@ -202,7 +202,7 @@ def handle_create_discount_code(event):
         body = json.loads(event['body'])
         
         # Validate required fields
-        required_fields = ['discountPercentage', 'expiryDays']
+        required_fields = ['discountPercentage', 'expiryHours']
         for field in required_fields:
             if field not in body:
                 return {
@@ -226,15 +226,15 @@ def handle_create_discount_code(event):
                 })
             }
         
-        # Validate expiry days (minimum today, maximum 2 days)
-        expiry_days = body['expiryDays']
-        if not (0 <= expiry_days <= 2):
+        # Validate expiry hours (0-48 hours, 0-2 days)
+        expiry_hours = body['expiryHours']
+        if not (0 <= expiry_hours <= 48):
             return {
                 'statusCode': 400,
                 'headers': get_cors_headers(),
                 'body': json.dumps({
                     'success': False,
-                    'message': 'Expiry days must be between 0 (today) and 2 days'
+                    'message': 'Expiry time must be between 0 and 48 hours (0-2 days)'
                 })
             }
         
@@ -243,7 +243,7 @@ def handle_create_discount_code(event):
         discount_code = generate_discount_code()
         
         # Calculate expiry date
-        expiry_date = datetime.utcnow() + timedelta(days=expiry_days)
+        expiry_date = datetime.utcnow() + timedelta(hours=expiry_hours)
         expiry_timestamp = int(expiry_date.timestamp())
         
         # Create discount code item
@@ -328,28 +328,90 @@ def handle_update_discount_code(event):
         
         body = json.loads(event['body'])
         
+        # Check if discount code exists
+        existing_response = discount_codes_table.get_item(Key={'codeId': code_id})
+        if 'Item' not in existing_response:
+            return {
+                'statusCode': 404,
+                'headers': get_cors_headers(),
+                'body': json.dumps({
+                    'success': False,
+                    'message': 'Discount code not found'
+                })
+            }
+        
+        existing_discount = existing_response['Item']
+        
         # Build update expression
         update_expression = "SET updatedAt = :updatedAt"
         expression_values = {':updatedAt': datetime.utcnow().isoformat()}
         
-        # Add updateable fields
-        updateable_fields = ['status', 'description', 'usageLimit']
-        for field in updateable_fields:
+        # Handle discountPercentage update
+        if 'discountPercentage' in body:
+            discount_percentage = body['discountPercentage']
+            # Validate discount percentage (5-15%)
+            if not isinstance(discount_percentage, (int, float)) or discount_percentage < 5 or discount_percentage > 15:
+                return {
+                    'statusCode': 400,
+                    'headers': get_cors_headers(),
+                    'body': json.dumps({
+                        'success': False,
+                        'message': 'Discount percentage must be between 5% and 15%'
+                    })
+                }
+            update_expression += ", discount_percentage = :discount_percentage"
+            expression_values[':discount_percentage'] = Decimal(str(discount_percentage))
+        
+        # Handle expiryHours update
+        if 'expiryHours' in body:
+            expiry_hours = body['expiryHours']
+            # Validate expiry hours (0-48)
+            if not isinstance(expiry_hours, (int, float)) or expiry_hours < 0 or expiry_hours > 48:
+                return {
+                    'statusCode': 400,
+                    'headers': get_cors_headers(),
+                    'body': json.dumps({
+                        'success': False,
+                        'message': 'Expiry time must be between 0 and 48 hours (0-2 days)'
+                    })
+                }
+            
+            # Calculate new expiry date from current time
+            new_expiry_date = datetime.utcnow() + timedelta(hours=expiry_hours)
+            update_expression += ", expiry_date = :expiry_date"
+            expression_values[':expiry_date'] = new_expiry_date.isoformat()
+        
+        # Handle isActive update (convert to status)
+        if 'isActive' in body:
+            is_active = body['isActive']
+            status = 'active' if is_active else 'deactivated'
+            update_expression += ", #status = :status"
+            expression_values[':status'] = status
+            
+        # Handle other fields that might be sent
+        other_updateable_fields = ['description', 'usageLimit']
+        for field in other_updateable_fields:
             if field in body:
-                if field == 'usageLimit':
-                    update_expression += f", {field} = :{field}"
-                    expression_values[f':{field}'] = body[field]
-                else:
-                    update_expression += f", {field} = :{field}"
-                    expression_values[f':{field}'] = body[field]
+                update_expression += f", {field} = :{field}"
+                expression_values[f':{field}'] = body[field]
+        
+        # Use ExpressionAttributeNames for reserved keywords
+        expression_attribute_names = {}
+        if '#status' in update_expression:
+            expression_attribute_names['#status'] = 'status'
         
         # Update the discount code
-        response = discount_codes_table.update_item(
-            Key={'codeId': code_id},
-            UpdateExpression=update_expression,
-            ExpressionAttributeValues=expression_values,
-            ReturnValues='ALL_NEW'
-        )
+        update_params = {
+            'Key': {'codeId': code_id},
+            'UpdateExpression': update_expression,
+            'ExpressionAttributeValues': expression_values,
+            'ReturnValues': 'ALL_NEW'
+        }
+        
+        if expression_attribute_names:
+            update_params['ExpressionAttributeNames'] = expression_attribute_names
+        
+        response = discount_codes_table.update_item(**update_params)
         
         return {
             'statusCode': 200,
@@ -372,6 +434,8 @@ def handle_update_discount_code(event):
         }
     except Exception as e:
         print(f"Error updating discount code: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return {
             'statusCode': 500,
             'headers': get_cors_headers(),
@@ -410,6 +474,18 @@ def handle_delete_discount_code(event):
                 })
             }
         
+        # Check if already deactivated
+        existing_discount = response['Item']
+        if existing_discount.get('status') == 'deactivated':
+            return {
+                'statusCode': 200,
+                'headers': get_cors_headers(),
+                'body': json.dumps({
+                    'success': True,
+                    'message': 'Discount code is already deactivated'
+                })
+            }
+        
         # Deactivate the discount code
         discount_codes_table.update_item(
             Key={'codeId': code_id},
@@ -432,6 +508,8 @@ def handle_delete_discount_code(event):
         
     except Exception as e:
         print(f"Error deactivating discount code: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return {
             'statusCode': 500,
             'headers': get_cors_headers(),

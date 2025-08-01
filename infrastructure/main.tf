@@ -1,4 +1,10 @@
 # ================================
+# DATA SOURCES
+# ================================
+# Get current AWS account information
+data "aws_caller_identity" "current" {}
+
+# ================================
 # LAMBDA MODULE
 # ================================
 # This module contains all Lambda functions for the application
@@ -45,6 +51,12 @@ module "lambda" {
   discount_codes_table_arn       = aws_dynamodb_table.discount_codes.arn
   user_discount_usage_table_name = aws_dynamodb_table.user_discount_usage.name
   user_discount_usage_table_arn  = aws_dynamodb_table.user_discount_usage.arn
+
+  # #booking related variables
+  # booking_table_name = aws_dynamodb_table.booking_table.name
+  # booking_table_arn  = aws_dynamodb_table.booking_table.arn
+  # sqs_queue_arn      = aws_sqs_queue.booking_queue.arn
+  # sqs_queue_url      = aws_sqs_queue.booking_queue.id
 }
 
 
@@ -108,6 +120,11 @@ module "apis" {
   post_feedback_lambda_invoke_arn    = module.lambda.post_feedback_lambda_invoke_arn
   post_feedback_lambda_function_name = module.lambda.post_feedback_lambda_function_name
 
+  # Get Feedback Lambda references
+  get_feedback_lambda_arn           = module.lambda.get_feedback_lambda_arn
+  get_feedback_lambda_invoke_arn    = module.lambda.get_feedback_lambda_invoke_arn
+  get_feedback_lambda_function_name = module.lambda.get_feedback_lambda_function_name
+
   # Bike Inventory Lambda references
   bike_management_lambda_arn               = module.lambda.bike_management_lambda_arn
   bike_management_lambda_invoke_arn        = module.lambda.bike_management_lambda_invoke_arn
@@ -118,6 +135,10 @@ module "apis" {
   discount_management_lambda_arn           = module.lambda.discount_management_lambda_arn
   discount_management_lambda_invoke_arn    = module.lambda.discount_management_lambda_invoke_arn
   discount_management_lambda_function_name = module.lambda.discount_management_lambda_function_name
+
+  #booking related variables
+  booking_request_lambda_invoke_arn           =  aws_lambda_function.booking_request.invoke_arn
+  booking_request_lambda_function_name          =  aws_lambda_function.booking_request.function_name
 }
 
 
@@ -132,16 +153,16 @@ module "apis" {
 # API GATEWAY OUTPUTS
 # ================================
 
-output "api_gateway_url" {
-  description = "API Gateway invoke URL"
-  value       = module.apis.api_gateway_invoke_url
+
+output "cognito_user_pool_id" {
+  description = "value of Cognito client ID"
+  value       = aws_cognito_user_pool.pool.id
 }
 
-output "api_gateway_id" {
-  description = "API Gateway ID"
-  value       = module.apis.api_gateway_id
+output "cognito_client_id" {
+  description = "value of Cognito user pool ID"
+  value       = aws_cognito_user_pool_client.client.id
 }
-
 output "api_gateway_deployment_invoke_url" {
   description = "API Gateway deployment invoke URL (for Frontend.tf compatibility)"
   value       = module.apis.api_gateway_deployment_invoke_url

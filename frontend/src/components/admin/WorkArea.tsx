@@ -70,6 +70,7 @@ const WorkArea: React.FC<WorkAreaProps> = ({ activeSection }) => {
       const response = await adminService.getActiveUsers();
       if (response.success) {
         setOnlineUsers(response.users || []);
+        console.log('Active users:', response.users);
       } else {
         console.error('Error retrieving active users:', response.message);
         setOnlineUsers([]);
@@ -97,16 +98,16 @@ const WorkArea: React.FC<WorkAreaProps> = ({ activeSection }) => {
   const renderCustomers = () => {
     if (loading) {
       return (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <div className="animate-pulse space-y-4">
-            <div className="h-4 bg-gray-200 rounded w-1/4"></div>
-            <div className="space-y-3">
+        <div className="bg-white rounded-3xl shadow-lg border border-gray-100 p-8">
+          <div className="animate-pulse space-y-6">
+            <div className="h-8 bg-gray-200 rounded w-1/4"></div>
+            <div className="space-y-4">
               {[1, 2, 3].map((i) => (
-                <div key={i} className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-gray-200 rounded-full"></div>
-                  <div className="flex-1">
-                    <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                    <div className="h-3 bg-gray-200 rounded w-1/2 mt-1"></div>
+                <div key={i} className="flex items-center space-x-4 p-6 border border-gray-200 rounded-2xl">
+                  <div className="w-14 h-14 bg-gray-200 rounded-2xl"></div>
+                  <div className="flex-1 space-y-3">
+                    <div className="h-5 bg-gray-200 rounded w-3/4"></div>
+                    <div className="h-4 bg-gray-200 rounded w-1/2"></div>
                   </div>
                 </div>
               ))}
@@ -118,18 +119,18 @@ const WorkArea: React.FC<WorkAreaProps> = ({ activeSection }) => {
 
     if (error) {
       return (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <div className="text-center py-8">
-            <div className="text-red-500 mb-2">
-              <svg className="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        <div className="bg-white rounded-3xl shadow-lg border border-gray-100 p-8">
+          <div className="text-center py-12">
+            <div className="text-red-500 mb-6">
+              <svg className="w-20 h-20 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Error Loading Customers</h3>
-            <p className="text-gray-500 mb-4">{error}</p>
+            <h3 className="text-2xl font-bold text-gray-900 mb-3">Error Loading Customers</h3>
+            <p className="text-gray-600 mb-6">{error}</p>
             <button
               onClick={fetchCustomers}
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+              className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-4 rounded-2xl hover:from-blue-700 hover:to-purple-700 transition-all duration-200 transform hover:scale-105 shadow-lg font-semibold"
             >
               Try Again
             </button>
@@ -139,70 +140,84 @@ const WorkArea: React.FC<WorkAreaProps> = ({ activeSection }) => {
     }
 
     return (
-      <div className="space-y-6">
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-          <div className="p-6 border-b border-gray-200 flex justify-between items-center">
-            <h3 className="text-lg font-medium text-gray-900">Customer Management</h3>
+      <div className="space-y-8">
+        <div className="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden">
+          <div className="p-8 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-gray-100 flex justify-between items-center">
+            <div>
+              <h3 className="text-3xl font-bold text-gray-900">Customer Management</h3>
+              <p className="text-gray-600 mt-2">Manage and monitor your customer base</p>
+            </div>
             <button
               onClick={fetchCustomers}
-              className="bg-blue-600 text-white px-3 py-1.5 text-sm rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
+              className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-2xl hover:from-blue-700 hover:to-purple-700 transition-all duration-200 transform hover:scale-105 shadow-lg flex items-center space-x-2 font-semibold"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
               <span>Refresh</span>
             </button>
           </div>
-          <div className="p-6">
+          <div className="p-8">
             {customers.length === 0 ? (
-              <div className="text-center py-8">
-                <div className="text-gray-400 mb-2">
-                  <svg className="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+              <div className="text-center py-16">
+                <div className="text-gray-400 mb-8">
+                  <svg className="w-24 h-24 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                   </svg>
                 </div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No Customers Found</h3>
-                <p className="text-gray-500">No customers have been registered yet.</p>
+                <h3 className="text-2xl font-bold text-gray-900 mb-3">No Customers Found</h3>
+                <p className="text-gray-600">No customers have been registered yet.</p>
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-6">
                 <div className="flex justify-between items-center">
                   <p className="text-sm text-gray-600">
                     Showing {customers.length} customer{customers.length !== 1 ? 's' : ''}
                   </p>
                 </div>
-                <div className="space-y-3">
-                  {customers.map((customer) => (
-                    <div key={customer.userId} className="flex items-center space-x-4 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-                      <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
-                        <span className="text-sm font-medium text-white">
-                          {customer.firstName[0]}{customer.lastName[0]}
-                        </span>
+                <div className="grid gap-6">
+                  {customers.map((customer, index) => (
+                    <div 
+                      key={customer.userId} 
+                      className="flex items-center space-x-6 p-6 border border-gray-200 rounded-3xl hover:bg-gradient-to-r hover:from-gray-50 hover:to-blue-50 transition-all duration-300 transform hover:scale-[1.02] shadow-sm hover:shadow-xl"
+                      style={{ animationDelay: `${index * 100}ms` }}
+                    >
+                      <div className="relative">
+                        <div className="w-16 h-16 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 rounded-3xl flex items-center justify-center shadow-lg">
+                          <span className="text-xl font-bold text-white">
+                            {customer.firstName[0]}{customer.lastName[0]}
+                          </span>
+                        </div>
+                        <div className="absolute -top-1 -right-1 w-5 h-5 bg-green-400 rounded-full border-2 border-white animate-pulse"></div>
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900 truncate">
+                        <p className="text-xl font-bold text-gray-900 truncate">
                           {customer.firstName} {customer.lastName}
                         </p>
-                        <p className="text-sm text-gray-500 truncate">{customer.email}</p>
-                        <p className="text-xs text-gray-400">
+                        <p className="text-gray-600 truncate">{customer.email}</p>
+                        <p className="text-sm text-gray-500">
                           Joined: {new Date(customer.userCreateDate).toLocaleDateString()}
                         </p>
                       </div>
-                      <div className="flex flex-col items-end space-y-1">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${customer.userStatus === 'CONFIRMED' ? 'bg-green-100 text-green-800' :
-                          customer.userStatus === 'UNCONFIRMED' ? 'bg-yellow-100 text-yellow-800' :
-                            'bg-red-100 text-red-800'
+                      <div className="flex flex-col items-end space-y-4">
+                        <div className="flex space-x-3">
+                          <span className={`inline-flex items-center px-4 py-2 rounded-2xl text-sm font-semibold border ${
+                            customer.userStatus === 'CONFIRMED' ? 'bg-green-100 text-green-800 border-green-200' :
+                            customer.userStatus === 'UNCONFIRMED' ? 'bg-yellow-100 text-yellow-800 border-yellow-200' :
+                              'bg-red-100 text-red-800 border-red-200'
                           }`}>
-                          {customer.userStatus}
-                        </span>
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${customer.emailVerified ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'
+                            {customer.userStatus}
+                          </span>
+                          <span className={`inline-flex items-center px-4 py-2 rounded-2xl text-sm font-semibold border ${
+                            customer.emailVerified ? 'bg-blue-100 text-blue-800 border-blue-200' : 'bg-gray-100 text-gray-800 border-gray-200'
                           }`}>
-                          {customer.emailVerified ? 'Verified' : 'Unverified'}
-                        </span>
+                            {customer.emailVerified ? 'Verified' : 'Unverified'}
+                          </span>
+                        </div>
                         <button
                           onClick={() => createAdminFromCustomer(customer.email)}
                           disabled={adminCreationLoading}
-                          className="text-xs bg-purple-600 text-white px-2 py-1 rounded hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                          className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-2xl hover:from-purple-700 hover:to-pink-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105 shadow-lg text-sm font-semibold"
                         >
                           {adminCreationLoading ? 'Creating...' : 'Make Admin'}
                         </button>
@@ -219,93 +234,93 @@ const WorkArea: React.FC<WorkAreaProps> = ({ activeSection }) => {
   };
 
   const renderDashboard = () => (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="bg-white rounded-3xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-all duration-300 transform hover:scale-105">
           <div className="flex items-center">
             <div className="flex-shrink-0">
-              <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
-                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-600 rounded-3xl flex items-center justify-center shadow-lg">
+                <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
                 </svg>
               </div>
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Total Customers</p>
-              <p className="text-2xl font-bold text-gray-900">{customers.length}</p>
+              <p className="text-sm font-medium text-gray-600">Total Customers</p>
+              <p className="text-3xl font-bold text-gray-900">{customers.length}</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="bg-white rounded-3xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-all duration-300 transform hover:scale-105">
           <div className="flex items-center">
             <div className="flex-shrink-0">
-              <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center">
-                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-14 h-14 bg-gradient-to-br from-green-500 to-green-600 rounded-3xl flex items-center justify-center shadow-lg">
+                <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
               </div>
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Active Scooters</p>
-              <p className="text-2xl font-bold text-gray-900">89</p>
+              <p className="text-sm font-medium text-gray-600">Active Scooters</p>
+              <p className="text-3xl font-bold text-gray-900">89</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="bg-white rounded-3xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-all duration-300 transform hover:scale-105">
           <div className="flex items-center">
             <div className="flex-shrink-0">
-              <div className="w-8 h-8 bg-yellow-500 rounded-lg flex items-center justify-center">
-                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-14 h-14 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-3xl flex items-center justify-center shadow-lg">
+                <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
               </div>
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Today's Bookings</p>
-              <p className="text-2xl font-bold text-gray-900">56</p>
+              <p className="text-sm font-medium text-gray-600">Today's Bookings</p>
+              <p className="text-3xl font-bold text-gray-900">56</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="bg-white rounded-3xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-all duration-300 transform hover:scale-105">
           <div className="flex items-center">
             <div className="flex-shrink-0">
-              <div className="w-8 h-8 bg-purple-500 rounded-lg flex items-center justify-center">
-                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-14 h-14 bg-gradient-to-br from-purple-500 to-pink-500 rounded-3xl flex items-center justify-center shadow-lg">
+                <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
                 </svg>
               </div>
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Revenue Today</p>
-              <p className="text-2xl font-bold text-gray-900">$2,847</p>
+              <p className="text-sm font-medium text-gray-600">Revenue Today</p>
+              <p className="text-3xl font-bold text-gray-900">$2,847</p>
             </div>
           </div>
         </div>
       </div>
 
       {/* Recent Activity and Online Users */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2">
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-            <div className="p-6 border-b border-gray-200">
-              <h3 className="text-lg font-medium text-gray-900">Recent Bookings</h3>
+          <div className="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden">
+            <div className="p-6 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-gray-100">
+              <h3 className="text-2xl font-bold text-gray-900">Recent Bookings</h3>
             </div>
             <div className="p-6">
               <div className="space-y-4">
-                {[1, 2, 3, 4].map((item) => (
-                  <div key={item} className="flex items-center space-x-4">
-                    <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
-                      <span className="text-sm font-medium text-gray-600">JD</span>
+                {[1, 2, 3, 4].map((item, index) => (
+                  <div key={item} className="flex items-center space-x-4 p-4 hover:bg-gray-50 rounded-2xl transition-all duration-200">
+                    <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-purple-500 rounded-3xl flex items-center justify-center shadow-lg">
+                      <span className="text-sm font-bold text-white">JD</span>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900">John Doe</p>
-                      <p className="text-sm text-gray-500">Scooter #SC001 • 2 hours ago</p>
+                      <p className="text-sm font-semibold text-gray-900">John Doe</p>
+                      <p className="text-sm text-gray-600">Scooter #SC001 • 2 hours ago</p>
                     </div>
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                    <span className="inline-flex items-center px-4 py-2 rounded-2xl text-sm font-semibold bg-green-100 text-green-800 border border-green-200">
                       Active
                     </span>
                   </div>
@@ -317,58 +332,63 @@ const WorkArea: React.FC<WorkAreaProps> = ({ activeSection }) => {
 
         {/* Online Users Component */}
         <div>
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-medium text-gray-900">Online Users</h3>
-              <div className="flex items-center space-x-2">
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+          <div className="bg-white rounded-3xl shadow-lg border border-gray-100 p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-2xl font-bold text-gray-900">Online Users</h3>
+              <div className="flex items-center space-x-3">
+                <span className="inline-flex items-center px-4 py-2 rounded-2xl text-sm font-semibold bg-green-100 text-green-800 border border-green-200">
                   {onlineUsers.length} online
                 </span>
                 <button
                   onClick={fetchOnlineUsers}
                   disabled={onlineUsersLoading}
-                  className="text-gray-400 hover:text-gray-600 disabled:opacity-50"
+                  className="text-gray-400 hover:text-gray-600 disabled:opacity-50 transition-all duration-200 transform hover:scale-110"
                 >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                   </svg>
                 </button>
               </div>
             </div>
 
-            <div className="space-y-3 max-h-96 overflow-y-auto">
+            <div className="space-y-4 max-h-96 overflow-y-auto">
               {onlineUsersLoading ? (
-                <div className="animate-pulse space-y-3">
+                <div className="animate-pulse space-y-4">
                   {[1, 2, 3].map((i) => (
-                    <div key={i} className="flex items-center space-x-3">
-                      <div className="w-8 h-8 bg-gray-200 rounded-full"></div>
-                      <div className="flex-1">
+                    <div key={i} className="flex items-center space-x-4">
+                      <div className="w-12 h-12 bg-gray-200 rounded-3xl"></div>
+                      <div className="flex-1 space-y-2">
                         <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                        <div className="h-3 bg-gray-200 rounded w-1/2 mt-1"></div>
+                        <div className="h-3 bg-gray-200 rounded w-1/2"></div>
                       </div>
                     </div>
                   ))}
                 </div>
               ) : onlineUsers.length === 0 ? (
-                <p className="text-gray-500 text-sm">No users currently online</p>
+                <p className="text-gray-500 text-sm text-center py-8">No users currently online</p>
               ) : (
-                onlineUsers.map((user) => (
-                  <div key={user.userId} className="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded-md">
+                onlineUsers.map((user, index) => (
+                  <div 
+                    key={user.userId} 
+                    className="flex items-center space-x-4 p-3 hover:bg-gray-50 rounded-2xl transition-all duration-200 transform hover:scale-105"
+                    style={{ animationDelay: `${index * 100}ms` }}
+                  >
                     <div className="relative">
-                      <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
-                        <span className="text-xs font-medium text-white">
+                      <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-500 rounded-3xl flex items-center justify-center shadow-lg">
+                        <span className="text-sm font-bold text-white">
                           {user.firstName[0]}{user.lastName[0]}
                         </span>
                       </div>
-                      <div className={`absolute -bottom-1 -right-1 w-3 h-3 ${user.status === 'online' ? 'bg-green-500' : 'bg-yellow-500'} rounded-full border-2 border-white`}></div>
+                      <div className={`absolute -bottom-1 -right-1 w-5 h-5 ${user.status === 'online' ? 'bg-green-500' : 'bg-yellow-500'} rounded-full border-2 border-white animate-pulse`}></div>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900 truncate">
+                      <p className="text-sm font-semibold text-gray-900 truncate">
                         {user.firstName} {user.lastName}
                       </p>
                       <div className="flex items-center space-x-2">
-                        <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium ${user.userType === 'franchise' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'
-                          }`}>
+                        <span className={`inline-flex items-center px-3 py-1 rounded-2xl text-xs font-semibold ${
+                          user.userType === 'franchise' ? 'bg-purple-100 text-purple-800 border border-purple-200' : 'bg-blue-100 text-blue-800 border border-blue-200'
+                        }`}>
                           {user.userType}
                         </span>
                         <span className="text-xs text-gray-500">
@@ -384,32 +404,37 @@ const WorkArea: React.FC<WorkAreaProps> = ({ activeSection }) => {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-        <div className="p-6 border-b border-gray-200">
-          <h3 className="text-lg font-medium text-gray-900">Scooter Status</h3>
+      <div className="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden">
+        <div className="p-6 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-gray-100">
+          <h3 className="text-2xl font-bold text-gray-900">Scooter Status</h3>
         </div>
         <div className="p-6">
-          <div className="space-y-4">
+          <div className="grid gap-4">
             {[
               { id: 'SC001', status: 'Available', battery: 85, location: 'Halifax Downtown' },
               { id: 'SC002', status: 'In Use', battery: 67, location: 'Dalhousie Campus' },
               { id: 'SC003', status: 'Charging', battery: 23, location: 'Spring Garden Rd' },
               { id: 'SC004', status: 'Maintenance', battery: 0, location: 'Service Center' },
-            ].map((scooter) => (
-              <div key={scooter.id} className="flex items-center justify-between">
+            ].map((scooter, index) => (
+              <div 
+                key={scooter.id} 
+                className="flex items-center justify-between p-4 border border-gray-200 rounded-2xl hover:bg-gray-50 transition-all duration-200 transform hover:scale-[1.02]"
+                style={{ animationDelay: `${index * 100}ms` }}
+              >
                 <div>
-                  <p className="text-sm font-medium text-gray-900">{scooter.id}</p>
-                  <p className="text-sm text-gray-500">{scooter.location}</p>
+                  <p className="text-lg font-semibold text-gray-900">{scooter.id}</p>
+                  <p className="text-gray-600">{scooter.location}</p>
                 </div>
                 <div className="text-right">
-                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${scooter.status === 'Available' ? 'bg-green-100 text-green-800' :
-                    scooter.status === 'In Use' ? 'bg-blue-100 text-blue-800' :
-                      scooter.status === 'Charging' ? 'bg-yellow-100 text-yellow-800' :
-                        'bg-red-100 text-red-800'
-                    }`}>
+                  <span className={`inline-flex items-center px-4 py-2 rounded-2xl text-sm font-semibold ${
+                    scooter.status === 'Available' ? 'bg-green-100 text-green-800 border border-green-200' :
+                    scooter.status === 'In Use' ? 'bg-blue-100 text-blue-800 border border-blue-200' :
+                      scooter.status === 'Charging' ? 'bg-yellow-100 text-yellow-800 border border-yellow-200' :
+                        'bg-red-100 text-red-800 border border-red-200'
+                  }`}>
                     {scooter.status}
                   </span>
-                  <p className="text-sm text-gray-500 mt-1">{scooter.battery}% Battery</p>
+                  <p className="text-sm text-gray-600 mt-1">{scooter.battery}% Battery</p>
                 </div>
               </div>
             ))}
@@ -417,7 +442,6 @@ const WorkArea: React.FC<WorkAreaProps> = ({ activeSection }) => {
         </div>
       </div>
     </div>
-
   );
 
   const renderContent = () => {
@@ -432,28 +456,27 @@ const WorkArea: React.FC<WorkAreaProps> = ({ activeSection }) => {
         return <BikeInventoryManagement />;
       case 'bookings':
         return (
-          <div className="space-y-6">
-            <h2 className="text-2xl font-bold text-gray-900">Booking Management</h2>
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <p className="text-gray-500">Booking management interface coming soon...</p>
+          <div className="space-y-8">
+            <div className="bg-white rounded-3xl shadow-lg border border-gray-100 p-8">
+              <h2 className="text-3xl font-bold text-gray-900 mb-4">Booking Management</h2>
+              <p className="text-gray-600">Booking management interface coming soon...</p>
             </div>
           </div>
         );
       case 'analytics':
         return (
-          <div className="space-y-6">
-            <h2 className="text-2xl font-bold text-gray-900">Analytics & Reports</h2>
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <p className="text-gray-500">Analytics dashboard coming soon...</p>
+          <div className="space-y-8">
+            <div className="bg-white rounded-3xl shadow-lg border border-gray-100 p-8">
+              <iframe width="780" height="600" src="https://lookerstudio.google.com/embed/reporting/924da47b-7aa9-47d0-9777-865b51613efe/page/ZXqSF" sandbox="allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"></iframe>
             </div>
           </div>
         );
       case 'settings':
         return (
-          <div className="space-y-6">
-            <h2 className="text-2xl font-bold text-gray-900">System Settings</h2>
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <p className="text-gray-500">Settings panel coming soon...</p>
+          <div className="space-y-8">
+            <div className="bg-white rounded-3xl shadow-lg border border-gray-100 p-8">
+              <h2 className="text-3xl font-bold text-gray-900 mb-4">System Settings</h2>
+              <p className="text-gray-600">Settings panel coming soon...</p>
             </div>
           </div>
         );
@@ -463,20 +486,20 @@ const WorkArea: React.FC<WorkAreaProps> = ({ activeSection }) => {
   };
 
   return (
-    <div className="flex-1 flex flex-col bg-gray-50 overflow-hidden">
+    <div className="flex-1 flex flex-col bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 overflow-hidden">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4">
+      <div className="bg-white border-b border-gray-200 px-8 py-6 shadow-sm">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">
+          <h1 className="text-4xl font-bold text-gray-900 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
             {activeSection.charAt(0).toUpperCase() + activeSection.slice(1)}
           </h1>
-          <p className="text-sm text-gray-500">Manage your DalScooter operations efficiently</p>
+          <p className="text-gray-600 mt-2">Manage your DalScooter operations efficiently</p>
         </div>
       </div>
 
       {/* Main Content */}
       <div className="flex-1 overflow-auto">
-        <div className="p-6">
+        <div className="p-8">
           {renderContent()}
         </div>
       </div>
