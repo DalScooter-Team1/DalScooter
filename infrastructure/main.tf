@@ -52,7 +52,7 @@ module "lambda" {
   user_discount_usage_table_name = aws_dynamodb_table.user_discount_usage.name
   user_discount_usage_table_arn  = aws_dynamodb_table.user_discount_usage.arn
 
-  # Booking related variables
+  # Booking related variables - referenced from booking_cleanup.tf where table is defined
   booking_table_name = aws_dynamodb_table.booking_table.name
   booking_table_arn  = aws_dynamodb_table.booking_table.arn
   booking_table_stream_arn = aws_dynamodb_table.booking_table.stream_arn
@@ -144,21 +144,31 @@ module "apis" {
   discount_management_lambda_function_name = module.lambda.discount_management_lambda_function_name
 
   #booking related variables
-  booking_request_lambda_invoke_arn           =  aws_lambda_function.booking_request.invoke_arn
-  booking_request_lambda_function_name          =  aws_lambda_function.booking_request.function_name
-  
+  booking_request_lambda_invoke_arn    = aws_lambda_function.booking_request.invoke_arn
+  booking_request_lambda_function_name = aws_lambda_function.booking_request.function_name
+
   # Get My Bookings Lambda references
-  get_my_bookings_lambda_invoke_arn        = module.lambda.get_my_bookings_lambda_invoke_arn
-  get_my_bookings_lambda_function_name     = module.lambda.get_my_bookings_lambda_function_name
+  get_my_bookings_lambda_invoke_arn    = module.lambda.get_my_bookings_lambda_invoke_arn
+  get_my_bookings_lambda_function_name = module.lambda.get_my_bookings_lambda_function_name
+
+  # Get All Bookings Lambda references (Admin)
+  get_all_bookings_lambda_invoke_arn    = module.lambda.get_all_bookings_lambda_invoke_arn
+  get_all_bookings_lambda_function_name = module.lambda.get_all_bookings_lambda_function_name
+
+  # Bot references
+  bot_handler_lambda_invoke_arn = module.chatbot.bot_handler_lambda_invoke_arn
 }
 
 
 # ================================
-# CHATBOT MODULE (COMMENTED OUT - REQUIRES NEWER AWS PROVIDER)
+# CHATBOT MODULE
 # ================================
-# module "chatbot" {
-#   source = "./modules/chatbot"
-# }
+module "chatbot" {
+  source              = "./modules/chatbot"
+  booking_table_name  = aws_dynamodb_table.booking_table.name
+  submit_concern_lambda_arn = module.apis.submit_concern_lambda_arn
+}
+
 
 # ================================
 # API GATEWAY OUTPUTS
