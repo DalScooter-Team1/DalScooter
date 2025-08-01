@@ -9,6 +9,8 @@ interface BookingSidebarProps {
   bookingSuccess: boolean;
   onBooking: () => void;
   onBookAnother: () => void;
+  discountCode?: string;
+  onDiscountCodeChange?: (code: string) => void;
 }
 
 export const BookingSidebar: React.FC<BookingSidebarProps> = ({
@@ -18,7 +20,9 @@ export const BookingSidebar: React.FC<BookingSidebarProps> = ({
   bookingLoading,
   bookingSuccess,
   onBooking,
-  onBookAnother
+  onBookAnother,
+  discountCode = '',
+  onDiscountCodeChange
 }) => {
   return (
     <div className="bg-white rounded-2xl shadow-xl p-6 sticky top-24 border border-gray-100">
@@ -62,6 +66,28 @@ export const BookingSidebar: React.FC<BookingSidebarProps> = ({
                 </option>
               ))}
             </select>
+          </div>
+
+          {/* Discount Code Field */}
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center">
+              <svg className="w-4 h-4 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+              </svg>
+              Discount Code (Optional)
+            </label>
+            <input
+              type="text"
+              value={discountCode}
+              onChange={(e) => onDiscountCodeChange?.(e.target.value)}
+              placeholder="Enter discount code"
+              className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+            />
+            {discountCode && (
+              <p className="text-xs text-gray-500 mt-1">
+                Code entered: {discountCode}
+              </p>
+            )}
           </div>
 
           <div className="mb-6 p-4 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl border border-gray-200">
