@@ -60,37 +60,37 @@ resource "aws_iam_role_policy" "bike_table_access" {
 
 # SQS Queue
 resource "aws_sqs_queue" "booking_queue" {
-  name                        = "dal-booking-queue"
-  visibility_timeout_seconds  = 60
-  message_retention_seconds   = 345600
-  receive_wait_time_seconds   = 5
-  delay_seconds               = 0
+  name                       = "dal-booking-queue"
+  visibility_timeout_seconds = 60
+  message_retention_seconds  = 345600
+  receive_wait_time_seconds  = 5
+  delay_seconds              = 0
 }
 
 data "archive_file" "booking_request" {
   type        = "zip"
-  source_file  = "${path.module}/../backend/BookingQueue/BookingRequest/booking_request.py"
+  source_file = "${path.module}/../backend/BookingQueue/BookingRequest/booking_request.py"
   output_path = "${path.module}/packages/booking_req.zip"
 }
 
 data "archive_file" "booking_approval" {
   type        = "zip"
-  source_file  = "${path.module}/../backend/BookingQueue/BookingApproval/booking_approval.py"
+  source_file = "${path.module}/../backend/BookingQueue/BookingApproval/booking_approval.py"
   output_path = "${path.module}/packages/booking_approve.zip"
 }
 # BookingRequest Lambda 
 resource "aws_lambda_function" "booking_request" {
-  function_name = "booking-request"
-  handler       = "booking_request.handler"
-  runtime       = "python3.9"
-  filename      = data.archive_file.booking_request.output_path
+  function_name    = "booking-request"
+  handler          = "booking_request.handler"
+  runtime          = "python3.9"
+  filename         = data.archive_file.booking_request.output_path
   source_code_hash = data.archive_file.booking_request.output_base64sha256
-  role          = aws_iam_role.lambda_exec_role.arn
+  role             = aws_iam_role.lambda_exec_role.arn
 
   environment {
     variables = {
-      SQS_QUEUE_URL       = aws_sqs_queue.booking_queue.id
-      BOOKING_TABLE_NAME  = aws_dynamodb_table.booking_table.name
+      SQS_QUEUE_URL      = aws_sqs_queue.booking_queue.id
+      BOOKING_TABLE_NAME = aws_dynamodb_table.booking_table.name
     }
   }
 
@@ -105,12 +105,12 @@ resource "aws_lambda_function" "booking_request" {
 
 # BookingApproval Lambda 
 resource "aws_lambda_function" "booking_approval" {
-  function_name = "booking-approval"
-  handler       = "booking_approval.handler"
-  runtime       = "python3.9"
-  filename      = data.archive_file.booking_approval.output_path
+  function_name    = "booking-approval"
+  handler          = "booking_approval.handler"
+  runtime          = "python3.9"
+  filename         = data.archive_file.booking_approval.output_path
   source_code_hash = data.archive_file.booking_approval.output_base64sha256
-  role          = aws_iam_role.lambda_exec_role.arn
+  role             = aws_iam_role.lambda_exec_role.arn
 
   environment {
     variables = {
@@ -130,4 +130,23 @@ resource "aws_lambda_event_source_mapping" "sqs_trigger" {
   function_name    = aws_lambda_function.booking_approval.arn
   batch_size       = 1
   enabled          = true
+}
+
+# ================================
+# OUTPUT VALUES
+# ================================
+
+output "get_all_bookings_lambda_arn" {
+  description = "ARN of the get all bookings Lambda function"
+  value       = module.lambda.get_all_bookings_lambda_arn
+}
+
+output "get_all_bookings_lambda_invoke_arn" {
+  description = "Invoke ARN of the get all bookings Lambda function"
+  value       = module.lambda.get_all_bookings_lambda_invoke_arn
+}
+
+output "get_all_bookings_lambda_function_name" {
+  description = "Function name of the get all bookings Lambda"
+  value       = module.lambda.get_all_bookings_lambda_function_name
 }
