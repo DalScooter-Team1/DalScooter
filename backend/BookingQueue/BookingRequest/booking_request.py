@@ -9,7 +9,23 @@ sqs = boto3.client('sqs')
 BOOKING_TABLE = os.environ['BOOKING_TABLE_NAME']
 QUEUE_URL = os.environ['SQS_QUEUE_URL']
 
+def get_cors_headers():
+    """Return CORS headers for API responses"""
+    return {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
+        'Access-Control-Allow-Methods': 'POST,OPTIONS'
+    }
+
 def handler(event, context):
+    # Handle CORS preflight
+    if event.get('httpMethod') == 'OPTIONS':
+        return {
+            'statusCode': 200,
+            'headers': get_cors_headers(),
+            'body': json.dumps({'message': 'CORS preflight successful'})
+        }
+    
     try:
         body = json.loads(event['body'])
         booking_id = str(uuid.uuid4())
@@ -36,6 +52,7 @@ def handler(event, context):
 
         return {
             'statusCode': 200,
+            'headers': get_cors_headers(),
             'body': json.dumps({
                 'message': 'Booking created and pushed to approval queue.',
                 'bookingId': booking_id
@@ -46,5 +63,6 @@ def handler(event, context):
         print(f"Booking request error: {e}")
         return {
             'statusCode': 500,
+            'headers': get_cors_headers(),
             'body': json.dumps({'error': 'Booking request failed.'})
         }
