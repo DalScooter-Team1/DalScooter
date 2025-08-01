@@ -139,19 +139,25 @@ module "apis" {
   #booking related variables
   booking_request_lambda_invoke_arn           =  aws_lambda_function.booking_request.invoke_arn
   booking_request_lambda_function_name          =  aws_lambda_function.booking_request.function_name
-  
+
   # Get My Bookings Lambda references
   get_my_bookings_lambda_invoke_arn        = module.lambda.get_my_bookings_lambda_invoke_arn
   get_my_bookings_lambda_function_name     = module.lambda.get_my_bookings_lambda_function_name
+
+  # Bot references
+  bot_handler_lambda_invoke_arn = module.chatbot.bot_handler_lambda_invoke_arn
 }
 
 
 # ================================
-# CHATBOT MODULE (COMMENTED OUT - REQUIRES NEWER AWS PROVIDER)
+# CHATBOT MODULE
 # ================================
-# module "chatbot" {
-#   source = "./modules/chatbot"
-# }
+module "chatbot" {
+  source              = "./modules/chatbot"
+  booking_table_name  = "Bookings"
+  submit_concern_lambda_arn = module.apis.submit_concern_lambda_arn
+}
+
 
 # ================================
 # API GATEWAY OUTPUTS

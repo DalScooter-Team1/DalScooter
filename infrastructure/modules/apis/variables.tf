@@ -233,5 +233,9 @@ variable "discount_management_lambda_function_name" {
 
 variable "booking_request_lambda_function_name" {
   description = "Function name of the booking request Lambda"
-  type        = string  
+  type        = string
+}
+variable "bot_handler_lambda_invoke_arn" {
+  description = "Invoke ARN of the Bot Handler Lambda function"
+  type        = string
 }
