@@ -85,6 +85,7 @@ export interface Bike {
     location: string;
     created_at: string;
     updated_at: string;
+    isActive: boolean;
 }
 
 // Backend request format (what we send to Lambda)
@@ -106,6 +107,7 @@ export interface BikeUpdateRequest {
     accessCode?: string;
     hourlyRate?: number;
     status?: string;
+    isActive?: boolean;
     features?: {
         heightAdjustment?: boolean;
         batteryLife?: number;
@@ -180,7 +182,7 @@ export const bikeInventoryService = {
             access_code: backendBike.accessCode,
             hourly_rate: backendBike.hourlyRate,
             status: backendBike.status,
-            availability: backendBike.status === 'available',
+            availability: backendBike.isActive, // Only use isActive for availability
             franchise_id: backendBike.franchiseId,
             features: [
                 backendBike.features.heightAdjustment ? 'Height Adjustment' : '',
@@ -191,14 +193,16 @@ export const bikeInventoryService = {
             location: backendBike.location.address,
             created_at: backendBike.createdAt,
             updated_at: backendBike.updatedAt,
+            isActive: backendBike.isActive,
         };
     },
 
     // ===== BIKE MANAGEMENT =====
 
     // Get all bikes for the franchise
-    getBikes: async (): Promise<{ success: boolean; bikes: Bike[]; message?: string; }> => {
-        const response = await bikeInventoryAPI.get('/bikes');
+    getBikes: async (includeInactive: boolean = true): Promise<{ success: boolean; bikes: Bike[]; message?: string; }> => {
+        const params = includeInactive ? '?includeInactive=true' : '';
+        const response = await bikeInventoryAPI.get(`/bikes${params}`);
         const data = response.data;
 
         if (data.success && data.bikes) {
@@ -251,17 +255,27 @@ export const bikeInventoryService = {
 
     // Update an existing bike
     updateBike: async (bikeId: string, bikeData: BikeUpdateRequest): Promise<BikeInventoryResponse<Bike>> => {
-        const response = await bikeInventoryAPI.put(`/bikes/${bikeId}`, bikeData);
-        const data = response.data;
+        console.log('updateBike called with ID:', bikeId);
+        console.log('updateBike called with data:', bikeData);
+        console.log('Making PUT request to:', `/bikes/${bikeId}`);
+        
+        try {
+            const response = await bikeInventoryAPI.put(`/bikes/${bikeId}`, bikeData);
+            console.log('Update response received:', response);
+            const data = response.data;
 
-        if (data.success && data.bike) {
-            return {
-                success: true,
-                data: bikeInventoryService.convertBackendBikeToFrontend(data.bike)
-            };
+            if (data.success && data.bike) {
+                return {
+                    success: true,
+                    data: bikeInventoryService.convertBackendBikeToFrontend(data.bike)
+                };
+            }
+
+            return data;
+        } catch (error) {
+            console.error('Error in updateBike:', error);
+            throw error;
         }
-
-        return data;
     },
 
     // Delete a bike

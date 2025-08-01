@@ -3,11 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import CustomerHeader from '../components/CustomerHeader';
 import CustomerMessaging from '../components/messaging/CustomerMessaging';
 import BikeAvailabilitySection from '../components/BikeAvailabilitySection';
+import MyBookings from '../components/MyBookings';
+import BookingSummary from '../components/BookingSummary';
 import { heartbeatService } from '../Services/heartbeatService';
 
 const CustomerDashboard: React.FC = () => {
   const navigate = useNavigate();
-  const [activeSection, setActiveSection] = useState<'dashboard' | 'messaging' | 'bikes'>('dashboard');
+  const [activeSection, setActiveSection] = useState<'dashboard' | 'messaging' | 'bikes' | 'bookings'>('dashboard');
 
   const handleLogout = () => {
     // Stop heartbeat service
@@ -52,16 +54,30 @@ const CustomerDashboard: React.FC = () => {
                   className={`${activeSection === 'bikes'
                     ? 'bg-gradient-to-r from-amber-400 to-yellow-500 text-white shadow-md'
                     : 'text-gray-600 hover:text-amber-600 hover:bg-amber-50'
-                    } flex items-center space-x-2 px-6 py-3 rounded-lg font-medium text-sm transition-all duration-200`}
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                  </svg>
-                  <span>Available Bikes</span>
-                </button>
-                <button
-                  onClick={() => setActiveSection('messaging')}
-                  className={`${activeSection === 'messaging'
+                 } flex items-center space-x-2 px-6 py-3 rounded-lg font-medium text-sm transition-all duration-200`}
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                <span>Available Bikes</span>
+              </button>
+              <button
+                onClick={() => setActiveSection('bookings')}
+                className={`${
+                  activeSection === 'bookings'
+                    ? 'bg-gradient-to-r from-amber-400 to-yellow-500 text-white shadow-md'
+                    : 'text-gray-600 hover:text-amber-600 hover:bg-amber-50'
+                } flex items-center space-x-2 px-6 py-3 rounded-lg font-medium text-sm transition-all duration-200`}
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+                <span>My Bookings</span>
+              </button>
+              <button
+                onClick={() => setActiveSection('messaging')}
+                className={`${
+                  activeSection === 'messaging'
                     ? 'bg-gradient-to-r from-amber-400 to-yellow-500 text-white shadow-md'
                     : 'text-gray-600 hover:text-amber-600 hover:bg-amber-50'
                     } flex items-center space-x-2 px-6 py-3 rounded-lg font-medium text-sm transition-all duration-200`}
@@ -114,6 +130,8 @@ const CustomerDashboard: React.FC = () => {
                   </div>
                 </div>
 
+                <BookingSummary onViewBookings={() => setActiveSection('bookings')} />
+
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
                   <div className="flex items-center">
                     <div className="p-3 bg-green-100 rounded-lg">
@@ -125,20 +143,6 @@ const CustomerDashboard: React.FC = () => {
                     <div className="ml-4">
                       <p className="text-sm font-medium text-gray-600">Nearby Locations</p>
                       <p className="text-2xl font-bold text-gray-900">3</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
-                  <div className="flex items-center">
-                    <div className="p-3 bg-purple-100 rounded-lg">
-                      <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                      </svg>
-                    </div>
-                    <div className="ml-4">
-                      <p className="text-sm font-medium text-gray-600">Total Trips</p>
-                      <p className="text-2xl font-bold text-gray-900">12</p>
                     </div>
                   </div>
                 </div>
@@ -197,8 +201,11 @@ const CustomerDashboard: React.FC = () => {
                       <p className="text-gray-600 mb-4">
                         Manage payment methods and view your trip history.
                       </p>
-                      <button className="text-purple-600 hover:text-purple-700 font-medium text-sm group-hover:underline">
-                        View History →
+                      <button
+                        onClick={() => setActiveSection('bookings')}
+                        className="text-purple-600 hover:text-purple-700 font-medium text-sm group-hover:underline"
+                      >
+                        View Booking History →
                       </button>
                     </div>
                   </div>
@@ -251,6 +258,10 @@ const CustomerDashboard: React.FC = () => {
 
           {activeSection === 'bikes' && (
             <BikeAvailabilitySection title="Available Bikes" showHeader={true} />
+          )}
+
+          {activeSection === 'bookings' && (
+            <MyBookings />
           )}
 
           {activeSection === 'messaging' && (

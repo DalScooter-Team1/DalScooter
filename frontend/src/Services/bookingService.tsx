@@ -59,6 +59,30 @@ export interface BookingResponse {
     error?: string;
 }
 
+export interface Booking {
+    bookingId: string;
+    bikeId: string;
+    userId: string;
+    startTime: string;
+    endTime: string;
+    status?: 'pending' | 'approved' | 'rejected' | 'completed' | 'cancelled';
+    isUsed?: boolean;   
+    accessCode?: string;
+    price?: string | number;
+    createdAt?: string;
+    updatedAt?: string;
+    bikeName?: string;
+    bikeModel?: string;
+    bikeLocation?: string;
+}
+
+export interface MyBookingsResponse {
+    success: boolean;
+    bookings: Booking[];
+    count: number;
+    error?: string;
+}
+
 // Booking Service functions
 export const bookingService = {
     // Create a new booking request
@@ -129,6 +153,83 @@ export const bookingService = {
                 return {
                     success: false,
                     error: error.message || 'An unexpected error occurred.',
+                };
+            }
+        }
+    },
+
+    // Get user's booking history
+    getMyBookings: async (): Promise<MyBookingsResponse> => {
+        try {
+            // Get userId from decoded token
+            const decodedToken = JSON.parse(localStorage.getItem('decodedToken') || '{}');
+            const userId = decodedToken.sub || decodedToken.email;
+            
+            if (!userId) {
+                return {
+                    success: false,
+                    bookings: [],
+                    count: 0,
+                    error: 'User ID not found. Please login again.',
+                };
+            }
+            
+            console.log('Fetching user bookings for userId:', userId);
+            console.log('Fetching from:', `${API_BASE_URL}/booking/my-bookings?userId=${userId}`);
+            
+            const response = await bookingAPI.get(`/booking/my-bookings?userId=${userId}`);
+            
+            console.log('My bookings response status:', response.status);
+            console.log('My bookings response data:', response.data);
+            
+            if (response.status === 200 && response.data) {
+                if (response.data.success && Array.isArray(response.data.bookings)) {
+                    return {
+                        success: true,
+                        bookings: response.data.bookings,
+                        count: response.data.count || response.data.bookings.length,
+                    };
+                } else if (Array.isArray(response.data)) {
+                    // Handle case where response.data is directly an array
+                    return {
+                        success: true,
+                        bookings: response.data,
+                        count: response.data.length,
+                    };
+                }
+            }
+            
+            // Handle empty response or no bookings
+            return {
+                success: true,
+                bookings: [],
+                count: 0,
+            };
+            
+        } catch (error: any) {
+            console.error('Error fetching user bookings:', error);
+            
+            if (error.response) {
+                const errorData = error.response.data;
+                return {
+                    success: false,
+                    bookings: [],
+                    count: 0,
+                    error: errorData?.error || errorData?.message || `Server error: ${error.response.status}`,
+                };
+            } else if (error.request) {
+                return {
+                    success: false,
+                    bookings: [],
+                    count: 0,
+                    error: 'Network error. Please check your connection and try again.',
+                };
+            } else {
+                return {
+                    success: false,
+                    bookings: [],
+                    count: 0,
+                    error: error.message || 'An unexpected error occurred while fetching bookings.',
                 };
             }
         }

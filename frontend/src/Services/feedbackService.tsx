@@ -1,6 +1,4 @@
- import React from 'react';
-
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://j5kvxocoah.execute-api.us-east-1.amazonaws.com/prod';
+const API_BASE_URL = import.meta.env.VITE_SERVER;
 
 export interface Feedback {
   uuid: string;
@@ -8,7 +6,6 @@ export interface Feedback {
   first_name?: string;
   last_name?: string;
   feedback_text: string;
-  bike_type: string;
   bike_id: string;
   booking_reference: string;
   timestamp: string;
@@ -56,7 +53,6 @@ class FeedbackService {
     first_name?: string;
     last_name?: string;
     feedback_text: string;
-    bike_type: string;
     bike_id: string;
     booking_reference: string;
   }): Promise<{ success: boolean; message: string; feedback_id?: string }> {
@@ -78,10 +74,20 @@ class FeedbackService {
       }
 
       const data = await response.json();
-      return data;
+      
+      // The backend returns: { message: "Feedback submitted successfully", feedback_id: "..." }
+      // Convert to our expected format
+      return {
+        success: true,
+        message: data.message || 'Feedback submitted successfully',
+        feedback_id: data.feedback_id
+      };
     } catch (error) {
       console.error('Error posting feedback:', error);
-      throw error;
+      return {
+        success: false,
+        message: error instanceof Error ? error.message : 'Failed to submit feedback'
+      };
     }
   }
 

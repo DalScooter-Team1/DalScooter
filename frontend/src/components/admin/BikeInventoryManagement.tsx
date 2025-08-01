@@ -81,13 +81,18 @@ const BikeInventoryManagement: React.FC<BikeInventoryManagementProps> = () => {
         setLoading(true);
         clearMessages();
         try {
-            const response = await bikeInventoryService.getBikes();
+            console.log('Fetching bikes with includeInactive=true');
+            const response = await bikeInventoryService.getBikes(true); // Include inactive bikes
+            console.log('Bikes response:', response);
             if (response.success) {
+                console.log('Number of bikes received:', response.bikes?.length);
+                console.log('Bikes data:', response.bikes);
                 setBikes(response.bikes || []);
             } else {
                 setError(response.message || 'Failed to fetch bikes');
             }
         } catch (err: any) {
+            console.error('Error fetching bikes:', err);
             setError(err.message || 'Error fetching bikes');
         } finally {
             setLoading(false);
@@ -114,9 +119,25 @@ const BikeInventoryManagement: React.FC<BikeInventoryManagementProps> = () => {
 
             let response;
             if (editingBike) {
+                console.log('Updating bike with ID:', editingBike.bike_id);
+                console.log('Update payload:', {
+                    accessCode: bikeData.accessCode,
+                    hourlyRate: bikeData.hourlyRate,
+                    isActive: bikeForm.availability, // Only use isActive, no status
+                    features: {
+                        heightAdjustment: bikeData.heightAdjustment,
+                        batteryLife: bikeData.batteryLife,
+                        maxSpeed: bikeData.maxSpeed,
+                        weight: bikeData.weight,
+                    },
+                    location: {
+                        address: bikeData.address,
+                    }
+                });
                 response = await bikeInventoryService.updateBike(editingBike.bike_id, {
                     accessCode: bikeData.accessCode,
                     hourlyRate: bikeData.hourlyRate,
+                    isActive: bikeForm.availability, // Only use isActive, no status
                     features: {
                         heightAdjustment: bikeData.heightAdjustment,
                         batteryLife: bikeData.batteryLife,
@@ -141,7 +162,18 @@ const BikeInventoryManagement: React.FC<BikeInventoryManagementProps> = () => {
                 setError(response.message || 'Failed to save bike');
             }
         } catch (err: any) {
-            setError(err.message || 'Error saving bike');
+            console.error('Error saving bike:', err);
+            if (err.response?.status === 404) {
+                setError('Bike not found. It may have been deleted by another admin.');
+            } else if (err.response?.status === 401) {
+                setError('You are not authorized to perform this action.');
+            } else if (err.response?.status === 403) {
+                setError('Access forbidden. Please check your permissions.');
+            } else if (err.response?.data?.message) {
+                setError(`Server error: ${err.response.data.message}`);
+            } else {
+                setError(`Error: ${err.message || 'Failed to save bike'}`);
+            }
         } finally {
             setLoading(false);
         }
@@ -164,6 +196,9 @@ const BikeInventoryManagement: React.FC<BikeInventoryManagementProps> = () => {
     };
 
     const handleEditBike = (bike: Bike) => {
+        console.log('Editing bike:', bike);
+        console.log('Bike ID:', bike.bike_id);
+        console.log('Bike isActive:', bike.isActive);
         setEditingBike(bike);
         setBikeForm({
             bikeType: bike.bike_type,
@@ -383,11 +418,11 @@ const BikeInventoryManagement: React.FC<BikeInventoryManagementProps> = () => {
                                     <h4 className="text-2xl font-bold text-gray-900">{bike.bike_type}</h4>
                                     <p className="text-gray-600">{bike.bike_id}</p>
                                 </div>
-                                <span className={`px-4 py-2 text-sm font-semibold rounded-2xl border ${bike.availability
+                                <span className={`px-4 py-2 text-sm font-semibold rounded-2xl border ${bike.isActive
                                     ? 'bg-green-100 text-green-800 border-green-200'
-                                    : 'bg-red-100 text-red-800 border-red-200'
+                                    : 'bg-gray-100 text-gray-800 border-gray-200'
                                     }`}>
-                                    {bike.availability ? 'Available' : 'Unavailable'}
+                                    {bike.isActive ? 'Active' : 'Inactive'}
                                 </span>
                             </div>
 
@@ -590,7 +625,7 @@ const BikeInventoryManagement: React.FC<BikeInventoryManagementProps> = () => {
                                     </div>
                                 </div>
 
-                                {/* Availability Section */}
+                                {/* Active Status Section */}
                                 <div className="border-t border-gray-200 pt-8">
                                     <label className="flex items-center">
                                         <input
@@ -599,7 +634,7 @@ const BikeInventoryManagement: React.FC<BikeInventoryManagementProps> = () => {
                                             onChange={(e) => setBikeForm({ ...bikeForm, availability: e.target.checked })}
                                             className="mr-4 w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                                         />
-                                        <span className="text-lg font-semibold text-gray-700">📍 Available for Rental</span>
+                                        <span className="text-lg font-semibold text-gray-700">� Active</span>
                                     </label>
                                 </div>
 

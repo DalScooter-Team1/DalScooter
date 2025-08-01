@@ -165,4 +165,36 @@ output "post_feedback_lambda_function_name" {
   value       = aws_lambda_function.post_feedback_lambda.function_name
 }
 
- 
+# Get My Bookings Lambda
+output "get_my_bookings_lambda_arn" {
+  description = "ARN of the get my bookings Lambda function"
+  value       = aws_lambda_function.get_my_bookings.arn
+}
+
+output "get_my_bookings_lambda_invoke_arn" {
+  description = "Invoke ARN of the get my bookings Lambda function"
+  value       = aws_lambda_function.get_my_bookings.invoke_arn
+}
+
+output "get_my_bookings_lambda_function_name" {
+  description = "Function name of the get my bookings Lambda"
+  value       = aws_lambda_function.get_my_bookings.function_name
+}
+
+# Get All Bookings Lambda outputs
+output "get_all_bookings_lambda_arn" {
+  description = "ARN of the get all bookings Lambda function"
+  value       = aws_lambda_function.get_all_bookings.arn
+}
+
+output "get_all_bookings_lambda_invoke_arn" {
+  description = "Invoke ARN of the get all bookings Lambda function"
+  value       = aws_lambda_function.get_all_bookings.invoke_arn
+}
+
+output "get_all_bookings_lambda_function_name" {
+  description = "Function name of the get all bookings Lambda"
+  value       = aws_lambda_function.get_all_bookings.function_name
+}
+
+
