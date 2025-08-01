@@ -31,6 +31,33 @@ resource "aws_iam_role_policy_attachment" "lambda_dynamodb" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess"
 }
 
+# Additional IAM policy for bike table access
+resource "aws_iam_role_policy" "bike_table_access" {
+  name = "bike-table-access"
+  role = aws_iam_role.lambda_exec_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "dynamodb:GetItem",
+          "dynamodb:PutItem",
+          "dynamodb:UpdateItem",
+          "dynamodb:DeleteItem",
+          "dynamodb:Query",
+          "dynamodb:Scan"
+        ]
+        Resource = [
+          aws_dynamodb_table.bikes.arn,
+          "${aws_dynamodb_table.bikes.arn}/index/*"
+        ]
+      }
+    ]
+  })
+}
+
 # SQS Queue
 resource "aws_sqs_queue" "booking_queue" {
   name                        = "dal-booking-queue"
@@ -57,6 +84,7 @@ resource "aws_lambda_function" "booking_request" {
   handler       = "booking_request.handler"
   runtime       = "python3.9"
   filename      = data.archive_file.booking_request.output_path
+  source_code_hash = data.archive_file.booking_request.output_base64sha256
   role          = aws_iam_role.lambda_exec_role.arn
 
   environment {
@@ -80,12 +108,14 @@ resource "aws_lambda_function" "booking_approval" {
   function_name = "booking-approval"
   handler       = "booking_approval.handler"
   runtime       = "python3.9"
-  filename      =  data.archive_file.booking_approval.output_path
+  filename      = data.archive_file.booking_approval.output_path
+  source_code_hash = data.archive_file.booking_approval.output_base64sha256
   role          = aws_iam_role.lambda_exec_role.arn
 
   environment {
     variables = {
       BOOKING_TABLE_NAME = aws_dynamodb_table.booking_table.name
+      BIKE_TABLE_NAME    = aws_dynamodb_table.bikes.name
     }
   }
 
