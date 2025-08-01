@@ -34,28 +34,27 @@ const CustomerDashboard: React.FC = () => {
         {/* Enhanced Navigation Tabs */}
         <div className="px-4 mb-8">
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-2">
-            <nav className="flex space-x-2" aria-label="Tabs">
-              <button
-                onClick={() => setActiveSection('dashboard')}
-                className={`${
-                  activeSection === 'dashboard'
+            <nav className="flex justify-between items-center" aria-label="Tabs">
+              <div className="flex space-x-2">
+                <button
+                  onClick={() => setActiveSection('dashboard')}
+                  className={`${activeSection === 'dashboard'
                     ? 'bg-gradient-to-r from-amber-400 to-yellow-500 text-white shadow-md'
                     : 'text-gray-600 hover:text-amber-600 hover:bg-amber-50'
-                } flex items-center space-x-2 px-6 py-3 rounded-lg font-medium text-sm transition-all duration-200`}
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5a2 2 0 012-2h4a2 2 0 012 2v6H8V5z" />
-                </svg>
-                <span>Dashboard</span>
-              </button>
-              <button
-                onClick={() => setActiveSection('bikes')}
-                className={`${
-                  activeSection === 'bikes'
+                    } flex items-center space-x-2 px-6 py-3 rounded-lg font-medium text-sm transition-all duration-200`}
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5a2 2 0 012-2h4a2 2 0 012 2v6H8V5z" />
+                  </svg>
+                  <span>Dashboard</span>
+                </button>
+                <button
+                  onClick={() => setActiveSection('bikes')}
+                  className={`${activeSection === 'bikes'
                     ? 'bg-gradient-to-r from-amber-400 to-yellow-500 text-white shadow-md'
                     : 'text-gray-600 hover:text-amber-600 hover:bg-amber-50'
-                } flex items-center space-x-2 px-6 py-3 rounded-lg font-medium text-sm transition-all duration-200`}
+                 } flex items-center space-x-2 px-6 py-3 rounded-lg font-medium text-sm transition-all duration-200`}
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -81,13 +80,14 @@ const CustomerDashboard: React.FC = () => {
                   activeSection === 'messaging'
                     ? 'bg-gradient-to-r from-amber-400 to-yellow-500 text-white shadow-md'
                     : 'text-gray-600 hover:text-amber-600 hover:bg-amber-50'
-                } flex items-center space-x-2 px-6 py-3 rounded-lg font-medium text-sm transition-all duration-200`}
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                </svg>
-                <span>Messages & Support</span>
-              </button>
+                    } flex items-center space-x-2 px-6 py-3 rounded-lg font-medium text-sm transition-all duration-200`}
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                  </svg>
+                  <span>Messages & Support</span>
+                </button>
+              </div>
             </nav>
           </div>
         </div>

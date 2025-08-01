@@ -8,25 +8,29 @@ import CustomerDashboard from './pages/CustomerDashboard';
 import BikeDetails from './pages/BikeDetails';
 import { useHeartbeatInitializer } from './hooks/useHeartbeatInitializer';
 import Home from './pages/Home';
+import ChatbotWidget from './components/chatbot/ChatbotWidget';
 
 function App() {
   // Initialize heartbeat service for customers
   useHeartbeatInitializer();
 
   return (
-     <BrowserRouter>
+    <BrowserRouter>
       <Routes>
 
         <Route path='/' element={<Home />} />
         <Route path='/register' element={<Register />} />
-        <Route path='/login' element= {<Login/>}/>
-        <Route path='/admin-dashboard' element={<AdminDashboard/>}/>
-        <Route path='/customer-dashboard' element={<CustomerDashboard/>}/>
-        <Route path='/bike/:bikeId' element={<BikeDetails/>}/>
-        
+        <Route path='/login' element={<Login />} />
+        <Route path='/admin-dashboard' element={<AdminDashboard />} />
+        <Route path='/customer-dashboard' element={<CustomerDashboard />} />
+        <Route path='/bike/:bikeId' element={<BikeDetails />} />
+
       </Routes>
-      </BrowserRouter>
-     
+
+      {/* Global Chatbot Widget - accessible from all pages */}
+      <ChatbotWidget />
+    </BrowserRouter>
+
   )
 }
 
