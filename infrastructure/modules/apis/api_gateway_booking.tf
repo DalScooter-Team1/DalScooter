@@ -21,7 +21,12 @@ resource "aws_api_gateway_method" "booking_request_post" {
   rest_api_id   = aws_api_gateway_rest_api.dalscooter_apis.id
   resource_id   = aws_api_gateway_resource.booking_request.id
   http_method   = "POST"
-  authorization = "NONE"
+  authorization = "CUSTOM"
+  authorizer_id = aws_api_gateway_authorizer.customer_authorizer.id
+
+  request_parameters = {
+    "method.request.header.Authorization" = true
+  }
 }
 
 # OPTIONS method for CORS
@@ -57,17 +62,8 @@ resource "aws_api_gateway_integration" "booking_request_options_integration" {
   }
 }
 
-# Method response for POST
-resource "aws_api_gateway_method_response" "booking_request_post_response" {
-  rest_api_id = aws_api_gateway_rest_api.dalscooter_apis.id
-  resource_id = aws_api_gateway_resource.booking_request.id
-  http_method = aws_api_gateway_method.booking_request_post.http_method
-  status_code = "200"
-
-  response_parameters = {
-    "method.response.header.Access-Control-Allow-Origin" = true
-  }
-}
+# Method response for POST - Not needed for Lambda proxy integration
+# The Lambda function handles all response format including status codes and headers
 
 # Method response for OPTIONS
 resource "aws_api_gateway_method_response" "booking_request_options_response" {
@@ -83,19 +79,8 @@ resource "aws_api_gateway_method_response" "booking_request_options_response" {
   }
 }
 
-# Integration response for POST
-resource "aws_api_gateway_integration_response" "booking_request_post_integration_response" {
-  rest_api_id = aws_api_gateway_rest_api.dalscooter_apis.id
-  resource_id = aws_api_gateway_resource.booking_request.id
-  http_method = aws_api_gateway_method.booking_request_post.http_method
-  status_code = aws_api_gateway_method_response.booking_request_post_response.status_code
-
-  response_parameters = {
-    "method.response.header.Access-Control-Allow-Origin" = "'*'"
-  }
-
-  depends_on = [aws_api_gateway_integration.booking_request_integration]
-}
+# Integration response for POST - Not needed for Lambda proxy integration
+# The Lambda function handles all response headers including CORS
 
 # Integration response for OPTIONS
 resource "aws_api_gateway_integration_response" "booking_request_options_integration_response" {
