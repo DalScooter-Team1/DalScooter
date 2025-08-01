@@ -414,7 +414,7 @@ const MyBookings: React.FC<MyBookingsProps> = ({ className = '' }) => {
                           </div>
                           <div>
                             <p className="font-medium text-blue-800">Booking ID</p>
-                            <p className="font-mono text-blue-700 font-semibold">{booking.bookingId.slice(-8)}</p>
+                            <p className="font-mono text-blue-700 font-semibold">{booking.bookingId}</p>
                           </div>
                         </div>
                         {booking.createdAt && (
