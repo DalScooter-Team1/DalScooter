@@ -48,28 +48,8 @@ def lambda_handler(event, context):
         bike_type = query_params.get('bikeType')
         location = query_params.get('location')
         
-        # Query available bikes
-        if bike_type:
-            response = bikes_table.query(
-                IndexName='bikeType-index',
-                KeyConditionExpression='bikeType = :bikeType',
-                FilterExpression='#status = :status AND isActive = :isActive',
-                ExpressionAttributeNames={'#status': 'status'},
-                ExpressionAttributeValues={
-                    ':bikeType': bike_type,
-                    ':status': 'available',
-                    ':isActive': True
-                }
-            )
-        else:
-            response = bikes_table.scan(
-                FilterExpression='#status = :status AND isActive = :isActive',
-                ExpressionAttributeNames={'#status': 'status'},
-                ExpressionAttributeValues={
-                    ':status': 'available',
-                    ':isActive': True
-                }
-            )
+        # Get all bikes from the table
+        response = bikes_table.scan()
         
         bikes = response.get('Items', [])
         
@@ -79,7 +59,7 @@ def lambda_handler(event, context):
             'body': json.dumps({
                 'success': True,
                 'bikes': bikes,
-                'totalAvailable': len(bikes),
+                'totalBikes': len(bikes),
                 'lastUpdated': bikes[0]['updatedAt'] if bikes else None
             }, default=decimal_default)
         }

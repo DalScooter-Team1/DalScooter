@@ -9,6 +9,7 @@ interface Bike {
   bikeType: string;
   hourlyRate: number;
   status: string;
+  isActive: boolean;
   features: {
     batteryLife: number;
     maxSpeed: number;
@@ -151,21 +152,29 @@ const BikeAvailabilitySection: React.FC<BikeAvailabilitySectionProps> = ({
             bikes.map((bike, index) => (
               <div
                 key={bike.bikeId}
-                onClick={() => handleBikeClick(bike)}
-                className="group relative bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border border-gray-100 overflow-hidden cursor-pointer"
+                onClick={() => bike.isActive !== false && handleBikeClick(bike)}
+                className={`group relative bg-white rounded-2xl shadow-lg transition-all duration-300 border border-gray-100 overflow-hidden ${
+                  bike.isActive === false 
+                    ? 'opacity-50 cursor-not-allowed' 
+                    : 'hover:shadow-2xl transform hover:-translate-y-2 cursor-pointer'
+                }`}
                 style={{ animationDelay: `${index * 100}ms` }}
               >
                 {/* Status Badge */}
                 <div className="absolute top-4 right-4 z-10">
                   <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
-                    bike.status === 'available' 
+                    bike.isActive === false
+                      ? 'bg-gray-100 text-gray-600 border border-gray-300'
+                      : bike.status === 'available' 
                       ? 'bg-green-100 text-green-800 border border-green-200' 
                       : 'bg-gray-100 text-gray-600 border border-gray-200'
                   }`}>
                     <span className={`w-2 h-2 rounded-full mr-2 ${
-                      bike.status === 'available' ? 'bg-green-500' : 'bg-gray-400'
+                      bike.isActive === false 
+                        ? 'bg-gray-500'
+                        : bike.status === 'available' ? 'bg-green-500' : 'bg-gray-400'
                     }`}></span>
-                    {bike.status}
+                    {bike.isActive === false ? 'In Use Currently' : bike.status}
                   </span>
                 </div>
 
@@ -224,13 +233,22 @@ const BikeAvailabilitySection: React.FC<BikeAvailabilitySectionProps> = ({
                   </div>
 
                   {/* Action Button */}
-                  <button className="w-full bg-gradient-to-r from-amber-500 to-yellow-500 text-white font-semibold py-3 px-4 rounded-xl hover:from-amber-600 hover:to-yellow-600 transition-all duration-200 transform hover:scale-105 shadow-lg">
-                    View Details
+                  <button 
+                    className={`w-full font-semibold py-3 px-4 rounded-xl transition-all duration-200 shadow-lg ${
+                      bike.isActive === false || bike.status !== 'available'
+                        ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                        : 'bg-gradient-to-r from-amber-500 to-yellow-500 text-white hover:from-amber-600 hover:to-yellow-600 transform hover:scale-105'
+                    }`}
+                    disabled={bike.isActive === false || bike.status !== 'available'}
+                  >
+                    {bike.isActive === false ? 'Currently In Use' : 'View Details'}
                   </button>
                 </div>
 
                 {/* Hover Effect Overlay */}
-                <div className="absolute inset-0 bg-gradient-to-r from-amber-400 to-yellow-400 opacity-0 group-hover:opacity-10 transition-opacity duration-300 rounded-2xl"></div>
+                {bike.isActive !== false && (
+                  <div className="absolute inset-0 bg-gradient-to-r from-amber-400 to-yellow-400 opacity-0 group-hover:opacity-10 transition-opacity duration-300 rounded-2xl"></div>
+                )}
               </div>
             ))
           ) : (

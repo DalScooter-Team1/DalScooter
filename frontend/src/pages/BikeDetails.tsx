@@ -12,6 +12,7 @@ interface Bike {
   bikeType: string;
   hourlyRate: number;
   status: string;
+  isActive: boolean;
   features: {
     batteryLife: number;
     maxSpeed: number;
@@ -304,14 +305,18 @@ const handleBooking = async () => {
                     <p className="text-amber-100 text-lg">{bike.bikeType}</p>
                     <div className="flex items-center mt-2">
                       <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold ${
-                        bike.status === 'available' 
+                        bike.isActive === false
+                          ? 'bg-gray-100 text-gray-600 border border-gray-300'
+                          : bike.status === 'available' 
                           ? 'bg-green-100 text-green-800 border border-green-200' 
                           : 'bg-gray-100 text-gray-600 border border-gray-200'
                       }`}>
                         <span className={`w-2 h-2 rounded-full mr-2 ${
-                          bike.status === 'available' ? 'bg-green-500' : 'bg-gray-400'
+                          bike.isActive === false 
+                            ? 'bg-gray-500'
+                            : bike.status === 'available' ? 'bg-green-500' : 'bg-gray-400'
                         }`}></span>
-                        {bike.status}
+                        {bike.isActive === false ? 'In Use Currently' : bike.status}
                       </span>
                     </div>
                   </div>
@@ -592,9 +597,9 @@ const handleBooking = async () => {
 
                   <button
                     onClick={handleBooking}
-                    disabled={bookingLoading || bike.status !== 'available'}
+                    disabled={bookingLoading || bike.status !== 'available' || bike.isActive === false}
                     className={`w-full py-4 px-6 rounded-xl font-semibold text-white transition-all duration-200 ${
-                      bookingLoading || bike.status !== 'available'
+                      bookingLoading || bike.status !== 'available' || bike.isActive === false
                         ? 'bg-gray-400 cursor-not-allowed'
                         : 'bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 transform hover:scale-105 shadow-lg'
                     }`}
@@ -609,9 +614,9 @@ const handleBooking = async () => {
                     )}
                   </button>
 
-                  {bike.status !== 'available' && (
+                  {(bike.status !== 'available' || bike.isActive === false) && (
                     <p className="text-red-600 text-sm text-center mt-2">
-                      This bike is currently unavailable
+                      {bike.isActive === false ? 'This bike is currently in use' : 'This bike is currently unavailable'}
                     </p>
                   )}
                 </>
