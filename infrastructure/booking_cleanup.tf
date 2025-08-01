@@ -48,12 +48,21 @@ resource "aws_dynamodb_table" "booking_table" {
   name         = var.booking_table_name
   billing_mode = "PAY_PER_REQUEST"
   
+  # Enable DynamoDB streams for data pipeline
+  stream_enabled   = true
+  stream_view_type = "NEW_AND_OLD_IMAGES"
+  
   attribute {
     name = "bookingId"
     type = "S"
   }
 
   hash_key = "bookingId"
+  
+  tags = {
+    Name    = "DALScooter Booking Table"
+    Project = "DALScooter"
+  }
 }
 
 data "archive_file" "booking_cleanup_zip" {
@@ -105,4 +114,10 @@ resource "aws_cloudwatch_event_target" "booking_cleanup_target" {
   rule      = aws_cloudwatch_event_rule.booking_cleanup_schedule.name
   target_id = "booking-cleanup-lambda"
   arn       = aws_lambda_function.booking_cleanup.arn
+}
+
+# Output the stream ARN for use in data pipeline
+output "booking_table_stream_arn" {
+  description = "ARN of the booking table DynamoDB stream"
+  value       = aws_dynamodb_table.booking_table.stream_arn
 }

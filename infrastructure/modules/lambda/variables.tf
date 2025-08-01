@@ -124,3 +124,36 @@ variable "booking_table_arn" {
   description = "ARN of the booking DynamoDB table"
   type        = string
 }
+
+variable "booking_table_stream_arn" {
+  description = "ARN of the booking DynamoDB table stream"
+  type        = string
+}
+
+# RDS Variables for data pipeline
+variable "rds_endpoint" {
+  description = "RDS instance endpoint"
+  type        = string
+}
+
+variable "rds_port" {
+  description = "RDS instance port"
+  type        = string
+}
+
+variable "rds_database_name" {
+  description = "RDS database name"
+  type        = string
+}
+
+variable "rds_username" {
+  description = "RDS master username"
+  type        = string
+  sensitive   = true
+}
+
+variable "rds_password" {
+  description = "RDS master password"
+  type        = string
+  sensitive   = true
+}

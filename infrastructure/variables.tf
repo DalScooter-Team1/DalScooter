@@ -69,7 +69,7 @@ variable "s3_bucket_name" {
   description = "Name of the S3 bucket to store CSV logs for logged in user directory stream"
   type        = string
 
-  default = "dalscooter-logged-in-user-directory-9196"
+  default = "dalscooter-logged-in-users"
 
 
 }
