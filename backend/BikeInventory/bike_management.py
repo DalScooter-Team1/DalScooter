@@ -155,44 +155,76 @@ def handle_get_bikes(event):
         bike_type = query_params.get('bikeType')
         status = query_params.get('status')
         franchise_id = query_params.get('franchiseId')
+        include_inactive = query_params.get('includeInactive', 'false').lower() == 'true'
         
-        # Build query based on parameters with active filter
+        # Build query based on parameters with optional active filter
         if bike_type:
-            response = bikes_table.query(
-                IndexName='bikeType-index',
-                KeyConditionExpression='bikeType = :bikeType',
-                FilterExpression='isActive = :isActive',
-                ExpressionAttributeValues={
-                    ':bikeType': bike_type,
-                    ':isActive': True
-                }
-            )
+            if include_inactive:
+                response = bikes_table.query(
+                    IndexName='bikeType-index',
+                    KeyConditionExpression='bikeType = :bikeType',
+                    ExpressionAttributeValues={
+                        ':bikeType': bike_type
+                    }
+                )
+            else:
+                response = bikes_table.query(
+                    IndexName='bikeType-index',
+                    KeyConditionExpression='bikeType = :bikeType',
+                    FilterExpression='isActive = :isActive',
+                    ExpressionAttributeValues={
+                        ':bikeType': bike_type,
+                        ':isActive': True
+                    }
+                )
         elif status:
-            response = bikes_table.query(
-                IndexName='status-index',
-                KeyConditionExpression='#status = :status',
-                FilterExpression='isActive = :isActive',
-                ExpressionAttributeNames={'#status': 'status'},
-                ExpressionAttributeValues={
-                    ':status': status,
-                    ':isActive': True
-                }
-            )
+            if include_inactive:
+                response = bikes_table.query(
+                    IndexName='status-index',
+                    KeyConditionExpression='#status = :status',
+                    ExpressionAttributeNames={'#status': 'status'},
+                    ExpressionAttributeValues={
+                        ':status': status
+                    }
+                )
+            else:
+                response = bikes_table.query(
+                    IndexName='status-index',
+                    KeyConditionExpression='#status = :status',
+                    FilterExpression='isActive = :isActive',
+                    ExpressionAttributeNames={'#status': 'status'},
+                    ExpressionAttributeValues={
+                        ':status': status,
+                        ':isActive': True
+                    }
+                )
         elif franchise_id:
-            response = bikes_table.query(
-                IndexName='franchiseId-index',
-                KeyConditionExpression='franchiseId = :franchiseId',
-                FilterExpression='isActive = :isActive',
-                ExpressionAttributeValues={
-                    ':franchiseId': franchise_id,
-                    ':isActive': True
-                }
-            )
+            if include_inactive:
+                response = bikes_table.query(
+                    IndexName='franchiseId-index',
+                    KeyConditionExpression='franchiseId = :franchiseId',
+                    ExpressionAttributeValues={
+                        ':franchiseId': franchise_id
+                    }
+                )
+            else:
+                response = bikes_table.query(
+                    IndexName='franchiseId-index',
+                    KeyConditionExpression='franchiseId = :franchiseId',
+                    FilterExpression='isActive = :isActive',
+                    ExpressionAttributeValues={
+                        ':franchiseId': franchise_id,
+                        ':isActive': True
+                    }
+                )
         else:
-            response = bikes_table.scan(
-                FilterExpression='isActive = :isActive',
-                ExpressionAttributeValues={':isActive': True}
-            )
+            if include_inactive:
+                response = bikes_table.scan()
+            else:
+                response = bikes_table.scan(
+                    FilterExpression='isActive = :isActive',
+                    ExpressionAttributeValues={':isActive': True}
+                )
         
         bikes = response.get('Items', [])
         
@@ -367,15 +399,8 @@ def handle_update_bike(event):
             }
             
         existing_bike = existing_bike_response['Item']
-        if not existing_bike.get('isActive', True):
-            return {
-                'statusCode': 404,
-                'headers': get_cors_headers(),
-                'body': json.dumps({
-                    'success': False,
-                    'message': 'Bike not found or has been deleted'
-                })
-            }
+        # Allow updating inactive bikes for admin operations
+        # Removed the isActive check to allow admins to reactivate bikes
         
         # Build update expression step by step
         update_parts = []
@@ -437,6 +462,11 @@ def handle_update_bike(event):
                 }
             update_parts.append("#status = :status")
             expression_values[':status'] = body['status']
+                
+        # Handle explicit isActive updates
+        if 'isActive' in body:
+            update_parts.append("isActive = :isActive")
+            expression_values[':isActive'] = bool(body['isActive'])
             
         if 'features' in body:
             try:

@@ -40,6 +40,7 @@ def handler(event, context):
             'startTime': body['startTime'],
             'endTime': body['endTime'],
             'accessCode': '',
+            'price': body['price'],
             'isUsed': False
         }
 
