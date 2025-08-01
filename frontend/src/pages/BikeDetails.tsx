@@ -5,6 +5,7 @@ import { useLocation } from 'react-router-dom';
 import { useParams, useNavigate } from 'react-router-dom';
 import { bikeInventoryService } from '../Services/bikeInventoryService';
 import { bookingService } from '../Services/bookingService';
+import { feedbackService } from '../Services/feedbackService';
 import { isAuthenticated } from '../utils/authUtils';
 
 interface Bike {
@@ -49,6 +50,10 @@ const BikeDetails: React.FC = () => {
   const [bookingSuccess, setBookingSuccess] = useState(false);
   const [selectedSentiment, setSelectedSentiment] = useState<'all' | 'positive' | 'neutral' | 'negative'>('all');
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
+  const [showFeedbackPopup, setShowFeedbackPopup] = useState(false);
+  const [feedbackText, setFeedbackText] = useState('');
+  const [feedbackLoading, setFeedbackLoading] = useState(false);
+  const [bookingReference, setBookingReference] = useState<string>('');
   
 
   useEffect(() => {
@@ -188,13 +193,24 @@ const handleBooking = async () => {
 
     // Use the booking service (same pattern as other working services)
     const result = await bookingService.createBooking(bookingData);
+    
+    console.log('Booking result received:', result);
 
     if (result.success) {
       console.log('Booking successful');
       setBookingSuccess(true);
-      if (result.bookingId) {
-        console.log('Booking ID:', result.bookingId);
-      }
+      
+      // Set booking reference - use provided bookingId or generate a fallback
+      const bookingRef = result.bookingId || `BK-${Date.now()}`;
+      console.log('Booking ID:', bookingRef);
+      setBookingReference(bookingRef);
+      
+      // Show feedback popup after successful booking
+      console.log('Setting timeout to show feedback popup in 1.5 seconds...');
+      setTimeout(() => {
+        console.log('Showing feedback popup now');
+        setShowFeedbackPopup(true);
+      }, 1500); // Show feedback popup after a short delay
     } else {
       console.error('Booking failed:', result.error);
       alert(`Booking failed: ${result.error}`);
@@ -207,6 +223,76 @@ const handleBooking = async () => {
     setBookingLoading(false);
   }
 };
+
+const handleFeedbackSubmit = async () => {
+  if (!feedbackText.trim()) {
+    alert('Please enter your feedback before submitting.');
+    return;
+  }
+
+  setFeedbackLoading(true);
+
+  try {
+    const decodedToken = localStorage.getItem('decodedToken');
+    const token = JSON.parse(decodedToken || '{}');
+
+    const feedbackData = {
+      email: token.email || '',
+      first_name: token.given_name || '',
+      last_name: token.family_name || '',
+      feedback_text: feedbackText.trim(),
+      bike_id: bike?.bikeId || '',
+      booking_reference: bookingReference || 'N/A'
+    };
+
+    console.log('Submitting feedback:', feedbackData);
+
+    const result = await feedbackService.postFeedback(feedbackData);
+
+    if (result.success) {
+      console.log('Feedback submitted successfully');
+      setShowFeedbackPopup(false);
+      setFeedbackText('');
+      alert('Thank you for your feedback!');
+      
+      // Refresh feedbacks to show the new one
+      if (bikeId) {
+        try {
+          const SERVER = import.meta.env.VITE_SERVER;
+          const response = await fetch(`${SERVER}/feedback/${bikeId}`);
+          if (response.ok) {
+            const data = await response.json();
+            if (data.success && data.feedbacks) {
+              const displayFeedbacks = data.feedbacks.map((feedback: any) => ({
+                id: feedback.uuid,
+                user: feedback.first_name && feedback.last_name 
+                  ? `${feedback.first_name} ${feedback.last_name}`
+                  : feedback.email.split('@')[0],
+                rating: feedback.polarity === 'POSITIVE' ? 5 : feedback.polarity === 'NEGATIVE' ? 2 : 3,
+                comment: feedback.feedback_text,
+                sentiment: feedback.polarity?.toLowerCase() || 'neutral',
+                date: new Date(feedback.timestamp).toLocaleDateString()
+              }));
+              setFeedbacks(displayFeedbacks);
+            }
+          }
+        } catch (error) {
+          console.error('Error refreshing feedbacks:', error);
+        }
+      }
+    } else {
+      console.error('Feedback submission failed:', result.message);
+      alert(`Failed to submit feedback: ${result.message}`);
+    }
+
+  } catch (error) {
+    console.error('Error submitting feedback:', error);
+    alert('There was an error submitting your feedback. Please try again.');
+  } finally {
+    setFeedbackLoading(false);
+  }
+};
+
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleString('en-CA', {
@@ -553,7 +639,11 @@ const handleBooking = async () => {
                                     <h4 className="text-lg font-semibold text-gray-900 mb-2">Booking Successful!</h4>
                   <p className="text-gray-600 mb-4">Your bike has been reserved for today.</p>
                   <button
-                    onClick={() => setBookingSuccess(false)}
+                    onClick={() => {
+                      setBookingSuccess(false);
+                      setShowFeedbackPopup(false);
+                      setFeedbackText('');
+                    }}
                     className="w-full bg-amber-500 text-white py-3 px-4 rounded-xl font-semibold hover:bg-amber-600 transition-colors"
                   >
                     Book Another
@@ -625,6 +715,102 @@ const handleBooking = async () => {
           </div>
         </div>
       </div>
+
+      {/* Feedback Popup */}
+      {(() => {
+        console.log('Rendering feedback popup check, showFeedbackPopup:', showFeedbackPopup);
+        return showFeedbackPopup;
+      })() && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center" style={{position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 9999}}>
+          {/* Backdrop blur */}
+          <div 
+            className="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm"
+            onClick={() => setShowFeedbackPopup(false)}
+            style={{position: 'absolute', top: 0, left: 0, right: 0, bottom: 0}}
+          ></div>
+          
+          {/* Popup content */}
+          <div className="relative bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4 transform transition-all duration-300 scale-100">
+            {/* Header */}
+            <div className="flex items-center mb-6">
+              <div className="bg-amber-100 p-3 rounded-lg mr-4">
+                <svg className="w-8 h-8 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-gray-900">Rate Your Experience</h3>
+                <p className="text-sm text-gray-600">How was your booking experience?</p>
+              </div>
+              <button
+                onClick={() => setShowFeedbackPopup(false)}
+                className="ml-auto text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Bike info */}
+            <div className="bg-gray-50 rounded-lg p-4 mb-6">
+              <div className="flex items-center">
+                <div className="bg-white p-2 rounded-lg mr-3">
+                  {getBikeIcon(bike?.bikeType || '')}
+                </div>
+                <div>
+                  <p className="font-semibold text-gray-900">{bike?.bikeType}</p>
+                  <p className="text-sm text-gray-600">Bike ID: {bike?.bikeId}</p>
+                  <p className="text-sm text-gray-600">Booking: {bookingReference}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Feedback form */}
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Share your feedback
+              </label>
+              <textarea
+                value={feedbackText}
+                onChange={(e) => setFeedbackText(e.target.value)}
+                placeholder="Tell us about your experience with this bike..."
+                className="w-full h-32 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent resize-none"
+                maxLength={500}
+              />
+              <p className="text-xs text-gray-500 mt-1">{feedbackText.length}/500 characters</p>
+            </div>
+
+            {/* Action buttons */}
+            <div className="flex space-x-3">
+              <button
+                onClick={() => setShowFeedbackPopup(false)}
+                className="flex-1 px-4 py-2 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                disabled={feedbackLoading}
+              >
+                Skip
+              </button>
+              <button
+                onClick={handleFeedbackSubmit}
+                disabled={feedbackLoading || !feedbackText.trim()}
+                className="flex-1 px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center justify-center"
+              >
+                {feedbackLoading ? (
+                  <>
+                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Submitting...
+                  </>
+                ) : (
+                  'Submit Feedback'
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Login Prompt Modal */}
       {showLoginPrompt && (
