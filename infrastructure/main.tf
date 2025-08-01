@@ -147,15 +147,21 @@ module "apis" {
   # Get All Bookings Lambda references (Admin)
   get_all_bookings_lambda_invoke_arn    = module.lambda.get_all_bookings_lambda_invoke_arn
   get_all_bookings_lambda_function_name = module.lambda.get_all_bookings_lambda_function_name
+
+  # Bot references
+  bot_handler_lambda_invoke_arn = module.chatbot.bot_handler_lambda_invoke_arn
 }
 
 
 # ================================
-# CHATBOT MODULE (COMMENTED OUT - REQUIRES NEWER AWS PROVIDER)
+# CHATBOT MODULE
 # ================================
-# module "chatbot" {
-#   source = "./modules/chatbot"
-# }
+module "chatbot" {
+  source              = "./modules/chatbot"
+  booking_table_name  = aws_dynamodb_table.booking_table.name
+  submit_concern_lambda_arn = module.apis.submit_concern_lambda_arn
+}
+
 
 # ================================
 # API GATEWAY OUTPUTS

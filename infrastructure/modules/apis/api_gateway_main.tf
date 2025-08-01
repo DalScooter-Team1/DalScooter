@@ -79,7 +79,17 @@ resource "aws_api_gateway_deployment" "registration_deployment" {
     aws_api_gateway_method.my_bookings_get,
     aws_api_gateway_integration.my_bookings_integration,
     aws_api_gateway_method.my_bookings_options,
-    aws_api_gateway_integration.my_bookings_options_integration
+    aws_api_gateway_integration.my_bookings_options_integration,
+    aws_api_gateway_integration.discount_codes_options_integration,
+    #bot endpoint
+    aws_api_gateway_method.bot_post,
+    aws_api_gateway_integration.bot_integration,
+    aws_api_gateway_method.bot_options,
+    aws_api_gateway_integration.bot_options_integration,
+    aws_api_gateway_method_response.bot_options_response,
+    aws_api_gateway_integration_response.bot_options_integration_response,
+    aws_api_gateway_method_response.bot_post_response,
+    aws_api_gateway_integration_response.bot_post_integration_response,
   ]
 
   rest_api_id = aws_api_gateway_rest_api.dalscooter_apis.id

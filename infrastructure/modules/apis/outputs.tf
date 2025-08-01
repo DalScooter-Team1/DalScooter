@@ -111,3 +111,8 @@ output "feedback_resource_id" {
   description = "ID of the feedback resource"
   value       = aws_api_gateway_resource.feedback.id
 }
+
+output "bot_handler_lambda_invoke_arn" {
+  description = "ID of the feedback resource"
+  value       = var.bot_handler_lambda_invoke_arn
+}
