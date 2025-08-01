@@ -4,6 +4,9 @@ import { heartbeatService } from '../../Services/heartbeatService';
 import MessagesManagement from '../messaging/MessagesManagement';
 import BikeInventoryManagement from './BikeInventoryManagement';
 
+// Import the simple booking management component
+import BookingManagementSimple from './BookingManagementSimple';
+
 interface WorkAreaProps {
   activeSection: string;
 }
@@ -177,8 +180,8 @@ const WorkArea: React.FC<WorkAreaProps> = ({ activeSection }) => {
                 </div>
                 <div className="grid gap-6">
                   {customers.map((customer, index) => (
-                    <div 
-                      key={customer.userId} 
+                    <div
+                      key={customer.userId}
                       className="flex items-center space-x-6 p-6 border border-gray-200 rounded-3xl hover:bg-gradient-to-r hover:from-gray-50 hover:to-blue-50 transition-all duration-300 transform hover:scale-[1.02] shadow-sm hover:shadow-xl"
                       style={{ animationDelay: `${index * 100}ms` }}
                     >
@@ -201,16 +204,14 @@ const WorkArea: React.FC<WorkAreaProps> = ({ activeSection }) => {
                       </div>
                       <div className="flex flex-col items-end space-y-4">
                         <div className="flex space-x-3">
-                          <span className={`inline-flex items-center px-4 py-2 rounded-2xl text-sm font-semibold border ${
-                            customer.userStatus === 'CONFIRMED' ? 'bg-green-100 text-green-800 border-green-200' :
+                          <span className={`inline-flex items-center px-4 py-2 rounded-2xl text-sm font-semibold border ${customer.userStatus === 'CONFIRMED' ? 'bg-green-100 text-green-800 border-green-200' :
                             customer.userStatus === 'UNCONFIRMED' ? 'bg-yellow-100 text-yellow-800 border-yellow-200' :
                               'bg-red-100 text-red-800 border-red-200'
-                          }`}>
+                            }`}>
                             {customer.userStatus}
                           </span>
-                          <span className={`inline-flex items-center px-4 py-2 rounded-2xl text-sm font-semibold border ${
-                            customer.emailVerified ? 'bg-blue-100 text-blue-800 border-blue-200' : 'bg-gray-100 text-gray-800 border-gray-200'
-                          }`}>
+                          <span className={`inline-flex items-center px-4 py-2 rounded-2xl text-sm font-semibold border ${customer.emailVerified ? 'bg-blue-100 text-blue-800 border-blue-200' : 'bg-gray-100 text-gray-800 border-gray-200'
+                            }`}>
                             {customer.emailVerified ? 'Verified' : 'Unverified'}
                           </span>
                         </div>
@@ -368,8 +369,8 @@ const WorkArea: React.FC<WorkAreaProps> = ({ activeSection }) => {
                 <p className="text-gray-500 text-sm text-center py-8">No users currently online</p>
               ) : (
                 onlineUsers.map((user, index) => (
-                  <div 
-                    key={user.userId} 
+                  <div
+                    key={user.userId}
                     className="flex items-center space-x-4 p-3 hover:bg-gray-50 rounded-2xl transition-all duration-200 transform hover:scale-105"
                     style={{ animationDelay: `${index * 100}ms` }}
                   >
@@ -386,9 +387,8 @@ const WorkArea: React.FC<WorkAreaProps> = ({ activeSection }) => {
                         {user.firstName} {user.lastName}
                       </p>
                       <div className="flex items-center space-x-2">
-                        <span className={`inline-flex items-center px-3 py-1 rounded-2xl text-xs font-semibold ${
-                          user.userType === 'franchise' ? 'bg-purple-100 text-purple-800 border border-purple-200' : 'bg-blue-100 text-blue-800 border border-blue-200'
-                        }`}>
+                        <span className={`inline-flex items-center px-3 py-1 rounded-2xl text-xs font-semibold ${user.userType === 'franchise' ? 'bg-purple-100 text-purple-800 border border-purple-200' : 'bg-blue-100 text-blue-800 border border-blue-200'
+                          }`}>
                           {user.userType}
                         </span>
                         <span className="text-xs text-gray-500">
@@ -416,8 +416,8 @@ const WorkArea: React.FC<WorkAreaProps> = ({ activeSection }) => {
               { id: 'SC003', status: 'Charging', battery: 23, location: 'Spring Garden Rd' },
               { id: 'SC004', status: 'Maintenance', battery: 0, location: 'Service Center' },
             ].map((scooter, index) => (
-              <div 
-                key={scooter.id} 
+              <div
+                key={scooter.id}
                 className="flex items-center justify-between p-4 border border-gray-200 rounded-2xl hover:bg-gray-50 transition-all duration-200 transform hover:scale-[1.02]"
                 style={{ animationDelay: `${index * 100}ms` }}
               >
@@ -426,12 +426,11 @@ const WorkArea: React.FC<WorkAreaProps> = ({ activeSection }) => {
                   <p className="text-gray-600">{scooter.location}</p>
                 </div>
                 <div className="text-right">
-                  <span className={`inline-flex items-center px-4 py-2 rounded-2xl text-sm font-semibold ${
-                    scooter.status === 'Available' ? 'bg-green-100 text-green-800 border border-green-200' :
+                  <span className={`inline-flex items-center px-4 py-2 rounded-2xl text-sm font-semibold ${scooter.status === 'Available' ? 'bg-green-100 text-green-800 border border-green-200' :
                     scooter.status === 'In Use' ? 'bg-blue-100 text-blue-800 border border-blue-200' :
                       scooter.status === 'Charging' ? 'bg-yellow-100 text-yellow-800 border border-yellow-200' :
                         'bg-red-100 text-red-800 border border-red-200'
-                  }`}>
+                    }`}>
                     {scooter.status}
                   </span>
                   <p className="text-sm text-gray-600 mt-1">{scooter.battery}% Battery</p>
@@ -455,14 +454,7 @@ const WorkArea: React.FC<WorkAreaProps> = ({ activeSection }) => {
       case 'scooters':
         return <BikeInventoryManagement />;
       case 'bookings':
-        return (
-          <div className="space-y-8">
-            <div className="bg-white rounded-3xl shadow-lg border border-gray-100 p-8">
-              <h2 className="text-3xl font-bold text-gray-900 mb-4">Booking Management</h2>
-              <p className="text-gray-600">Booking management interface coming soon...</p>
-            </div>
-          </div>
-        );
+        return <BookingManagementSimple />;
       case 'analytics':
         return (
           <div className="space-y-8">
