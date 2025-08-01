@@ -55,10 +55,25 @@ module "lambda" {
   # Booking related variables - referenced from booking_cleanup.tf where table is defined
   booking_table_name = aws_dynamodb_table.booking_table.name
   booking_table_arn  = aws_dynamodb_table.booking_table.arn
+  booking_table_stream_arn = aws_dynamodb_table.booking_table.stream_arn
+  
+  # RDS variables (required by lambda module but not used since RDS is disabled)
+  rds_endpoint      = ""
+  rds_port          = ""
+  rds_database_name = ""
+  rds_username      = ""
+  rds_password      = ""
+  
+  # MySQL variables for active users directory pipeline
+  mysql_host     = var.mysql_host
+  mysql_port     = var.mysql_port
+  mysql_database = var.mysql_database
+  mysql_username = var.mysql_username
+  mysql_password = var.mysql_password
+  mysql_layer_arn = aws_lambda_layer_version.mysql_layer.arn
   # sqs_queue_arn      = aws_sqs_queue.booking_queue.arn
   # sqs_queue_url      = aws_sqs_queue.booking_queue.id
 }
-
 
 # ================================
 # S3 BUCKET FOR LOGGED IN USER DIRECTORY STREAM

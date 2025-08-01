@@ -1,0 +1,16 @@
+# ================================
+# TERRAFORM VARIABLES EXAMPLE
+# ================================
+# Copy this file to terraform.tfvars and update with your values
+
+# MySQL Database Connection (your external database)
+mysql_host     = "your-database-host.com"
+mysql_port     = "3306"
+mysql_database = "dalscooter"
+mysql_username = "your-username"
+mysql_password = "your-password"
+
+# Other existing variables...
+rds_password = "your-rds-password-if-using-rds"
+region = "us-east-1"
+booking_table_name = "dalscooter-bookings"
