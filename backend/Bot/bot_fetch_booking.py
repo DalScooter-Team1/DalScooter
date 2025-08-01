@@ -48,7 +48,7 @@ def lambda_handler(event, context):
         ref_value  = slots["booking_reference_concern"]["value"]
         booking_ref = ref_value.get("interpretedValue") if ref_value else None
         # only CUSTOMERS can raise concerns
-        if user_type != "customer":
+        if user_type != "customers":
             return build_response(
                 event,
                 "Only customers can raise booking concerns. Please log in as a customer.",
@@ -110,8 +110,8 @@ def lambda_handler(event, context):
             return build_response(event, f"I could not find any booking with reference {booking_ref}. Please check your booking reference and try again.", session_attrs)
 
         bike_id = booking.get("bikeId")
-        start_time = booking.get("startTime")
-        end_time = booking.get("endTime")
+        start_time = booking.get("startTime")[11:16]
+        end_time = booking.get("endTime")[11:16]
 
         return build_response(event, f"With booking reference you provided, here is the bike number {bike_id}. This booking starts at {start_time} and ends at {end_time}.", session_attrs)
 
@@ -126,7 +126,7 @@ def lambda_handler(event, context):
         if user_id is None or user_type is None:
             return build_response(event, f"I am missing user details. Please contact Technical Support.", session_attrs)
 
-        if user_type != "customer":
+        if user_type != "customers":
             return build_response(event, f"Only customers can fetch access code of a booking. Please log in as a customer.", session_attrs)
 
         try:
@@ -146,8 +146,8 @@ def lambda_handler(event, context):
             return build_response(event, f"You have used the Access Code. Book a new bike!", session_attrs)
 
         access_code = booking.get("accessCode")
-        start_time = booking.get("startTime")
-        end_time = booking.get("endTime")
+        start_time = booking.get("startTime")[11:16]
+        end_time = booking.get("endTime")[11:16]
 
         if not access_code or access_code == "":
             return build_response(event, f"Your booking was found, but there is no access code available. Please contact support.", session_attrs)

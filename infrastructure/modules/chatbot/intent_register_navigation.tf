@@ -22,7 +22,7 @@ resource "aws_lexv2models_intent" "register_navigation" {
       message_group {
         message {
           plain_text_message {
-            value = "To Register, click the SIgn Up button at the top right of the page."
+            value = "To Register, click the Register button at the top right of the page."
           }
         }
       }
