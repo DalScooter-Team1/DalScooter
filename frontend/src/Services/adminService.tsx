@@ -15,8 +15,8 @@ adminAPI.interceptors.request.use(
   (config) => {
     // Always use ID token for admin endpoints as it contains cognito:groups claim
     const token = localStorage.getItem('idToken');
-    
-    
+
+
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     } else {
@@ -97,6 +97,27 @@ export interface ActiveUsersResponse {
   message?: string;
 }
 
+export interface Booking {
+  bookingId: string;
+  userId: string;
+  bikeId: string;
+  startTime: string;
+  endTime: string;
+  startTimeFormatted: string;
+  endTimeFormatted: string;
+  accessCode?: string;
+  isUsed: boolean;
+  status: 'Pending' | 'Approved' | 'Completed';
+  price?: number;
+}
+
+export interface BookingsResponse {
+  success: boolean;
+  bookings: Booking[];
+  total: number;
+  message?: string;
+}
+
 // Admin Service functions
 export const adminService = {
   // Get all customers
@@ -137,6 +158,26 @@ export const adminService = {
   getActiveUsers: async (): Promise<ActiveUsersResponse> => {
     const response = await adminAPI.get('/active-users');
     return response.data;
+  },
+
+  // Get all customer bookings (admin only)
+  getAllBookings: async (): Promise<BookingsResponse> => {
+    try {
+      const response = await adminAPI.get('/booking/admin');
+      return {
+        success: true,
+        bookings: response.data.bookings || [],
+        total: response.data.total || 0
+      };
+    } catch (error: any) {
+      console.error('Error fetching bookings:', error);
+      return {
+        success: false,
+        bookings: [],
+        total: 0,
+        message: error.response?.data?.error || 'Failed to fetch bookings'
+      };
+    }
   },
 };
 
