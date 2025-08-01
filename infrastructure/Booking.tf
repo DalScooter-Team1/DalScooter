@@ -31,6 +31,18 @@ resource "aws_iam_role_policy_attachment" "lambda_dynamodb" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess"
 }
 
+# SNS permissions for booking confirmation emails
+resource "aws_iam_role_policy_attachment" "lambda_sns" {
+  role       = aws_iam_role.lambda_exec_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSNSFullAccess"
+}
+
+# Cognito permissions for user attribute lookup
+resource "aws_iam_role_policy_attachment" "lambda_cognito" {
+  role       = aws_iam_role.lambda_exec_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonCognitoPowerUser"
+}
+
 # Additional IAM policy for bike table access
 resource "aws_iam_role_policy" "bike_table_access" {
   name = "bike-table-access"
@@ -114,8 +126,10 @@ resource "aws_lambda_function" "booking_approval" {
 
   environment {
     variables = {
-      BOOKING_TABLE_NAME = aws_dynamodb_table.booking_table.name
-      BIKE_TABLE_NAME    = aws_dynamodb_table.bikes.name
+      BOOKING_TABLE_NAME     = aws_dynamodb_table.booking_table.name
+      BIKE_TABLE_NAME        = aws_dynamodb_table.bikes.name
+      COGNITO_USER_POOL_ID   = aws_cognito_user_pool.pool.id
+      SIGNUP_LOGIN_TOPIC_ARN = aws_sns_topic.user_signup_login.arn
     }
   }
 
