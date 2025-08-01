@@ -4,6 +4,7 @@ import { useLocation } from 'react-router-dom';
 
 import { useParams, useNavigate } from 'react-router-dom';
 import { bikeInventoryService } from '../Services/bikeInventoryService';
+import { bookingService } from '../Services/bookingService';
 
 interface Bike {
   bikeId: string;
@@ -34,8 +35,6 @@ interface Feedback {
   date: string;
 }
 
- 
- 
 const BikeDetails: React.FC = () => {
   const { bikeId } = useParams<{ bikeId: string }>();
    const location = useLocation();
@@ -151,14 +150,53 @@ const BikeDetails: React.FC = () => {
     }
   };
 
-  const handleBooking = async () => {
-    setBookingLoading(true);
-    // Simulate booking process
-    setTimeout(() => {
-      setBookingSuccess(true);
+const handleBooking = async () => {
+  setBookingLoading(true);
+
+  try {
+    const decodedToken = localStorage.getItem('decodedToken'); 
+    const token = JSON.parse(decodedToken || '{}');
+
+    if (!token.sub) {
+      alert('Authentication required. Please log in again.');
       setBookingLoading(false);
-    }, 2000);
-  };
+      return;
+    }
+
+    const startTime = new Date();
+    const endTime = new Date(startTime.getTime() + selectedHours * 60 * 60 * 1000);
+
+    const bookingData = {
+      bikeId: bike?.bikeId || '',
+      userId: token.sub,
+      startTime: startTime.toISOString(),
+      endTime: endTime.toISOString(),
+      price: bike?.hourlyRate * selectedHours
+    };
+
+    console.log('Creating booking with data:', bookingData);
+
+    // Use the booking service (same pattern as other working services)
+    const result = await bookingService.createBooking(bookingData);
+
+    if (result.success) {
+      console.log('Booking successful');
+      setBookingSuccess(true);
+      if (result.bookingId) {
+        console.log('Booking ID:', result.bookingId);
+      }
+    } else {
+      console.error('Booking failed:', result.error);
+      alert(`Booking failed: ${result.error}`);
+    }
+
+  } catch (error) {
+    console.error('Error during booking:', error);
+    alert('There was an error processing your booking. Please try again.');
+  } finally {
+    setBookingLoading(false);
+  }
+};
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleString('en-CA', {
@@ -498,7 +536,7 @@ const BikeDetails: React.FC = () => {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
                   </div>
-                  <h4 className="text-lg font-semibold text-gray-900 mb-2">Booking Successful!</h4>
+                                    <h4 className="text-lg font-semibold text-gray-900 mb-2">Booking Successful!</h4>
                   <p className="text-gray-600 mb-4">Your bike has been reserved for today.</p>
                   <button
                     onClick={() => setBookingSuccess(false)}
@@ -577,4 +615,4 @@ const BikeDetails: React.FC = () => {
   );
 };
 
-export default BikeDetails; 
+export default BikeDetails;
