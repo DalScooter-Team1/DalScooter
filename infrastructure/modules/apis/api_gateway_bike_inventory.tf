@@ -370,6 +370,25 @@ resource "aws_api_gateway_integration" "bike_by_id_options_integration" {
   }
 }
 
+# OPTIONS method for individual discount code operations
+resource "aws_api_gateway_method" "discount_code_by_id_options" {
+  rest_api_id   = aws_api_gateway_rest_api.dalscooter_apis.id
+  resource_id   = aws_api_gateway_resource.discount_code_by_id.id
+  http_method   = "OPTIONS"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "discount_code_by_id_options_integration" {
+  rest_api_id = aws_api_gateway_rest_api.dalscooter_apis.id
+  resource_id = aws_api_gateway_resource.discount_code_by_id.id
+  http_method = aws_api_gateway_method.discount_code_by_id_options.http_method
+  type        = "MOCK"
+
+  request_templates = {
+    "application/json" = "{\"statusCode\": 200}"
+  }
+}
+
 # ================================
 # OPTIONS METHOD RESPONSES AND INTEGRATION RESPONSES
 # ================================
@@ -396,7 +415,7 @@ resource "aws_api_gateway_integration_response" "bikes_options_integration_respo
 
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
-    "method.response.header.Access-Control-Allow-Methods" = "'GET,POST,OPTIONS'"
+    "method.response.header.Access-Control-Allow-Methods" = "'GET,POST,PUT,DELETE,OPTIONS'"
     "method.response.header.Access-Control-Allow-Origin"  = "'*'"
   }
 
@@ -488,6 +507,35 @@ resource "aws_api_gateway_integration_response" "bike_by_id_options_integration_
   }
 
   depends_on = [aws_api_gateway_integration.bike_by_id_options_integration]
+}
+
+# Method response for discount code by ID OPTIONS
+resource "aws_api_gateway_method_response" "discount_code_by_id_options_response" {
+  rest_api_id = aws_api_gateway_rest_api.dalscooter_apis.id
+  resource_id = aws_api_gateway_resource.discount_code_by_id.id
+  http_method = aws_api_gateway_method.discount_code_by_id_options.http_method
+  status_code = "200"
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = true
+    "method.response.header.Access-Control-Allow-Methods" = true
+    "method.response.header.Access-Control-Allow-Origin"  = true
+  }
+}
+
+resource "aws_api_gateway_integration_response" "discount_code_by_id_options_integration_response" {
+  rest_api_id = aws_api_gateway_rest_api.dalscooter_apis.id
+  resource_id = aws_api_gateway_resource.discount_code_by_id.id
+  http_method = aws_api_gateway_method.discount_code_by_id_options.http_method
+  status_code = aws_api_gateway_method_response.discount_code_by_id_options_response.status_code
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+    "method.response.header.Access-Control-Allow-Methods" = "'PUT,DELETE,OPTIONS'"
+    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
+  }
+
+  depends_on = [aws_api_gateway_integration.discount_code_by_id_options_integration]
 }
 
 # ================================

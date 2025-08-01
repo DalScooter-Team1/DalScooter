@@ -148,26 +148,29 @@ const LeftBar: React.FC<LeftBarProps> = ({ activeSection, onSectionChange }) => 
   const userInitials = getUserInitials();
 
   return (
-    <div className={`bg-gray-900 text-white transition-all duration-300 h-screen flex flex-col shadow-xl ${isCollapsed ? 'w-16' : 'w-64'}`}>
+    <div className={`bg-white border-r border-gray-200 text-gray-900 transition-all duration-500 h-screen flex flex-col shadow-xl ${isCollapsed ? 'w-20' : 'w-80'}`}>
       {/* Header */}
-      <div className="p-4 border-b border-gray-700">
+      <div className="p-6 border-b border-gray-200 bg-white">
         <div className="flex items-center justify-between">
           {!isCollapsed && (
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg">
-                <span className="text-lg font-bold text-white">DS</span>
+            <div className="flex items-center space-x-4">
+              <div className="relative">
+                <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
+                  <span className="text-xl font-bold text-white">DS</span>
+                </div>
+                <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-400 rounded-full border-2 border-white animate-pulse"></div>
               </div>
               <div>
-                <span className="text-xl font-bold text-white">DalScooter</span>
-                <p className="text-xs text-gray-400">Admin Portal</p>
+                <span className="text-xl font-bold text-gray-900">DalScooter</span>
+                <p className="text-gray-600 text-sm">Admin Portal</p>
               </div>
             </div>
           )}
           <button
             onClick={() => setIsCollapsed(!isCollapsed)}
-            className="p-2 rounded-lg hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-900"
+            className="p-2 rounded-xl hover:bg-gray-100 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transform hover:scale-105"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </button>
@@ -175,26 +178,28 @@ const LeftBar: React.FC<LeftBarProps> = ({ activeSection, onSectionChange }) => 
       </div>
 
       {/* Navigation Menu */}
-      <nav className="flex-1 p-4">
-        <div className="space-y-1">
-          {menuItems.map((item) => (
+      <nav className="flex-1 p-6">
+        <div className="space-y-3">
+          {menuItems.map((item, index) => (
             <button
               key={item.id}
               onClick={() => onSectionChange(item.id)}
-              className={`w-full flex items-center px-3 py-3 rounded-lg transition-all duration-200 group ${activeSection === item.id
-                  ? 'bg-blue-600 text-white shadow-lg'
-                  : 'text-gray-300 hover:bg-gray-800 hover:text-white'
-                } ${isCollapsed ? 'justify-center' : 'space-x-3'}`}
+              className={`w-full flex items-center px-4 py-4 rounded-2xl transition-all duration-300 group transform hover:scale-105 ${
+                activeSection === item.id
+                  ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg shadow-blue-500/25'
+                  : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
+                } ${isCollapsed ? 'justify-center' : 'space-x-4'}`}
               title={isCollapsed ? item.name : undefined}
+              style={{ animationDelay: `${index * 50}ms` }}
             >
-              <div className={`${activeSection === item.id ? 'text-white' : 'text-gray-400 group-hover:text-white'} transition-colors`}>
+              <div className={`${activeSection === item.id ? 'text-white' : 'text-gray-500 group-hover:text-gray-700'} transition-colors duration-200`}>
                 {item.icon}
               </div>
               {!isCollapsed && (
-                <span className="text-sm font-medium">{item.name}</span>
+                <span className="text-sm font-semibold">{item.name}</span>
               )}
               {!isCollapsed && activeSection === item.id && (
-                <div className="ml-auto w-2 h-2 bg-white rounded-full"></div>
+                <div className="ml-auto w-2 h-2 bg-white rounded-full animate-pulse"></div>
               )}
             </button>
           ))}
@@ -203,22 +208,25 @@ const LeftBar: React.FC<LeftBarProps> = ({ activeSection, onSectionChange }) => 
 
       {/* Footer */}
       {!isCollapsed && (
-        <div className="p-4 border-t border-gray-700">
-          <div className="bg-gray-800 rounded-xl p-4 transition-all hover:bg-gray-750">
-            <div className="flex items-center space-x-3">
-              <div className="h-10 w-10 bg-gradient-to-r from-blue-600 to-blue-700 rounded-full flex items-center justify-center shadow-sm">
-                <span className="text-sm font-medium text-white">{userInitials}</span>
+        <div className="p-6 border-t border-gray-200">
+          <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-2xl p-4 transition-all duration-300 hover:from-gray-100 hover:to-gray-200 transform hover:scale-105">
+            <div className="flex items-center space-x-4">
+              <div className="relative">
+                <div className="h-12 w-12 bg-gradient-to-br from-blue-500 to-purple-500 rounded-2xl flex items-center justify-center shadow-lg">
+                  <span className="text-sm font-bold text-white">{userInitials}</span>
+                </div>
+                <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-400 rounded-full border-2 border-white animate-pulse"></div>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-white truncate">{userInfo.firstName} {userInfo.lastName}</p>
-                <p className="text-xs text-gray-400 truncate">{userInfo.email}</p>
+                <p className="text-sm font-semibold text-gray-900 truncate">{userInfo.firstName} {userInfo.lastName}</p>
+                <p className="text-xs text-gray-600 truncate">{userInfo.email}</p>
               </div>
               <button
                 onClick={handleLogout}
-                className="text-gray-400 hover:text-white transition-colors"
+                className="text-gray-400 hover:text-gray-600 transition-all duration-200 transform hover:scale-110"
                 title="Logout"
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                 </svg>
               </button>
@@ -229,10 +237,10 @@ const LeftBar: React.FC<LeftBarProps> = ({ activeSection, onSectionChange }) => 
 
       {/* Collapsed Footer - Logout Button */}
       {isCollapsed && (
-        <div className="p-4 border-t border-gray-700">
+        <div className="p-6 border-t border-gray-200">
           <button
             onClick={handleLogout}
-            className="w-full p-3 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800 transition-all duration-200"
+            className="w-full p-3 rounded-xl text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-all duration-200 transform hover:scale-105"
             title="Logout"
           >
             <svg className="w-5 h-5 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">

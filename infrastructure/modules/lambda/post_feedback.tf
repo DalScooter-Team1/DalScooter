@@ -115,6 +115,37 @@ resource "aws_lambda_function" "post_feedback_lambda" {
   }
   depends_on = [aws_iam_role_policy.post_feedback_lambda_policy]
 }
+# ================================
+# GET FEEDBACK LAMBDA
+# ================================
+
+# Create a zip file for the Get Feedback Lambda function
+data "archive_file" "get_feedback_zip" {
+  type        = "zip"
+  source_file = "${path.module}/../../../backend/Feedback/get_feedback.py"
+  output_path = "${path.module}/../../packages/get_feedback.zip"
+}
+
+# Get Feedback Lambda Function
+resource "aws_lambda_function" "get_feedback_lambda" {
+  function_name    = "dalscooter-get-feedback-lambda"
+  role             = aws_iam_role.post_feedback_lambda_role.arn
+  handler          = "get_feedback.lambda_handler"
+  runtime          = "python3.9"
+  filename         = data.archive_file.get_feedback_zip.output_path
+  source_code_hash = data.archive_file.get_feedback_zip.output_base64sha256
+  timeout          = 30
+  environment {
+    variables = {
+      FEEDBACK_TABLE = aws_dynamodb_table.feedback_table.name
+    }
+  }
+  tags = {
+    Name = "DalScooter Get Feedback Lambda"
+  }
+  depends_on = [aws_iam_role_policy.post_feedback_lambda_policy]
+}
+
 
 # ================================
 # DYNAMODB STREAM PROCESSOR
@@ -196,6 +227,7 @@ resource "aws_lambda_function" "stream_processor_lambda" {
 
   environment {
     variables = {
+            FEEDBACK_TABLE = aws_dynamodb_table.feedback_table.name
       FEEDBACK_QUEUE_URL = var.feedback_queue_url
     }
   }
@@ -269,6 +301,7 @@ resource "aws_iam_role_policy" "analyse_feedback_lambda_policy" {
           "dynamodb:GetItem",
           "dynamodb:PutItem",
           "dynamodb:UpdateItem",
+             "dynamodb:DeleteItem",
           "dynamodb:Query",
           "dynamodb:Scan"
         ]
@@ -379,3 +412,18 @@ output "analyse_feedback_lambda_function_name" {
 output "analyse_feedback_sqs_event_source_mapping_uuid" {
   value = aws_lambda_event_source_mapping.analyse_feedback_sqs_mapping.uuid
 }
+ 
+ 
+ #Get Feedback Lambda outputs
+output "get_feedback_lambda_arn" {
+  value = aws_lambda_function.get_feedback_lambda.arn
+}
+
+output "get_feedback_lambda_invoke_arn" {
+  value = aws_lambda_function.get_feedback_lambda.invoke_arn
+}
+
+output "get_feedback_lambda_function_name" {
+  value = aws_lambda_function.get_feedback_lambda.function_name
+}
+

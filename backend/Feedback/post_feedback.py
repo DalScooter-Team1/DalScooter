@@ -26,11 +26,16 @@ def lambda_handler(event, context):
         print("FEEDBACK_TABLE environment variable is not set")
         return {
             'statusCode': 500,
-                'body': json.dumps({
-                    'error': 'Server configuration error',
-                    'message': 'FEEDBACK_TABLE environment variable is not set'
-                })
-            }
+            'headers': {
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Headers': 'Content-Type,Authorization',
+                'Access-Control-Allow-Methods': 'POST,OPTIONS'
+            },
+            'body': json.dumps({
+                'error': 'Server configuration error',
+                'message': 'FEEDBACK_TABLE environment variable is not set'
+            })
+        }
 
 
     # Check the feedback text in the event
@@ -41,6 +46,11 @@ def lambda_handler(event, context):
     if not feedback_text:
         return {
             'statusCode': 400,
+            'headers': {
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Headers': 'Content-Type,Authorization',
+                'Access-Control-Allow-Methods': 'POST,OPTIONS'
+            },
             'body': json.dumps({
                 'error': 'Bad Request',
                 'message': 'Feedback text is required'
@@ -60,6 +70,8 @@ def lambda_handler(event, context):
         item = {
             'uuid': str(uuid.uuid4()),  # Generate proper UUID
            'email': body.get('email', 'anonymous'), 
+           'first_name': body.get('first_name', 'anonymous'),
+           'last_name': body.get('last_name', 'anonymous'),
             'feedback_text': feedback_text,
             'bike_type': body.get('bike_type', 'unknown'), 
             'bike_id': body.get('bike_id', 'unknown'),  
@@ -73,6 +85,11 @@ def lambda_handler(event, context):
         table.put_item(Item=item)
         return {
             'statusCode': 200,
+            'headers': {
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Headers': 'Content-Type,Authorization',
+                'Access-Control-Allow-Methods': 'POST,OPTIONS'
+            },
             'body': json.dumps({
                 'message': 'Feedback submitted successfully',
                 'feedback_id': item.get('booking_reference')  # Return the booking reference as feedback ID
@@ -82,6 +99,11 @@ def lambda_handler(event, context):
         print(f"Error storing feedback: {str(e)}")
         return {
             'statusCode': 500,
+            'headers': {
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Headers': 'Content-Type,Authorization',
+                'Access-Control-Allow-Methods': 'POST,OPTIONS'
+            },
             'body': json.dumps({
                 'error': 'Internal Server Error',
                 'message': 'Failed to store feedback'

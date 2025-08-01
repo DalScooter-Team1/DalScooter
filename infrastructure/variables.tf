@@ -68,7 +68,10 @@
 variable "s3_bucket_name" {
   description = "Name of the S3 bucket to store CSV logs for logged in user directory stream"
   type        = string
-  default = "dalscooter-logged-in-user-directory"
+
+  default = "dalscooter-logged-in-user-directory-9196"
+
+
 }
 
 variable "s3_folder" {
@@ -76,3 +79,72 @@ variable "s3_folder" {
   type        = string
   default     = "logged_in_user_directory/"
 }
+
+# Booking table name var from booking_cleanup 
+variable "booking_table_name" {
+  description = "Name of the DynamoDB bookings table"
+  type        = string
+  default     = "dalscooter-bookings"
+}
+
+
+# AWS region variable
+variable "region" {
+  description = "AWS region for resources"
+  type        = string
+  default     = "us-east-1"
+}
+
+# ================================
+# RDS VARIABLES
+# ================================
+
+variable "rds_instance_class" {
+  description = "RDS instance class"
+  type        = string
+  default     = "db.t3.micro" # Smallest instance for faster creation
+}
+
+variable "rds_allocated_storage" {
+  description = "Initial allocated storage for RDS instance (GB)"
+  type        = number
+  default     = 20 # Minimum for faster creation
+}
+
+variable "rds_max_allocated_storage" {
+  description = "Maximum allocated storage for RDS instance (GB)"
+  type        = number
+  default     = 50 # Reduced for faster creation
+}
+
+variable "rds_engine" {
+  description = "Database engine for RDS instance"
+  type        = string
+  default     = "mysql"
+}
+
+variable "rds_engine_version" {
+  description = "Database engine version"
+  type        = string
+  default     = "8.0"
+}
+
+variable "rds_database_name" {
+  description = "Name of the database to create"
+  type        = string
+  default     = "dalscooter"
+}
+
+variable "rds_username" {
+  description = "Master username for the database"
+  type        = string
+  default     = "admin"
+}
+
+variable "rds_password" {
+  description = "Master password for the database"
+  type        = string
+  default     = "dalscooter123!"
+  sensitive   = true
+}
+

@@ -1,4 +1,5 @@
 @import "tailwindcss";
+
 @layer base {
   html {
     font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
@@ -16,14 +17,55 @@
   .perspective-1000 {
     perspective: 1000px;
   }
+  
+  /* Fade in up animation for reviews */
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  .animate-fade-in-up {
+    animation: fadeInUp 0.6s ease-out forwards;
+  }
+  
+  /* Gentle hover scale animation */
+  @keyframes gentleScale {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.02); }
+    100% { transform: scale(1); }
+  }
+  
+  .animate-gentle-pulse:hover {
+    animation: gentleScale 0.3s ease-in-out;
+  }
+  
+  /* Gradient background animation */
+  @keyframes gradientShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+  
+  .animate-gradient {
+    background-size: 200% 200%;
+    animation: gradientShift 6s ease infinite;
+  }
 }
 
-a {
+/* Only apply default link styles to unstyled links, not to styled buttons */
+a:not([class*="bg-"]):not([class*="text-"]) {
   font-weight: 500;
   color: #646cff;
   text-decoration: inherit;
 }
-a:hover {
+
+a:not([class*="bg-"]):not([class*="text-"]):hover {
   color: #535bf2;
 }
 
@@ -49,9 +91,11 @@ button {
   cursor: pointer;
   transition: border-color 0.25s;
 }
+
 button:hover {
   border-color: #646cff;
 }
+
 button:focus,
 button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
@@ -62,10 +106,42 @@ button:focus-visible {
     color: #213547;
     background-color: #ffffff;
   }
+
   a:hover {
     color: #747bff;
   }
+
   button {
     background-color: #f9f9f9;
   }
+}
+
+/* Gentle bounce for interactive elements */
+@keyframes gentleBounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-2px);
+  }
+}
+
+.animate-gentle-bounce {
+  animation: gentleBounce 2s ease-in-out infinite;
+}
+
+/* Shimmer effect for loading states */
+@keyframes shimmer {
+  0% {
+    background-position: -468px 0;
+  }
+  100% {
+    background-position: 468px 0;
+  }
+}
+
+.animate-shimmer {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 400% 100%;
+  animation: shimmer 1.5s infinite;
 }

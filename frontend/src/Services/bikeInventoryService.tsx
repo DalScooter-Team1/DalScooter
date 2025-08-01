@@ -85,6 +85,7 @@ export interface Bike {
     location: string;
     created_at: string;
     updated_at: string;
+    isActive: boolean;
 }
 
 // Backend request format (what we send to Lambda)
@@ -106,6 +107,7 @@ export interface BikeUpdateRequest {
     accessCode?: string;
     hourlyRate?: number;
     status?: string;
+    isActive?: boolean;
     features?: {
         heightAdjustment?: boolean;
         batteryLife?: number;
@@ -120,7 +122,8 @@ export interface BikeUpdateRequest {
 }
 
 export interface DiscountCode {
-    code: string;
+    codeId: string;  // UUID identifier for backend operations
+    code: string;    // Human-readable discount code
     discount_percentage: number;
     expiry_date: string;
     is_active: boolean;
@@ -162,11 +165,9 @@ export interface DiscountCodeListResponse {
 
 export interface BikeAvailabilityResponse {
     success: boolean;
-    available_bikes: {
-        bike_type: BikeType;
-        bikes: BikeBackendResponse[];
-    }[];
-    message?: string;
+    bikes: BikeBackendResponse[];
+    totalAvailable: number;
+    lastUpdated: string;
 }
 
 // Bike Inventory Service functions
@@ -181,7 +182,7 @@ export const bikeInventoryService = {
             access_code: backendBike.accessCode,
             hourly_rate: backendBike.hourlyRate,
             status: backendBike.status,
-            availability: backendBike.status === 'available',
+            availability: backendBike.isActive, // Only use isActive for availability
             franchise_id: backendBike.franchiseId,
             features: [
                 backendBike.features.heightAdjustment ? 'Height Adjustment' : '',
@@ -192,14 +193,16 @@ export const bikeInventoryService = {
             location: backendBike.location.address,
             created_at: backendBike.createdAt,
             updated_at: backendBike.updatedAt,
+            isActive: backendBike.isActive,
         };
     },
 
     // ===== BIKE MANAGEMENT =====
 
     // Get all bikes for the franchise
-    getBikes: async (): Promise<{ success: boolean; bikes: Bike[]; message?: string; }> => {
-        const response = await bikeInventoryAPI.get('/bikes');
+    getBikes: async (includeInactive: boolean = true): Promise<{ success: boolean; bikes: Bike[]; message?: string; }> => {
+        const params = includeInactive ? '?includeInactive=true' : '';
+        const response = await bikeInventoryAPI.get(`/bikes${params}`);
         const data = response.data;
 
         if (data.success && data.bikes) {
@@ -252,17 +255,27 @@ export const bikeInventoryService = {
 
     // Update an existing bike
     updateBike: async (bikeId: string, bikeData: BikeUpdateRequest): Promise<BikeInventoryResponse<Bike>> => {
-        const response = await bikeInventoryAPI.put(`/bikes/${bikeId}`, bikeData);
-        const data = response.data;
+        console.log('updateBike called with ID:', bikeId);
+        console.log('updateBike called with data:', bikeData);
+        console.log('Making PUT request to:', `/bikes/${bikeId}`);
+        
+        try {
+            const response = await bikeInventoryAPI.put(`/bikes/${bikeId}`, bikeData);
+            console.log('Update response received:', response);
+            const data = response.data;
 
-        if (data.success && data.bike) {
-            return {
-                success: true,
-                data: bikeInventoryService.convertBackendBikeToFrontend(data.bike)
-            };
+            if (data.success && data.bike) {
+                return {
+                    success: true,
+                    data: bikeInventoryService.convertBackendBikeToFrontend(data.bike)
+                };
+            }
+
+            return data;
+        } catch (error) {
+            console.error('Error in updateBike:', error);
+            throw error;
         }
-
-        return data;
     },
 
     // Delete a bike
@@ -279,34 +292,22 @@ export const bikeInventoryService = {
         return response.data;
     },
 
-    // Get discount code by code
-    getDiscountCode: async (code: string): Promise<BikeInventoryResponse<DiscountCode>> => {
-        const response = await bikeInventoryAPI.get(`/discount-codes/${code}`);
-        return response.data;
-    },
-
     // Create a new discount code
     createDiscountCode: async (discountData: DiscountCodeCreateRequest): Promise<BikeInventoryResponse<DiscountCode>> => {
-        // Convert expiryHours to expiryDays for backend compatibility
-        const backendData = {
-            ...discountData,
-            expiryDays: Math.ceil(discountData.expiryHours / 24) // Convert hours to days, round up
-        };
-        delete (backendData as any).expiryHours; // Remove the frontend field
-
-        const response = await bikeInventoryAPI.post('/discount-codes', backendData);
+        // Send the data as-is since backend now expects discountPercentage and expiryHours
+        const response = await bikeInventoryAPI.post('/discount-codes', discountData);
         return response.data;
     },
 
     // Update an existing discount code
-    updateDiscountCode: async (code: string, discountData: DiscountCodeUpdateRequest): Promise<BikeInventoryResponse<DiscountCode>> => {
-        const response = await bikeInventoryAPI.put(`/discount-codes/${code}`, discountData);
+    updateDiscountCode: async (codeId: string, discountData: DiscountCodeUpdateRequest): Promise<BikeInventoryResponse<DiscountCode>> => {
+        const response = await bikeInventoryAPI.put(`/discount-codes/${codeId}`, discountData);
         return response.data;
     },
 
     // Deactivate a discount code
-    deactivateDiscountCode: async (code: string): Promise<BikeInventoryResponse> => {
-        const response = await bikeInventoryAPI.delete(`/discount-codes/${code}`);
+    deactivateDiscountCode: async (codeId: string): Promise<BikeInventoryResponse> => {
+        const response = await bikeInventoryAPI.delete(`/discount-codes/${codeId}`);
         return response.data;
     },
 
