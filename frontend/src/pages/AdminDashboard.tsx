@@ -3,7 +3,7 @@ import LeftBar from '../components/admin/LeftBar';
 import WorkArea from '../components/admin/WorkArea';
  
 function AdminDashboard() {
-  const [activeSection, setActiveSection] = useState('dashboard');
+  const [activeSection, setActiveSection] = useState('analytics');
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
