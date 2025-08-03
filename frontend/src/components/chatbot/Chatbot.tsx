@@ -23,8 +23,10 @@ const Chatbot: React.FC<ChatbotProps> = ({ isOpen, onClose, isGuest = false }) =
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const chatContainerRef = useRef<HTMLDivElement>(null);
 
-    const userType = isGuest ? '' : localStorage.getItem('userRole') || '';
-    const userId   = isGuest ? '' : localStorage.getItem('userId')   || '';
+    const userRoles = isGuest ? [] : JSON.parse(localStorage.getItem('userRoles') || '[]');
+    const userType = isGuest ? '' : (userRoles.includes('franchise') ? 'franchise' : userRoles.includes('customers') ? 'customers' : '');
+    const decodedToken = isGuest ? null : JSON.parse(localStorage.getItem('decodedToken') || '{}');
+    const userId = isGuest ? '' : (decodedToken?.sub || '');
 
     const API_URL = import.meta.env.VITE_SERVER;
 
@@ -69,15 +71,7 @@ const Chatbot: React.FC<ChatbotProps> = ({ isOpen, onClose, isGuest = false }) =
     const handleSendMessage = async (text: string) => {
         if (!text.trim()) return;
 
-        const rawToken = localStorage.getItem('decodedToken');
-        const decoded = JSON.parse(rawToken) as {
-            'cognito:username': string;
-            'cognito:groups': string[];
-        };
-        const userId = decoded['cognito:username'];
-        const userType = decoded['cognito:groups'][0];
-
-        console.log(userType +"----"+userId)
+        console.log(userType + "----" + userId)
         // 1) Show user bubble
         const userMessage: Message = {
             id: Date.now().toString(),
@@ -92,8 +86,8 @@ const Chatbot: React.FC<ChatbotProps> = ({ isOpen, onClose, isGuest = false }) =
         // 2) Build payload
         const payload: any = { text: text.trim() };
         if (sessionId) payload.sessionId = sessionId;
-        if (userType)  payload.userType  = userType;
-        if (userId)    payload.userId    = userId;
+        if (userType) payload.userType = userType;
+        if (userId) payload.userId = userId;
 
         try {
             // 3) Call the BotHandler API
