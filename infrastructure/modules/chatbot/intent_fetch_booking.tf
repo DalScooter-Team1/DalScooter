@@ -127,33 +127,26 @@ resource "aws_lexv2models_slot" "booking_reference_booking" {
 # (adds the slot‑placeholder utterances,
 #  sets slot priority, and hooks Lambda)
 ############################
-resource "null_resource" "patch_fetch_booking_intent" {
+resource "null_resource" "update_fetch_booking_intent_with_slot_priority" {
   triggers = {
-    bot_id     = aws_lexv2models_bot.chatbot.id
-    locale_id  = var.locale_id
-    intent_id  = aws_lexv2models_intent.fetch_booking.intent_id
-    slot_id    = aws_lexv2models_slot.booking_reference_booking.slot_id
+    intent_id = aws_lexv2models_intent.fetch_booking.intent_id
+    slot_id   = aws_lexv2models_slot.booking_reference_booking.slot_id
   }
 
   provisioner "local-exec" {
-    interpreter = ["bash", "-c"]
-    command = <<-EOT
+    command = <<EOT
       aws lexv2-models update-intent \
-        --bot-id ${self.triggers.bot_id} \
-        --bot-version DRAFT \
-        --locale-id ${self.triggers.locale_id} \
-        --intent-id ${self.triggers.intent_id} \
+        --intent-id ${aws_lexv2models_intent.fetch_booking.intent_id} \
         --intent-name fetch_booking_intent \
-        --sample-utterances '[{"utterance":"What is my booking status?"},{"utterance":"I want access code"},{"utterance":"Give me my access code"},{"utterance":"Access code please"},{"utterance":"How do I get my access code?"},{"utterance":"Get access code for booking {booking_reference_customer}"},{"utterance":"I need the access code for booking {booking_reference_customer}"},{"utterance":"{booking_reference_customer} access code"},{"utterance":"access code for {booking_reference_customer}"}]' \
-        --slot-priorities priority=1,slotId=${self.triggers.slot_id} \
-        --fulfillment-code-hook '{"enabled":true}'
+        --bot-id ${aws_lexv2models_bot.chatbot.id} \
+        --bot-version DRAFT \
+        --locale-id ${var.locale_id} \
+        --slot-priorities priority=1,slotId=${aws_lexv2models_slot.booking_reference_booking.slot_id}
     EOT
   }
 
   depends_on = [
     aws_lexv2models_intent.fetch_booking,
-    aws_lexv2models_slot.booking_reference_booking,
-    aws_lambda_function.bot_fetch_booking,
-    aws_lexv2models_bot_locale.chatbot_locale,
+    aws_lexv2models_slot.booking_reference_booking
   ]
 }

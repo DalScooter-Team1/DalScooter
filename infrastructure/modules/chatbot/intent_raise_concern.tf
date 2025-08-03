@@ -128,33 +128,26 @@ resource "aws_lexv2models_slot" "booking_reference_concern" {
 # (adds the slot‑placeholder utterances,
 #  sets slot priority, and hooks Lambda)
 ############################
-resource "null_resource" "patch_raise_concern_intent" {
+resource "null_resource" "update_raise_concern_intent_with_slot_priority" {
   triggers = {
-    bot_id     = aws_lexv2models_bot.chatbot.id
-    locale_id  = var.locale_id
-    intent_id  = aws_lexv2models_intent.raise_concern.intent_id
-    slot_id    = aws_lexv2models_slot.booking_reference_concern.slot_id
+    intent_id = aws_lexv2models_intent.raise_concern.intent_id
+    slot_id   = aws_lexv2models_slot.booking_reference_concern.slot_id
   }
 
   provisioner "local-exec" {
-    interpreter = ["bash", "-c"]
-    command = <<-EOT
+    command = <<EOT
       aws lexv2-models update-intent \
-        --bot-id ${self.triggers.bot_id} \
-        --bot-version DRAFT \
-        --locale-id ${self.triggers.locale_id} \
-        --intent-id ${self.triggers.intent_id} \
+        --intent-id ${aws_lexv2models_intent.raise_concern.intent_id} \
         --intent-name raise_concern_intent \
-        --sample-utterances '[{"utterance":"I have an issue"},{"utterance":"Raise a concern"},{"utterance":"Report a problem"},{"utterance":"I want to raise a concern"},{"utterance":"raise a ticket"},{"utterance":"Report an issue"},{"utterance":"I have an issue with booking {booking_reference_concern}"},{"utterance":"Raise a concern for booking {booking_reference_concern}"},{"utterance":"Report a problem with booking {booking_reference_concern}"},{"utterance":"issue for {booking_reference_concern}"},{"utterance":"concern for {booking_reference_concern}"}]' \
-        --slot-priorities priority=1,slotId=${self.triggers.slot_id} \
-        --fulfillment-code-hook '{"enabled":true}'
+        --bot-id ${aws_lexv2models_bot.chatbot.id} \
+        --bot-version DRAFT \
+        --locale-id ${var.locale_id} \
+        --slot-priorities priority=1,slotId=${aws_lexv2models_slot.booking_reference_concern.slot_id}
     EOT
   }
 
   depends_on = [
     aws_lexv2models_intent.raise_concern,
-    aws_lexv2models_slot.booking_reference_concern,
-    aws_lambda_function.bot_fetch_booking,
-    aws_lexv2models_bot_locale.chatbot_locale,
+    aws_lexv2models_slot.booking_reference_concern
   ]
 }

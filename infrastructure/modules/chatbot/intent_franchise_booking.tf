@@ -123,33 +123,26 @@ resource "aws_lexv2models_slot" "booking_reference_bike" {
 # (adds the slot‑placeholder utterances,
 #  sets slot priority, and hooks Lambda)
 ############################
-resource "null_resource" "patch_franchise_booking_intent" {
+resource "null_resource" "update_intent_with_slot_priority" {
   triggers = {
-    bot_id     = aws_lexv2models_bot.chatbot.id
-    locale_id  = var.locale_id
-    intent_id  = aws_lexv2models_intent.franchise_booking.intent_id
-    slot_id    = aws_lexv2models_slot.booking_reference_bike.slot_id
+    intent_id = aws_lexv2models_intent.franchise_booking.intent_id
+    slot_id   = aws_lexv2models_slot.booking_reference_bike.slot_id
   }
 
   provisioner "local-exec" {
-    interpreter = ["bash", "-c"]
-    command = <<-EOT
+    command = <<EOT
       aws lexv2-models update-intent \
-        --bot-id ${self.triggers.bot_id} \
-        --bot-version DRAFT \
-        --locale-id ${self.triggers.locale_id} \
-        --intent-id ${self.triggers.intent_id} \
+        --intent-id ${aws_lexv2models_intent.franchise_booking.intent_id} \
         --intent-name franchise_booking_intent \
-        --sample-utterances '[{"utterance":"{booking_reference_franchise} bike number"},{"utterance":"Bike number for {booking_reference_franchise}"},{"utterance":"Get bike for {booking_reference_franchise}"},{"utterance":"Which bike {booking_reference_franchise}"},{"utterance":"Booking {booking_reference_franchise} bike"},{"utterance":"Show bike {booking_reference_franchise}"},{"utterance":"Bike ID {booking_reference_franchise}"},{"utterance":"Tell bike {booking_reference_franchise}"},{"utterance":"Give me bike number"},{"utterance":"Bike number please"},{"utterance":"Get bike number"}]' \
-        --slot-priorities priority=1,slotId=${self.triggers.slot_id} \
-        --fulfillment-code-hook '{"enabled":true}'
+        --bot-id ${aws_lexv2models_bot.chatbot.id} \
+        --bot-version DRAFT \
+        --locale-id ${var.locale_id} \
+        --slot-priorities priority=1,slotId=${aws_lexv2models_slot.booking_reference_bike.slot_id}
     EOT
   }
 
   depends_on = [
     aws_lexv2models_intent.franchise_booking,
-    aws_lexv2models_slot.booking_reference_bike,
-    aws_lambda_function.bot_fetch_booking,
-    aws_lexv2models_bot_locale.chatbot_locale,
+    aws_lexv2models_slot.booking_reference_bike
   ]
 }
