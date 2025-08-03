@@ -412,18 +412,4 @@ output "analyse_feedback_lambda_function_name" {
 output "analyse_feedback_sqs_event_source_mapping_uuid" {
   value = aws_lambda_event_source_mapping.analyse_feedback_sqs_mapping.uuid
 }
- 
- 
- #Get Feedback Lambda outputs
-output "get_feedback_lambda_arn" {
-  value = aws_lambda_function.get_feedback_lambda.arn
-}
-
-output "get_feedback_lambda_invoke_arn" {
-  value = aws_lambda_function.get_feedback_lambda.invoke_arn
-}
-
-output "get_feedback_lambda_function_name" {
-  value = aws_lambda_function.get_feedback_lambda.function_name
-}
 

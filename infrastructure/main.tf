@@ -150,6 +150,9 @@ module "apis" {
   discount_management_lambda_arn           = module.lambda.discount_management_lambda_arn
   discount_management_lambda_invoke_arn    = module.lambda.discount_management_lambda_invoke_arn
   discount_management_lambda_function_name = module.lambda.discount_management_lambda_function_name
+  verify_discount_lambda_arn               = module.lambda.verify_discount_lambda_arn
+  verify_discount_lambda_invoke_arn        = module.lambda.verify_discount_lambda_invoke_arn
+  verify_discount_lambda_function_name     = module.lambda.verify_discount_lambda_function_name
 
   #booking related variables
   booking_request_lambda_invoke_arn    = aws_lambda_function.booking_request.invoke_arn

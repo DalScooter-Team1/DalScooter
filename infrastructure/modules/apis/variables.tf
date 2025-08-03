@@ -241,6 +241,21 @@ variable "discount_management_lambda_function_name" {
   type        = string
 }
 
+variable "verify_discount_lambda_arn" {
+  description = "ARN of the verify discount Lambda function"
+  type        = string
+}
+
+variable "verify_discount_lambda_invoke_arn" {
+  description = "Invoke ARN of the verify discount Lambda function"
+  type        = string
+}
+
+variable "verify_discount_lambda_function_name" {
+  description = "Name of the verify discount Lambda function"
+  type        = string
+}
+
 
 variable "booking_request_lambda_function_name" {
   description = "Function name of the booking request Lambda"

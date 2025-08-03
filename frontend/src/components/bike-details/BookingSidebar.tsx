@@ -11,6 +11,12 @@ interface BookingSidebarProps {
   onBookAnother: () => void;
   discountCode?: string;
   onDiscountCodeChange?: (code: string) => void;
+  discountStatus?: {
+    isVerifying: boolean;
+    isValid: boolean | null;
+    message: string;
+    discountPercentage?: number;
+  };
 }
 
 export const BookingSidebar: React.FC<BookingSidebarProps> = ({
@@ -22,7 +28,8 @@ export const BookingSidebar: React.FC<BookingSidebarProps> = ({
   onBooking,
   onBookAnother,
   discountCode = '',
-  onDiscountCodeChange
+  onDiscountCodeChange,
+  discountStatus
 }) => {
   return (
     <div className="bg-white rounded-2xl shadow-xl p-6 sticky top-24 border border-gray-100">
@@ -76,16 +83,52 @@ export const BookingSidebar: React.FC<BookingSidebarProps> = ({
               </svg>
               Discount Code (Optional)
             </label>
-            <input
-              type="text"
-              value={discountCode}
-              onChange={(e) => onDiscountCodeChange?.(e.target.value)}
-              placeholder="Enter discount code"
-              className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-            />
-            {discountCode && (
-              <p className="text-xs text-gray-500 mt-1">
-                Code entered: {discountCode}
+            <div className="relative">
+              <input
+                type="text"
+                value={discountCode}
+                onChange={(e) => onDiscountCodeChange?.(e.target.value)}
+                placeholder="Enter discount code"
+                className={`w-full p-3 border rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent ${
+                  discountStatus?.isValid === true 
+                    ? 'border-green-500 bg-green-50' 
+                    : discountStatus?.isValid === false 
+                    ? 'border-red-500 bg-red-50' 
+                    : 'border-gray-300'
+                }`}
+              />
+              {discountStatus?.isVerifying && (
+                <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-amber-500 border-t-transparent"></div>
+                </div>
+              )}
+              {discountStatus?.isValid === true && (
+                <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                  <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+              )}
+              {discountStatus?.isValid === false && (
+                <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                  <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </div>
+              )}
+            </div>
+            {discountStatus?.message && (
+              <p className={`text-xs mt-1 ${
+                discountStatus.isValid === true 
+                  ? 'text-green-600' 
+                  : discountStatus.isValid === false 
+                  ? 'text-red-600' 
+                  : 'text-gray-500'
+              }`}>
+                {discountStatus.message}
+                {discountStatus.isValid === true && discountStatus.discountPercentage && (
+                  <span className="font-semibold"> ({discountStatus.discountPercentage}% off)</span>
+                )}
               </p>
             )}
           </div>
@@ -99,10 +142,27 @@ export const BookingSidebar: React.FC<BookingSidebarProps> = ({
               <span className="text-gray-600 font-medium">Duration</span>
               <span className="text-gray-900 font-semibold">{selectedHours} {selectedHours === 1 ? 'hour' : 'hours'}</span>
             </div>
+            {discountStatus?.isValid === true && discountStatus.discountPercentage && (
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-green-600 font-medium">Discount ({discountStatus.discountPercentage}%)</span>
+                <span className="text-green-600 font-semibold">-${((bike.hourlyRate * selectedHours * discountStatus.discountPercentage) / 100).toFixed(2)}</span>
+              </div>
+            )}
             <div className="border-t border-gray-200 pt-2 mt-2">
               <div className="flex justify-between items-center">
                 <span className="font-bold text-gray-900">Total</span>
-                <span className="text-xl font-bold text-amber-600">${bike.hourlyRate * selectedHours}</span>
+                <div className="text-right">
+                  {discountStatus?.isValid === true && discountStatus.discountPercentage ? (
+                    <>
+                      <span className="text-sm text-gray-500 line-through">${bike.hourlyRate * selectedHours}</span>
+                      <span className="text-xl font-bold text-amber-600 ml-2">
+                        ${(bike.hourlyRate * selectedHours * (100 - discountStatus.discountPercentage) / 100).toFixed(2)}
+                      </span>
+                    </>
+                  ) : (
+                    <span className="text-xl font-bold text-amber-600">${bike.hourlyRate * selectedHours}</span>
+                  )}
+                </div>
               </div>
             </div>
           </div>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   BikeOverviewCard,
@@ -8,6 +8,7 @@ import {
   LoginPromptModal
 } from '../components/bike-details';
 import { useBikeDetails, useBooking, useFeedback } from '../hooks';
+import { bookingService } from '../Services/bookingService';
 
 const BikeDetails: React.FC = () => {
   const navigate = useNavigate();
@@ -48,6 +49,82 @@ const BikeDetails: React.FC = () => {
 
   // Local state for booking sidebar
   const [selectedHours, setSelectedHours] = useState(1);
+  const [discountCode, setDiscountCode] = useState('');
+  const [discountStatus, setDiscountStatus] = useState<{
+    isVerifying: boolean;
+    isValid: boolean | null;
+    message: string;
+    discountPercentage?: number;
+  }>({
+    isVerifying: false,
+    isValid: null,
+    message: '',
+  });
+
+  // Handle discount code verification
+  const verifyDiscountCode = useCallback(async (code: string) => {
+    if (!code.trim()) {
+      setDiscountStatus({
+        isVerifying: false,
+        isValid: null,
+        message: '',
+      });
+      return;
+    }
+
+    setDiscountStatus({
+      isVerifying: true,
+      isValid: null,
+      message: 'Verifying...',
+    });
+
+    try {
+      const result = await bookingService.verifyDiscountCode(code.trim());
+      
+      if (result.success) {
+        setDiscountStatus({
+          isVerifying: false,
+          isValid: true,
+          message: result.message,
+          discountPercentage: result.discountPercentage,
+        });
+      } else {
+        setDiscountStatus({
+          isVerifying: false,
+          isValid: false,
+          message: result.message,
+        });
+      }
+    } catch (error) {
+      setDiscountStatus({
+        isVerifying: false,
+        isValid: false,
+        message: 'Failed to verify discount code. Please try again.',
+      });
+    }
+  }, []);
+
+  // Debounce discount code verification
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      verifyDiscountCode(discountCode);
+    }, 800); // Wait 800ms after user stops typing
+
+    return () => clearTimeout(timer);
+  }, [discountCode, verifyDiscountCode]);
+
+  const handleDiscountCodeChange = (code: string) => {
+    setDiscountCode(code);
+    
+    // Reset status immediately if code is empty
+    if (!code.trim()) {
+      setDiscountStatus({
+        isVerifying: false,
+        isValid: null,
+        message: '',
+      });
+    }
+  };
 
   // Handler functions for child components
   const onBooking = () => handleBooking(bike, selectedHours, () => setShowFeedbackPopup(true));
@@ -127,6 +204,9 @@ const BikeDetails: React.FC = () => {
               bookingSuccess={bookingSuccess}
               onBooking={onBooking}
               onBookAnother={handleBookAnother}
+              discountCode={discountCode}
+              onDiscountCodeChange={handleDiscountCodeChange}
+              discountStatus={discountStatus}
             />
           </div>
         </div>
