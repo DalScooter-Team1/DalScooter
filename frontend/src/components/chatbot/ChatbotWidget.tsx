@@ -10,10 +10,9 @@ const ChatbotWidget: React.FC = () => {
     useEffect(() => {
         const checkVisibility = () => {
             const currentPath = window.location.pathname;
-            // Hide chatbot on admin-specific pages
-            const adminPaths = ['/admin-dashboard'];
-            const shouldHide = adminPaths.some(path => currentPath.includes(path));
-            setIsVisible(!shouldHide);
+            // Show chatbot on all pages including admin pages
+            // No paths are excluded - chatbot available everywhere
+            setIsVisible(true);
         };
 
         checkVisibility();
@@ -49,8 +48,8 @@ const ChatbotWidget: React.FC = () => {
     // Check for guest user access
     const isGuestUser = () => {
         const accessToken = localStorage.getItem('accessToken');
-        const userRole = localStorage.getItem('userRole');
-        return !accessToken || userRole === 'guest';
+        const userRoles = JSON.parse(localStorage.getItem('userRoles') || '[]');
+        return !accessToken || userRoles.length === 0;
     };
 
     // Add pulse animation for new users
@@ -96,7 +95,7 @@ const ChatbotWidget: React.FC = () => {
         setTimeout(() => document.body.removeChild(announcer), 1000);
     };
 
-    // Don't render if not visible (admin pages)
+    // Show chatbot on all pages (including admin pages)
     if (!isVisible) return null;
 
     return (

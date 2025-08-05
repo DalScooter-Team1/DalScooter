@@ -234,4 +234,56 @@ export const bookingService = {
             }
         }
     },
+
+    // Verify discount code
+    verifyDiscountCode: async (code: string): Promise<{ success: boolean; message: string; discountPercentage?: number }> => {
+        try {
+            console.log('Verifying discount code:', code);
+            
+            const response = await axios.get(`${API_BASE_URL}/verify-discount/${code}`, {
+                timeout: 10000,
+                validateStatus: function (status) {
+                    return status < 500;
+                },
+            });
+            
+            console.log('Discount verification response:', response.data);
+            
+            if (response.status === 200 && response.data) {
+                // Backend returns 'flag' instead of 'success'
+                const isSuccess = response.data.flag === 'success';
+                return {
+                    success: isSuccess,
+                    message: response.data.message || (isSuccess ? 'Discount code verified' : 'Failed to verify discount code'),
+                    discountPercentage: response.data.discount_percentage,
+                };
+            } else {
+                return {
+                    success: false,
+                    message: response.data?.message || 'Failed to verify discount code',
+                };
+            }
+            
+        } catch (error: any) {
+            console.error('Error verifying discount code:', error);
+            
+            if (error.response) {
+                const errorData = error.response.data;
+                return {
+                    success: false,
+                    message: errorData?.message || `Server error: ${error.response.status}`,
+                };
+            } else if (error.request) {
+                return {
+                    success: false,
+                    message: 'Network error. Please check your connection and try again.',
+                };
+            } else {
+                return {
+                    success: false,
+                    message: error.message || 'An unexpected error occurred while verifying discount code.',
+                };
+            }
+        }
+    },
 };

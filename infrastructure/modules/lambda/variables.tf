@@ -124,3 +124,75 @@ variable "booking_table_arn" {
   description = "ARN of the booking DynamoDB table"
   type        = string
 }
+
+variable "booking_table_stream_arn" {
+  description = "ARN of the booking DynamoDB table stream"
+  type        = string
+}
+
+# RDS Variables for data pipeline
+variable "rds_endpoint" {
+  description = "RDS instance endpoint"
+  type        = string
+}
+
+variable "rds_port" {
+  description = "RDS instance port"
+  type        = string
+}
+
+variable "rds_database_name" {
+  description = "RDS database name"
+  type        = string
+}
+
+variable "rds_username" {
+  description = "RDS master username"
+  type        = string
+  sensitive   = true
+}
+
+variable "rds_password" {
+  description = "RDS master password"
+  type        = string
+  sensitive   = true
+}
+
+# MySQL variables for active users directory pipeline
+variable "mysql_host" {
+  description = "MySQL host endpoint"
+  type        = string
+  default     = ""
+}
+
+variable "mysql_port" {
+  description = "MySQL port"
+  type        = string
+  default     = "3306"
+}
+
+variable "mysql_database" {
+  description = "MySQL database name"
+  type        = string
+  default     = ""
+}
+
+variable "mysql_username" {
+  description = "MySQL username"
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
+variable "mysql_password" {
+  description = "MySQL password"
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
+variable "mysql_layer_arn" {
+  description = "ARN of the MySQL Lambda layer"
+  type        = string
+  default     = ""
+}

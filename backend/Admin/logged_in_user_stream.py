@@ -1,9 +1,21 @@
 import os
 import boto3
-import csv
-import io
-import base64
+import json
+import logging
+import pymysql
 from datetime import datetime
+from decimal import Decimal
+
+# Configure logging
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+
+# MySQL connection parameters from environment variables
+MYSQL_HOST = os.environ['MYSQL_HOST']
+MYSQL_PORT = int(os.environ['MYSQL_PORT'])
+MYSQL_DATABASE = os.environ['MYSQL_DATABASE']
+MYSQL_USERNAME = os.environ['MYSQL_USERNAME']
+MYSQL_PASSWORD = os.environ['MYSQL_PASSWORD']
 
 
 # Cognito setup
@@ -54,147 +66,217 @@ def get_user_details(email):
         }
 
 
-def lambda_handler(event, context):
-
-    import logging
-    logger = logging.getLogger()
-    logger.setLevel(logging.INFO)
-
-    logger.info('Lambda function started.')
-
-    s3 = boto3.client('s3')
-
-    records = event.get('Records', [])
-
-    logger.info(f'Received {(records)}')
-
-    bucket = os.environ['S3_BUCKET']
-    folder = os.environ.get('S3_FOLDER', 'logged_in_user_directory/')
-    logger.info(f'Using S3 bucket: {bucket}, folder: {folder}')
-    csv_rows = []
-    headers = set()
-
-    # Collect all fields for CSV header and add user details fields
-    user_details_map = {}
-    for idx, record in enumerate(records):
-        ddb = record.get('dynamodb', {})
-        new_image = ddb.get('NewImage', {})
-        if new_image:
-            logger.info(f'Record {idx}: Found NewImage with keys: {list(new_image.keys())}')
-            headers.update(new_image.keys())
-            sub = new_image.get('sub', {}).get('S')
-            if sub:
-                user_details = get_user_details(sub)
-                user_details_map[idx] = user_details
-                # Add user details fields to headers
-                headers.add('family_name')
-                headers.add('given_name')
-             
-        else:
-            logger.info(f'Record {idx}: No NewImage found.')
-    headers = sorted(headers)
-    logger.info(f'CSV headers determined: {headers}')
-
-    # Prepare CSV rows with user details
-    for idx, record in enumerate(records):
-        ddb = record.get('dynamodb', {})
-        new_image = ddb.get('NewImage', {})
-        if new_image:
-            row = []
-            for h in headers:
-                if h == 'family_name':
-                    val = user_details_map.get(idx, {}).get('lastName', '')
-                elif h == 'given_name':
-                    val = user_details_map.get(idx, {}).get('firstName', '')
-                else:
-                    val = new_image.get(h, {}).get('S') or new_image.get(h, {}).get('N') or ''
-                row.append(val)
-            # Check if sub already exists in csv_rows, update if found, else append
-            sub_value = new_image.get('sub', {}).get('S')
-            updated = False
-            for i, existing_row in enumerate(csv_rows):
-                try:
-                    sub_idx = headers.index('sub')
-                except ValueError:
-                    sub_idx = -1
-                if sub_idx != -1 and existing_row[sub_idx] == sub_value:
-                    csv_rows[i] = row  # Update existing
-                    updated = True
-                    logger.info(f'Record {idx}: Updated existing row for sub: {sub_value}')
-                    break
-            if not updated:
-                csv_rows.append(row)
-                logger.info(f'Record {idx}: Added new row for sub: {sub_value}')
-        else:
-            logger.info(f'Record {idx}: Skipped, no NewImage.')
-
-    if not csv_rows:
-        logger.info("No new records to process.")
-        return {'statusCode': 200, 'body': 'No new records.'}
-
-    # Prepare CSV in memory
-    output = io.StringIO()
-    writer = csv.writer(output)
-    writer.writerow(headers)
-    writer.writerows(csv_rows)
-    csv_data = output.getvalue()
-    logger.info(f'Prepared CSV data for {len(csv_rows)} new rows.')
-
-    # Save to S3 with a fixed filename (append mode)
-    key = f"{folder}logged_in_users.csv"
-    logger.info(f'S3 object key for CSV: {key}')
-
-
-    # Try to get the existing CSV from S3 and deduplicate by 'sub'
+def get_mysql_connection():
+    """Create and return a MySQL connection"""
     try:
-        existing_obj = s3.get_object(Bucket=bucket, Key=key)
-        existing_data = existing_obj['Body'].read().decode('utf-8')
-        existing_lines = existing_data.splitlines()
-        reader = csv.reader(existing_lines)
-        existing_rows = list(reader)
-        logger.info(f'Existing CSV found with {len(existing_rows)-1 if existing_rows else 0} rows.')
-        # Build a dict of sub -> row for existing rows (skip header)
-        sub_idx = None
-        if existing_rows:
-            try:
-                sub_idx = existing_rows[0].index('sub')
-            except ValueError:
-                sub_idx = None
-        existing_map = {}
-        if sub_idx is not None:
-            for row in existing_rows[1:]:
-                if len(row) > sub_idx:
-                    existing_map[row[sub_idx]] = row
-        # Add/update with new rows
-        try:
-            new_sub_idx = headers.index('sub')
-        except ValueError:
-            new_sub_idx = None
-        if new_sub_idx is not None:
-            for row in csv_rows:
-                if len(row) > new_sub_idx:
-                    existing_map[row[new_sub_idx]] = row
-            # Compose all rows: header + deduped rows
-            all_rows = [headers] + list(existing_map.values())
-            logger.info('Deduplicated rows by sub. Writing updated CSV.')
-        else:
-            all_rows = [headers] + csv_rows
-            logger.info('No sub column found. Writing new rows only.')
-    except s3.exceptions.NoSuchKey:
-        # File does not exist, create new
-        all_rows = [headers] + csv_rows
-        logger.info('No existing CSV found. Creating new file.')
+        connection = pymysql.connect(
+            host=MYSQL_HOST,
+            port=MYSQL_PORT,
+            user=MYSQL_USERNAME,
+            password=MYSQL_PASSWORD,
+            database=MYSQL_DATABASE,
+            charset='utf8mb4',
+            cursorclass=pymysql.cursors.DictCursor,
+            autocommit=True
+        )
+        logger.info("Successfully connected to MySQL database")
+        return connection
     except Exception as e:
-        logger.error(f'Error reading existing CSV: {str(e)}')
-        return {'statusCode': 500, 'body': f'Error reading existing CSV: {str(e)}'}
+        logger.error(f"Error connecting to MySQL: {str(e)}")
+        raise
 
-    # Write all rows back to S3
-    output = io.StringIO()
-    writer = csv.writer(output)
-    writer.writerows(all_rows)
-    s3.put_object(Bucket=bucket, Key=key, Body=output.getvalue().encode('utf-8'))
-    logger.info(f"Wrote {len(all_rows)-1} records to {key}")
 
-    # User details already fetched and included in CSV rows above
+def create_active_users_table_if_not_exists(connection):
+    """Create the active_users_directory table in MySQL if it doesn't exist"""
+    try:
+        with connection.cursor() as cursor:
+            create_table_sql = """
+            CREATE TABLE IF NOT EXISTS active_users_directory (
+                sub VARCHAR(255) PRIMARY KEY,
+                email VARCHAR(255),
+                firstName VARCHAR(255),
+                lastName VARCHAR(255),
+                userType VARCHAR(50),
+                userId VARCHAR(255),
+                status VARCHAR(50),
+                expires_at BIGINT,
+                login_time DATETIME,
+                last_heartbeat DATETIME,
+                dynamodb_event_name VARCHAR(20),
+                last_modified TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                INDEX idx_email (email),
+                INDEX idx_userType (userType),
+                INDEX idx_status (status),
+                INDEX idx_expires_at (expires_at)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+            """
+            cursor.execute(create_table_sql)
+            logger.info("Active users directory table created or already exists")
+    except Exception as e:
+        logger.error(f"Error creating active users directory table: {str(e)}")
+        raise
 
-    return {'statusCode': 200, 'body': f'Appended {len(csv_rows)} records to {key}'}
+
+def convert_dynamodb_to_mysql_value(value):
+    """Convert DynamoDB value to MySQL compatible value"""
+    if value is None:
+        return None
+    elif isinstance(value, Decimal):
+        return float(value)
+    elif isinstance(value, dict) and len(value) == 1:
+        # Handle DynamoDB typed values like {'S': 'string_value'} or {'N': '123'}
+        data_type, data_value = next(iter(value.items()))
+        if data_type == 'S':
+            return data_value
+        elif data_type == 'N':
+            return float(data_value) if '.' in data_value else int(data_value)
+        elif data_type == 'BOOL':
+            return data_value
+        elif data_type == 'NULL':
+            return None
+        else:
+            return str(data_value)
+    else:
+        return value
+
+
+def parse_timestamp_to_datetime(timestamp):
+    """Parse Unix timestamp to MySQL datetime format"""
+    if not timestamp:
+        return None
+    try:
+        if isinstance(timestamp, str):
+            timestamp = int(timestamp)
+        dt = datetime.fromtimestamp(timestamp)
+        return dt.strftime('%Y-%m-%d %H:%M:%S')
+    except Exception as e:
+        logger.warning(f"Error parsing timestamp {timestamp}: {str(e)}")
+        return None
+
+
+def process_dynamodb_record(record, connection):
+    """Process a single DynamoDB stream record and save to MySQL"""
+    try:
+        event_name = record['eventName']
+        logger.info(f"Processing {event_name} event for MySQL")
+        
+        with connection.cursor() as cursor:
+            if event_name in ['INSERT', 'MODIFY']:
+                # Extract data from DynamoDB record
+                dynamodb_image = record['dynamodb'].get('NewImage', {})
+                
+                # Convert DynamoDB format to standard format
+                user_data = {}
+                for key, value in dynamodb_image.items():
+                    user_data[key] = convert_dynamodb_to_mysql_value(value)
+                
+                # Get user details from Cognito
+                sub = user_data.get('sub')
+                user_details = get_user_details(sub) if sub else {}
+                
+                # Prepare data for MySQL insertion
+                mysql_data = {
+                    'sub': user_data.get('sub'),
+                    'email': user_data.get('sub'),  # Using sub as email since it's the email
+                    'firstName': user_details.get('firstName', ''),
+                    'lastName': user_details.get('lastName', ''),
+                    'userType': user_details.get('userType', 'customer'),
+                    'userId': user_details.get('userId', user_data.get('sub')),
+                    'status': user_details.get('status', 'online'),
+                    'expires_at': user_data.get('expires_at'),
+                    'login_time': parse_timestamp_to_datetime(user_data.get('login_time')),
+                    'last_heartbeat': parse_timestamp_to_datetime(user_data.get('last_heartbeat')),
+                    'dynamodb_event_name': event_name
+                }
+                
+                # Insert or update record in MySQL
+                upsert_sql = """
+                INSERT INTO active_users_directory (
+                    sub, email, firstName, lastName, userType, userId, status,
+                    expires_at, login_time, last_heartbeat, dynamodb_event_name
+                ) VALUES (
+                    %(sub)s, %(email)s, %(firstName)s, %(lastName)s, %(userType)s, 
+                    %(userId)s, %(status)s, %(expires_at)s, %(login_time)s, 
+                    %(last_heartbeat)s, %(dynamodb_event_name)s
+                ) ON DUPLICATE KEY UPDATE
+                    email = VALUES(email),
+                    firstName = VALUES(firstName),
+                    lastName = VALUES(lastName),
+                    userType = VALUES(userType),
+                    userId = VALUES(userId),
+                    status = VALUES(status),
+                    expires_at = VALUES(expires_at),
+                    login_time = VALUES(login_time),
+                    last_heartbeat = VALUES(last_heartbeat),
+                    dynamodb_event_name = VALUES(dynamodb_event_name),
+                    last_modified = CURRENT_TIMESTAMP
+                """
+                
+                cursor.execute(upsert_sql, mysql_data)
+                logger.info(f"Successfully processed {event_name} for user {mysql_data['sub']}")
+                
+            elif event_name == 'REMOVE':
+                # Handle record deletion
+                old_image = record['dynamodb'].get('OldImage', {})
+                sub = convert_dynamodb_to_mysql_value(old_image.get('sub'))
+                
+                if sub:
+                    # Instead of deleting, mark as removed
+                    update_sql = """
+                    UPDATE active_users_directory 
+                    SET dynamodb_event_name = 'REMOVE', status = 'offline', last_modified = CURRENT_TIMESTAMP
+                    WHERE sub = %s
+                    """
+                    cursor.execute(update_sql, (sub,))
+                    logger.info(f"Marked user {sub} as REMOVED")
+                
+    except Exception as e:
+        logger.error(f"Error processing DynamoDB record to MySQL: {str(e)}")
+        logger.error(f"Record: {json.dumps(record, default=str)}")
+        raise
+
+
+def lambda_handler(event, context):
+    """Main Lambda handler function"""
+    logger.info("Starting logged in user stream processing")
+    logger.info(f"Received event: {json.dumps(event, default=str)}")
+    
+    connection = None
+    try:
+        # Get MySQL connection
+        connection = get_mysql_connection()
+        
+        # Create table if it doesn't exist
+        create_active_users_table_if_not_exists(connection)
+        
+        # Process each record in the DynamoDB stream
+        for record in event['Records']:
+            if record['eventSource'] == 'aws:dynamodb':
+                process_dynamodb_record(record, connection)
+        
+        logger.info("Successfully processed all DynamoDB stream records")
+        
+        return {
+            'statusCode': 200,
+            'body': json.dumps({
+                'message': 'Successfully processed DynamoDB stream records',
+                'processed_records': len(event['Records'])
+            })
+        }
+        
+    except Exception as e:
+        logger.error(f"Error in lambda_handler: {str(e)}")
+        return {
+            'statusCode': 500,
+            'body': json.dumps({
+                'error': str(e),
+                'message': 'Error processing DynamoDB stream records'
+            })
+        }
+    
+    finally:
+        if connection:
+            connection.close()
+            logger.info("MySQL connection closed")
+    
+

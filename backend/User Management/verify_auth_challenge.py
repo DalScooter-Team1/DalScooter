@@ -75,9 +75,7 @@ LOGIN_NOTIFICATION_TEMPLATE = """<!DOCTYPE html>
             <p>If you did not initiate this login, please contact support immediately.</p>
         </div>
         
-        <div style="text-align: center;">
-            <a href="#" class="button">Account Security</a>
-        </div>
+      
         
         <p>Thank you for using DalScooter!</p>
         <p>Best regards,<br>The DalScooter Team</p>

@@ -89,7 +89,9 @@ def _api_response(status_code: int, body: dict):
     return {
         "statusCode": status_code,
         "headers": {
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "POST, OPTIONS"
         },
         "body": json.dumps(body)
     }

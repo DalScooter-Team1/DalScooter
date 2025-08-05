@@ -63,7 +63,7 @@ resource "aws_lambda_function" "notification" {
   environment {
     variables = {
       SES_REGION       = "us-east-1"
-      SES_FROM_ADDRESS = "example@dal.ca"
+      SES_FROM_ADDRESS = "vb677883@dal.ca"
     }
   }
 }

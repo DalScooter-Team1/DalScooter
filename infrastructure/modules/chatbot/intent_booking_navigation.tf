@@ -20,7 +20,7 @@ resource "aws_lexv2models_intent" "booking_navigation" {
       message_group {
         message {
           plain_text_message {
-            value = "After logging in, Go to Booking panel -> Click Book button -> Enter booking details -> Submit by clicking Book button. Boom! Now your booking is done."
+            value = "As customer once you logged in, Go to Available Bikes panel -> Select Bike you want to book -> Enter booking details -> Click Book Now. Boom! Now your booking is done."
           }
         }
       }

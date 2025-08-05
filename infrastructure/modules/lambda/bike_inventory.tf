@@ -197,6 +197,47 @@ resource "aws_cloudwatch_log_group" "bike_availability_log_group" {
 }
 
 # ================================
+# VERIFY DISCOUNT CODE LAMBDA (PUBLIC)
+# ================================
+
+# Create a zip file for the Verify Discount Lambda function
+data "archive_file" "verify_discount_zip" {
+  type        = "zip"
+  source_file = "${path.module}/../../../backend/BikeInventory/verify_discount.py"
+  output_path = "${path.module}/../../packages/verify_discount.zip"
+  depends_on  = [local_file.create_bike_packages_dir]
+}
+
+# Verify Discount Lambda Function (Public access)
+resource "aws_lambda_function" "verify_discount" {
+  filename         = data.archive_file.verify_discount_zip.output_path
+  function_name    = "dalscooter-verify-discount"
+  role            = aws_iam_role.bike_inventory_lambda_role.arn
+  handler         = "verify_discount.lambda_handler"
+  runtime         = "python3.9"
+  timeout         = 30
+  memory_size     = 128
+  source_code_hash = data.archive_file.verify_discount_zip.output_base64sha256
+
+  environment {
+    variables = {
+      DISCOUNT_CODES_TABLE_NAME = var.discount_codes_table_name
+    }
+  }
+
+  depends_on = [
+    aws_iam_role_policy.bike_inventory_lambda_policy,
+    aws_cloudwatch_log_group.verify_discount_log_group,
+  ]
+}
+
+# CloudWatch Log Group for Verify Discount Lambda
+resource "aws_cloudwatch_log_group" "verify_discount_log_group" {
+  name              = "/aws/lambda/dalscooter-verify-discount"
+  retention_in_days = 14
+}
+
+# ================================
 # LOCAL FILES
 # ================================
 

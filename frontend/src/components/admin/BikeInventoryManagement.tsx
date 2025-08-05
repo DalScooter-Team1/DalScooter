@@ -1,6 +1,31 @@
 import React, { useState, useEffect } from 'react';
 import { bikeInventoryService, type Bike, type DiscountCode, type BikeCreateRequest, type DiscountCodeCreateRequest, type BikeType } from '../../Services/bikeInventoryService.tsx';
 
+// Add custom CSS animations
+const customStyles = `
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  .animate-fade-in {
+    animation: fade-in 0.5s ease-in-out;
+  }
+`;
+
+// Inject styles
+if (typeof document !== 'undefined') {
+  const styleSheet = document.createElement("style");
+  styleSheet.innerText = customStyles;
+  document.head.appendChild(styleSheet);
+}
+
 // Frontend form interfaces
 interface BikeFormData {
     bikeType: BikeType;
@@ -20,6 +45,12 @@ interface DiscountFormData {
     code: string;
     discountPercentage: number;
     expiryHours: number;
+}
+
+interface DiceAnimationState {
+    isRolling: boolean;
+    currentValue: string;
+    finalCode: string;
 }
 
 interface BikeInventoryManagementProps {
@@ -60,6 +91,13 @@ const BikeInventoryManagement: React.FC<BikeInventoryManagementProps> = () => {
         expiryHours: 24,
     });
 
+    // Dice animation state
+    const [diceAnimation, setDiceAnimation] = useState<DiceAnimationState>({
+        isRolling: false,
+        currentValue: '',
+        finalCode: ''
+    });
+
     // Feature input helper
     const [newFeature, setNewFeature] = useState('');
 
@@ -74,6 +112,55 @@ const BikeInventoryManagement: React.FC<BikeInventoryManagementProps> = () => {
     const clearMessages = () => {
         setError('');
         setSuccessMessage('');
+    };
+
+    // Dice roll animation function
+    const generateRandomCode = () => {
+        const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        return Array.from({ length: 8 }, () => characters.charAt(Math.floor(Math.random() * characters.length))).join('');
+    };
+
+    const startDiceRollAnimation = (): Promise<string> => {
+        return new Promise((resolve) => {
+            setDiceAnimation({
+                isRolling: true,
+                currentValue: '',
+                finalCode: ''
+            });
+
+            const duration = 2500; // 2.5 seconds for more dramatic effect
+            const intervalTime = 80; // Faster updates for smoother animation
+            const steps = duration / intervalTime;
+            let currentStep = 0;
+
+            const interval = setInterval(() => {
+                currentStep++;
+                const randomCode = generateRandomCode();
+                
+                setDiceAnimation(prev => ({
+                    ...prev,
+                    currentValue: randomCode
+                }));
+
+                if (currentStep >= steps) {
+                    clearInterval(interval);
+                    const finalCode = generateRandomCode();
+                    setDiceAnimation({
+                        isRolling: false,
+                        currentValue: finalCode,
+                        finalCode: finalCode
+                    });
+                    
+                    // Update the form with the generated code
+                    setDiscountForm(prev => ({
+                        ...prev,
+                        code: finalCode
+                    }));
+                    
+                    setTimeout(() => resolve(finalCode), 300); // Small delay for visual effect
+                }
+            }, intervalTime);
+        });
     };
 
     // Bike Management Functions
@@ -292,13 +379,24 @@ const BikeInventoryManagement: React.FC<BikeInventoryManagementProps> = () => {
 
         try {
             let response;
+            let codeToUse = discountForm.code;
+
+            // For new discount codes, generate the code with animation
+            if (!editingDiscount) {
+                codeToUse = await startDiceRollAnimation();
+            }
+
             if (editingDiscount) {
                 response = await bikeInventoryService.updateDiscountCode(editingDiscount.codeId, {
                     discountPercentage: discountForm.discountPercentage,
                     expiryHours: discountForm.expiryHours,
                 });
             } else {
-                response = await bikeInventoryService.createDiscountCode(discountForm);
+                // Use the generated code for creating new discount
+                response = await bikeInventoryService.createDiscountCode({
+                    ...discountForm,
+                    code: codeToUse
+                });
             }
 
             if (response.success) {
@@ -322,6 +420,11 @@ const BikeInventoryManagement: React.FC<BikeInventoryManagementProps> = () => {
             code: '',
             discountPercentage: 5,
             expiryHours: 24,
+        });
+        setDiceAnimation({
+            isRolling: false,
+            currentValue: '',
+            finalCode: ''
         });
     };
 
@@ -774,6 +877,7 @@ const BikeInventoryManagement: React.FC<BikeInventoryManagementProps> = () => {
                                     onClick={() => {
                                         setShowDiscountForm(false);
                                         setEditingDiscount(null);
+                                        resetDiscountForm();
                                     }}
                                     className="text-gray-400 hover:text-gray-600 transition-colors p-2 rounded-2xl hover:bg-gray-100"
                                 >
@@ -784,19 +888,100 @@ const BikeInventoryManagement: React.FC<BikeInventoryManagementProps> = () => {
                             </div>
 
                             <form onSubmit={handleDiscountSubmit} className="space-y-8">
-                                <div>
-                                    <label className="block text-lg font-semibold text-gray-700 mb-3">
-                                        Discount Code
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={discountForm.code}
-                                        onChange={(e) => setDiscountForm({ ...discountForm, code: e.target.value })}
-                                        className="w-full border border-gray-300 rounded-2xl px-6 py-4 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 text-lg"
-                                        placeholder="Enter discount code"
-                                        required
-                                    />
-                                </div>
+                                {/* Discount Code Display/Generation Section */}
+                                {!editingDiscount && (
+                                    <div>
+                                        <label className="block text-lg font-semibold text-gray-700 mb-3">
+                                            Generated Discount Code
+                                        </label>
+                                        <div className="relative">
+                                            <div className="w-full border-2 border-dashed border-gray-300 rounded-2xl px-6 py-8 bg-gradient-to-br from-blue-50 to-purple-50 flex flex-col items-center justify-center space-y-4">
+                                                {/* Dice Animation Container */}
+                                                <div className={`transition-all duration-300 ${diceAnimation.isRolling ? 'animate-bounce' : ''}`}>
+                                                    <div className="relative">
+                                                        {/* Dice Icon */}
+                                                        <div className={`w-20 h-20 bg-gradient-to-br from-purple-500 to-blue-600 rounded-xl flex items-center justify-center shadow-xl transform transition-all duration-200 ${diceAnimation.isRolling ? 'rotate-[360deg] scale-110 shadow-2xl' : 'rotate-0 scale-100'}`}>
+                                                            <svg className="w-10 h-10 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                                                <path fillRule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V4a2 2 0 00-2-2H6zm1 2a1 1 0 000 2h6a1 1 0 100-2H7zm6 7a1 1 0 11-2 0 1 1 0 012 0zm-4 0a1 1 0 11-2 0 1 1 0 012 0zm-2 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
+                                                            </svg>
+                                                        </div>
+                                                        {/* Rolling animation overlay */}
+                                                        {diceAnimation.isRolling && (
+                                                            <>
+                                                                <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-yellow-400 to-orange-500 opacity-30 animate-pulse"></div>
+                                                                <div className="absolute -inset-2 rounded-xl bg-gradient-to-br from-purple-400 to-blue-500 opacity-20 animate-ping"></div>
+                                                            </>
+                                                        )}
+                                                        {/* Success glow effect */}
+                                                        {diceAnimation.finalCode && !diceAnimation.isRolling && (
+                                                            <div className="absolute -inset-2 rounded-xl bg-gradient-to-br from-green-400 to-emerald-500 opacity-25 animate-pulse"></div>
+                                                        )}
+                                                    </div>
+                                                </div>
+
+                                                {/* Code Display */}
+                                                <div className="text-center">
+                                                    {diceAnimation.isRolling ? (
+                                                        <>
+                                                            <div className="text-3xl font-mono font-bold text-gray-800 tracking-wider mb-2 animate-pulse bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+                                                                {diceAnimation.currentValue || 'XXXXXXXX'}
+                                                            </div>
+                                                            <p className="text-sm text-purple-600 animate-bounce font-semibold">
+                                                                🎲 Rolling the dice...
+                                                            </p>
+                                                            <div className="mt-2 flex justify-center space-x-1">
+                                                                <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                                                                <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                                                                <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                                                            </div>
+                                                        </>
+                                                    ) : diceAnimation.finalCode ? (
+                                                        <>
+                                                            <div className="text-4xl font-mono font-bold text-green-700 tracking-wider mb-2 animate-fade-in bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+                                                                {diceAnimation.finalCode}
+                                                            </div>
+                                                            <p className="text-sm text-green-600 font-semibold">
+                                                                ✨ Code generated successfully!
+                                                            </p>
+                                                            <div className="mt-2 inline-flex items-center px-3 py-1 rounded-full bg-green-100 text-green-800 text-xs font-medium">
+                                                                🎯 Ready to create
+                                                            </div>
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <div className="text-3xl font-mono font-bold text-gray-400 tracking-wider mb-2">
+                                                                XXXXXXXX
+                                                            </div>
+                                                            <p className="text-sm text-gray-500">
+                                                                Click "Generate & Create Code" to start
+                                                            </p>
+                                                            <div className="mt-2 inline-flex items-center px-3 py-1 rounded-full bg-gray-100 text-gray-600 text-xs font-medium">
+                                                                🎲 Waiting to roll
+                                                            </div>
+                                                        </>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Show current code for editing */}
+                                {editingDiscount && (
+                                    <div>
+                                        <label className="block text-lg font-semibold text-gray-700 mb-3">
+                                            Current Discount Code
+                                        </label>
+                                        <div className="w-full border border-gray-300 rounded-2xl px-6 py-4 bg-gray-50 text-center">
+                                            <span className="text-2xl font-mono font-bold text-gray-800 tracking-wider">
+                                                {editingDiscount.code}
+                                            </span>
+                                        </div>
+                                        <p className="text-sm text-gray-500 mt-2">
+                                            Note: Discount codes cannot be modified, only percentage and expiry can be updated.
+                                        </p>
+                                    </div>
+                                )}
 
                                 <div>
                                     <label className="block text-lg font-semibold text-gray-700 mb-3">
@@ -832,16 +1017,35 @@ const BikeInventoryManagement: React.FC<BikeInventoryManagementProps> = () => {
                                 <div className="flex space-x-6 pt-8">
                                     <button
                                         type="submit"
-                                        disabled={loading}
-                                        className="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 text-white px-8 py-4 rounded-2xl hover:from-green-700 hover:to-emerald-700 disabled:opacity-50 transition-all duration-200 transform hover:scale-105 shadow-lg font-semibold text-lg"
+                                        disabled={loading || diceAnimation.isRolling}
+                                        className="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 text-white px-8 py-4 rounded-2xl hover:from-green-700 hover:to-emerald-700 disabled:opacity-50 transition-all duration-200 transform hover:scale-105 shadow-lg font-semibold text-lg flex items-center justify-center space-x-2"
                                     >
-                                        {loading ? 'Saving...' : editingDiscount ? 'Update Code' : 'Create Code'}
+                                        {diceAnimation.isRolling ? (
+                                            <>
+                                                <svg className="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                                </svg>
+                                                <span>Generating...</span>
+                                            </>
+                                        ) : loading ? (
+                                            <span>Saving...</span>
+                                        ) : editingDiscount ? (
+                                            <span>Update Code</span>
+                                        ) : (
+                                            <>
+                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4" />
+                                                </svg>
+                                                <span>Generate & Create Code</span>
+                                            </>
+                                        )}
                                     </button>
                                     <button
                                         type="button"
                                         onClick={() => {
                                             setShowDiscountForm(false);
                                             setEditingDiscount(null);
+                                            resetDiscountForm();
                                         }}
                                         className="flex-1 bg-gray-600 text-white px-8 py-4 rounded-2xl hover:bg-gray-700 transition-all duration-200 transform hover:scale-105 shadow-lg font-semibold text-lg"
                                     >

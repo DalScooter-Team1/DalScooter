@@ -44,7 +44,7 @@ resource "aws_lexv2models_slot" "booking_reference_booking" {
 
     prompt_specification {
       allow_interrupt            = true
-      max_retries                = 2
+      max_retries                = 1
       message_selection_strategy = "Random"
 
       message_group {
@@ -54,8 +54,70 @@ resource "aws_lexv2models_slot" "booking_reference_booking" {
           }
         }
       }
+      prompt_attempts_specification {
+        allow_interrupt = true
+        map_block_key   = "Initial"
+
+        allowed_input_types {
+          allow_audio_input = true
+          allow_dtmf_input  = true
+        }
+
+        audio_and_dtmf_input_specification {
+          start_timeout_ms = 4000
+
+          audio_specification {
+            end_timeout_ms = 640
+            max_length_ms  = 15000
+          }
+
+          dtmf_specification {
+            deletion_character = "*"
+            end_character      = "#"
+            end_timeout_ms     = 5000
+            max_length         = 513
+          }
+        }
+
+        text_input_specification {
+          start_timeout_ms = 30000
+        }
+      }
+
+      prompt_attempts_specification {
+        allow_interrupt = true
+        map_block_key   = "Retry1"
+
+        allowed_input_types {
+          allow_audio_input = true
+          allow_dtmf_input  = true
+        }
+
+        audio_and_dtmf_input_specification {
+          start_timeout_ms = 4000
+
+          audio_specification {
+            end_timeout_ms = 640
+            max_length_ms  = 15000
+          }
+
+          dtmf_specification {
+            deletion_character = "*"
+            end_character      = "#"
+            end_timeout_ms     = 5000
+            max_length         = 513
+          }
+        }
+
+        text_input_specification {
+          start_timeout_ms = 30000
+        }
+      }
+
     }
   }
+
+ 
 
   depends_on = [ aws_lexv2models_intent.fetch_booking ]
 }
@@ -65,33 +127,36 @@ resource "aws_lexv2models_slot" "booking_reference_booking" {
 # (adds the slot‑placeholder utterances,
 #  sets slot priority, and hooks Lambda)
 ############################
-resource "null_resource" "patch_fetch_booking_intent" {
+resource "null_resource" "update_fetch_booking_intent_with_slot_priority" {
   triggers = {
-    bot_id     = aws_lexv2models_bot.chatbot.id
-    locale_id  = var.locale_id
-    intent_id  = aws_lexv2models_intent.fetch_booking.intent_id
-    slot_id    = aws_lexv2models_slot.booking_reference_booking.slot_id
+    intent_id = aws_lexv2models_intent.fetch_booking.intent_id
+    slot_id   = aws_lexv2models_slot.booking_reference_booking.slot_id
   }
 
   provisioner "local-exec" {
-    interpreter = ["bash", "-c"]
-    command = <<-EOT
+    command = <<EOT
       aws lexv2-models update-intent \
-        --bot-id ${self.triggers.bot_id} \
-        --bot-version DRAFT \
-        --locale-id ${self.triggers.locale_id} \
-        --intent-id ${self.triggers.intent_id} \
+        --intent-id ${aws_lexv2models_intent.fetch_booking.intent_id} \
         --intent-name fetch_booking_intent \
-        --sample-utterances '[{"utterance":"What is my booking status?"},{"utterance":"I want access code"},{"utterance":"Give me my access code"},{"utterance":"Access code please"},{"utterance":"How do I get my access code?"},{"utterance":"Get access code for booking {booking_reference_customer}"},{"utterance":"I need the access code for booking {booking_reference_customer}"},{"utterance":"{booking_reference_customer} access code"},{"utterance":"access code for {booking_reference_customer}"}]' \
-        --slot-priorities priority=1,slotId=${self.triggers.slot_id} \
-        --fulfillment-code-hook '{"enabled":true}'
+        --description "Fetch the access code for your booking." \
+        --bot-id ${aws_lexv2models_bot.chatbot.id} \
+        --bot-version DRAFT \
+        --locale-id ${var.locale_id} \
+        --sample-utterances '[
+          {"utterance": "What is my booking status?"},
+          {"utterance": "I want access code"},
+          {"utterance": "Give me my access code"},
+          {"utterance": "Access code please"},
+          {"utterance": "How do I get my access code?"},
+          {"utterance": "My booking reference is {booking_reference_customer}"},
+          {"utterance": "The reference is {booking_reference_customer}"}]' \
+        --fulfillment-code-hook enabled=true \
+        --slot-priorities priority=1,slotId=${aws_lexv2models_slot.booking_reference_booking.slot_id}
     EOT
   }
 
   depends_on = [
     aws_lexv2models_intent.fetch_booking,
-    aws_lexv2models_slot.booking_reference_booking,
-    aws_lambda_function.bot_fetch_booking,
-    aws_lexv2models_bot_locale.chatbot_locale,
+    aws_lexv2models_slot.booking_reference_booking
   ]
 }

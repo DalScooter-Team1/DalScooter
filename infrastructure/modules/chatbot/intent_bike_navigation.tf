@@ -10,13 +10,14 @@ resource "aws_lexv2models_intent" "bike_navigation" {
 
   sample_utterance { utterance = "how to add bike" }
   sample_utterance { utterance = "steps to add bike" }
+  sample_utterance { utterance = "add bike" }
 
   initial_response_setting {
     initial_response {
       message_group {
         message {
           plain_text_message {
-            value = "After logging in, Go to Bikes panel -> Click Add button -> Enter bike details -> Submit by clicking Add button. Boom! Now your bike is added."
+            value = "As Franchise once you logged in, Go to Scooters tab from left panel -> Click Add New Bike -> Enter bike details -> Click Add Bike at bottom left of model. Boom! Now your bike is added."
           }
         }
       }

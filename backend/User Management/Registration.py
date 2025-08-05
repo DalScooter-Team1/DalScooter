@@ -71,9 +71,7 @@ WELCOME_EMAIL_TEMPLATE = """<!DOCTYPE html>
             <li>Track your rides and history</li>
             <li>Manage your profile and payment methods</li>
         </ul>
-        <div style="text-align: center;">
-            <a href="#" class="button">Get Started Now</a>
-        </div>
+        
         <p>If you have any questions or need assistance, please don't hesitate to contact our support team.</p>
         <p>Happy scooting!</p>
         <p>Best regards,<br>The DalScooter Team</p>
