@@ -58,12 +58,12 @@ module "lambda" {
   booking_table_stream_arn = aws_dynamodb_table.booking_table.stream_arn
   
   # RDS variables (required by lambda module but not used since RDS is disabled)
-  rds_endpoint      = ""
-  rds_port          = ""
-  rds_database_name = ""
-  rds_username      = ""
-  rds_password      = ""
-  
+  rds_endpoint      = "database-1.cnhorhvm8uch.us-east-1.rds.amazonaws.com"
+  rds_port          = "3306"
+  rds_database_name = "dalscooter"
+  rds_username      = "root"
+  rds_password      = "dalScooter123"
+
   # MySQL variables for active users directory pipeline
   mysql_host     = var.mysql_host
   mysql_port     = var.mysql_port

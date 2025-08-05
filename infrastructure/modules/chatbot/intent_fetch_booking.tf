@@ -138,9 +138,19 @@ resource "null_resource" "update_fetch_booking_intent_with_slot_priority" {
       aws lexv2-models update-intent \
         --intent-id ${aws_lexv2models_intent.fetch_booking.intent_id} \
         --intent-name fetch_booking_intent \
+        --description "Fetch the access code for your booking." \
         --bot-id ${aws_lexv2models_bot.chatbot.id} \
         --bot-version DRAFT \
         --locale-id ${var.locale_id} \
+        --sample-utterances '[
+          {"utterance": "What is my booking status?"},
+          {"utterance": "I want access code"},
+          {"utterance": "Give me my access code"},
+          {"utterance": "Access code please"},
+          {"utterance": "How do I get my access code?"},
+          {"utterance": "My booking reference is {booking_reference_customer}"},
+          {"utterance": "The reference is {booking_reference_customer}"}]' \
+        --fulfillment-code-hook enabled=true \
         --slot-priorities priority=1,slotId=${aws_lexv2models_slot.booking_reference_booking.slot_id}
     EOT
   }

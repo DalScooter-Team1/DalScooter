@@ -134,9 +134,18 @@ resource "null_resource" "update_intent_with_slot_priority" {
       aws lexv2-models update-intent \
         --intent-id ${aws_lexv2models_intent.franchise_booking.intent_id} \
         --intent-name franchise_booking_intent \
+        --description "As Franchise, Fetch the bike number for your booking." \
         --bot-id ${aws_lexv2models_bot.chatbot.id} \
         --bot-version DRAFT \
         --locale-id ${var.locale_id} \
+        --sample-utterances '[
+          {"utterance": "Give me bike number"},
+          {"utterance": "Bike number please"},
+          {"utterance": "Get bike number"},
+          {"utterance": "My booking reference is {booking_reference_franchise}"},
+          {"utterance": "The reference is {booking_reference_franchise}"}
+        ]' \
+        --fulfillment-code-hook enabled=true \
         --slot-priorities priority=1,slotId=${aws_lexv2models_slot.booking_reference_bike.slot_id}
     EOT
   }

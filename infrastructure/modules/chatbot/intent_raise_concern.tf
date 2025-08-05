@@ -139,9 +139,21 @@ resource "null_resource" "update_raise_concern_intent_with_slot_priority" {
       aws lexv2-models update-intent \
         --intent-id ${aws_lexv2models_intent.raise_concern.intent_id} \
         --intent-name raise_concern_intent \
+        --description "As customer, raise a issue/concern for the booking." \
         --bot-id ${aws_lexv2models_bot.chatbot.id} \
         --bot-version DRAFT \
         --locale-id ${var.locale_id} \
+        --sample-utterances '[
+          {"utterance": "I have an issue"},
+          {"utterance": "Raise a concern"},
+          {"utterance": "Report a problem"},
+          {"utterance": "I want to raise a concern"},
+          {"utterance": "raise a ticket"},
+          {"utterance": "Report an issue"},
+          {"utterance": "My booking reference is {booking_reference_concern}"},
+          {"utterance": "The reference is {booking_reference_concern}"}
+        ]' \
+        --fulfillment-code-hook enabled=true \
         --slot-priorities priority=1,slotId=${aws_lexv2models_slot.booking_reference_concern.slot_id}
     EOT
   }
