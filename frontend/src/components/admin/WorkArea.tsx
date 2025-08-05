@@ -17,8 +17,6 @@ const WorkArea: React.FC<WorkAreaProps> = ({ activeSection }) => {
   const [error, setError] = useState<string>('');
   const [adminCreationLoading, setAdminCreationLoading] = useState(false);
   const [selectedCustomerEmail, setSelectedCustomerEmail] = useState<string>('');
-  const [onlineUsers, setOnlineUsers] = useState<ActiveUser[]>([]);
-  const [onlineUsersLoading, setOnlineUsersLoading] = useState(false);
 
   // Create admin from customer
   const createAdminFromCustomer = async (email: string) => {
@@ -66,35 +64,10 @@ const WorkArea: React.FC<WorkAreaProps> = ({ activeSection }) => {
     }
   };
 
-  // Fetch online users
-  const fetchOnlineUsers = async () => {
-    setOnlineUsersLoading(true);
-    try {
-      const response = await adminService.getActiveUsers();
-      if (response.success) {
-        setOnlineUsers(response.users || []);
-        console.log('Active users:', response.users);
-      } else {
-        console.error('Error retrieving active users:', response.message);
-        setOnlineUsers([]);
-      }
-    } catch (error) {
-      console.error('Error fetching online users:', error);
-      setOnlineUsers([]);
-    } finally {
-      setOnlineUsersLoading(false);
-    }
-  };
-
   // Fetch customers when component mounts
   useEffect(() => {
     if (activeSection === 'customers') {
       fetchCustomers();
-    } else if (activeSection === 'dashboard') {
-      fetchOnlineUsers();
-      // Refresh online users every 15 seconds
-      const interval = setInterval(fetchOnlineUsers, 15000);
-      return () => clearInterval(interval);
     }
   }, [activeSection]);
 
@@ -234,219 +207,8 @@ const WorkArea: React.FC<WorkAreaProps> = ({ activeSection }) => {
     );
   };
 
-  const renderDashboard = () => (
-    <div className="space-y-8">
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white rounded-3xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-all duration-300 transform hover:scale-105">
-          <div className="flex items-center">
-            <div className="flex-shrink-0">
-              <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-600 rounded-3xl flex items-center justify-center shadow-lg">
-                <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
-                </svg>
-              </div>
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Total Customers</p>
-              <p className="text-3xl font-bold text-gray-900">{customers.length}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-3xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-all duration-300 transform hover:scale-105">
-          <div className="flex items-center">
-            <div className="flex-shrink-0">
-              <div className="w-14 h-14 bg-gradient-to-br from-green-500 to-green-600 rounded-3xl flex items-center justify-center shadow-lg">
-                <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-              </div>
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Active Scooters</p>
-              <p className="text-3xl font-bold text-gray-900">89</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-3xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-all duration-300 transform hover:scale-105">
-          <div className="flex items-center">
-            <div className="flex-shrink-0">
-              <div className="w-14 h-14 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-3xl flex items-center justify-center shadow-lg">
-                <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-              </div>
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Today's Bookings</p>
-              <p className="text-3xl font-bold text-gray-900">56</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-3xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-all duration-300 transform hover:scale-105">
-          <div className="flex items-center">
-            <div className="flex-shrink-0">
-              <div className="w-14 h-14 bg-gradient-to-br from-purple-500 to-pink-500 rounded-3xl flex items-center justify-center shadow-lg">
-                <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                </svg>
-              </div>
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Revenue Today</p>
-              <p className="text-3xl font-bold text-gray-900">$2,847</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Recent Activity and Online Users */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2">
-          <div className="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden">
-            <div className="p-6 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-gray-100">
-              <h3 className="text-2xl font-bold text-gray-900">Recent Bookings</h3>
-            </div>
-            <div className="p-6">
-              <div className="space-y-4">
-                {[1, 2, 3, 4].map((item, index) => (
-                  <div key={item} className="flex items-center space-x-4 p-4 hover:bg-gray-50 rounded-2xl transition-all duration-200">
-                    <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-purple-500 rounded-3xl flex items-center justify-center shadow-lg">
-                      <span className="text-sm font-bold text-white">JD</span>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-gray-900">John Doe</p>
-                      <p className="text-sm text-gray-600">Scooter #SC001 • 2 hours ago</p>
-                    </div>
-                    <span className="inline-flex items-center px-4 py-2 rounded-2xl text-sm font-semibold bg-green-100 text-green-800 border border-green-200">
-                      Active
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Online Users Component */}
-        <div>
-          <div className="bg-white rounded-3xl shadow-lg border border-gray-100 p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-2xl font-bold text-gray-900">Online Users</h3>
-              <div className="flex items-center space-x-3">
-                <span className="inline-flex items-center px-4 py-2 rounded-2xl text-sm font-semibold bg-green-100 text-green-800 border border-green-200">
-                  {onlineUsers.length} online
-                </span>
-                <button
-                  onClick={fetchOnlineUsers}
-                  disabled={onlineUsersLoading}
-                  className="text-gray-400 hover:text-gray-600 disabled:opacity-50 transition-all duration-200 transform hover:scale-110"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-
-            <div className="space-y-4 max-h-96 overflow-y-auto">
-              {onlineUsersLoading ? (
-                <div className="animate-pulse space-y-4">
-                  {[1, 2, 3].map((i) => (
-                    <div key={i} className="flex items-center space-x-4">
-                      <div className="w-12 h-12 bg-gray-200 rounded-3xl"></div>
-                      <div className="flex-1 space-y-2">
-                        <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                        <div className="h-3 bg-gray-200 rounded w-1/2"></div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : onlineUsers.length === 0 ? (
-                <p className="text-gray-500 text-sm text-center py-8">No users currently online</p>
-              ) : (
-                onlineUsers.map((user, index) => (
-                  <div
-                    key={user.userId}
-                    className="flex items-center space-x-4 p-3 hover:bg-gray-50 rounded-2xl transition-all duration-200 transform hover:scale-105"
-                    style={{ animationDelay: `${index * 100}ms` }}
-                  >
-                    <div className="relative">
-                      <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-500 rounded-3xl flex items-center justify-center shadow-lg">
-                        <span className="text-sm font-bold text-white">
-                          {user.firstName[0]}{user.lastName[0]}
-                        </span>
-                      </div>
-                      <div className={`absolute -bottom-1 -right-1 w-5 h-5 ${user.status === 'online' ? 'bg-green-500' : 'bg-yellow-500'} rounded-full border-2 border-white animate-pulse`}></div>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-gray-900 truncate">
-                        {user.firstName} {user.lastName}
-                      </p>
-                      <div className="flex items-center space-x-2">
-                        <span className={`inline-flex items-center px-3 py-1 rounded-2xl text-xs font-semibold ${user.userType === 'franchise' ? 'bg-purple-100 text-purple-800 border border-purple-200' : 'bg-blue-100 text-blue-800 border border-blue-200'
-                          }`}>
-                          {user.userType}
-                        </span>
-                        <span className="text-xs text-gray-500">
-                          {new Date(user.lastSeen).toLocaleTimeString()}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden">
-        <div className="p-6 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-gray-100">
-          <h3 className="text-2xl font-bold text-gray-900">Scooter Status</h3>
-        </div>
-        <div className="p-6">
-          <div className="grid gap-4">
-            {[
-              { id: 'SC001', status: 'Available', battery: 85, location: 'Halifax Downtown' },
-              { id: 'SC002', status: 'In Use', battery: 67, location: 'Dalhousie Campus' },
-              { id: 'SC003', status: 'Charging', battery: 23, location: 'Spring Garden Rd' },
-              { id: 'SC004', status: 'Maintenance', battery: 0, location: 'Service Center' },
-            ].map((scooter, index) => (
-              <div
-                key={scooter.id}
-                className="flex items-center justify-between p-4 border border-gray-200 rounded-2xl hover:bg-gray-50 transition-all duration-200 transform hover:scale-[1.02]"
-                style={{ animationDelay: `${index * 100}ms` }}
-              >
-                <div>
-                  <p className="text-lg font-semibold text-gray-900">{scooter.id}</p>
-                  <p className="text-gray-600">{scooter.location}</p>
-                </div>
-                <div className="text-right">
-                  <span className={`inline-flex items-center px-4 py-2 rounded-2xl text-sm font-semibold ${scooter.status === 'Available' ? 'bg-green-100 text-green-800 border border-green-200' :
-                    scooter.status === 'In Use' ? 'bg-blue-100 text-blue-800 border border-blue-200' :
-                      scooter.status === 'Charging' ? 'bg-yellow-100 text-yellow-800 border border-yellow-200' :
-                        'bg-red-100 text-red-800 border border-red-200'
-                    }`}>
-                    {scooter.status}
-                  </span>
-                  <p className="text-sm text-gray-600 mt-1">{scooter.battery}% Battery</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-
   const renderContent = () => {
     switch (activeSection) {
-      case 'dashboard':
-        return renderDashboard();
       case 'customers':
         return renderCustomers();
       case 'messages':
@@ -473,7 +235,13 @@ const WorkArea: React.FC<WorkAreaProps> = ({ activeSection }) => {
           </div>
         );
       default:
-        return renderDashboard();
+        return (
+          <div className="space-y-8">
+            <div className="bg-white rounded-3xl shadow-lg border border-gray-100 p-8">
+              <iframe width="780" height="600" src="https://lookerstudio.google.com/embed/reporting/924da47b-7aa9-47d0-9777-865b51613efe/page/ZXqSF" sandbox="allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"></iframe>
+            </div>
+          </div>
+        );
     }
   };
 

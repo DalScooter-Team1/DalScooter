@@ -165,6 +165,22 @@ output "post_feedback_lambda_function_name" {
   value       = aws_lambda_function.post_feedback_lambda.function_name
 }
 
+# Get Feedback Lambda outputs
+output "get_feedback_lambda_arn" {
+  description = "ARN of the get feedback Lambda function"
+  value       = aws_lambda_function.get_feedback_lambda.arn
+}
+
+output "get_feedback_lambda_invoke_arn" {
+  description = "Invoke ARN of the get feedback Lambda function"
+  value       = aws_lambda_function.get_feedback_lambda.invoke_arn
+}
+
+output "get_feedback_lambda_function_name" {
+  description = "Function name of the get feedback Lambda"
+  value       = aws_lambda_function.get_feedback_lambda.function_name
+}
+
 # Get My Bookings Lambda
 output "get_my_bookings_lambda_arn" {
   description = "ARN of the get my bookings Lambda function"
@@ -195,6 +211,22 @@ output "get_all_bookings_lambda_invoke_arn" {
 output "get_all_bookings_lambda_function_name" {
   description = "Function name of the get all bookings Lambda"
   value       = aws_lambda_function.get_all_bookings.function_name
+}
+
+# Verify Discount Lambda outputs
+output "verify_discount_lambda_arn" {
+  description = "ARN of the verify discount Lambda function"
+  value       = aws_lambda_function.verify_discount.arn
+}
+
+output "verify_discount_lambda_invoke_arn" {
+  description = "Invoke ARN of the verify discount Lambda function"
+  value       = aws_lambda_function.verify_discount.invoke_arn
+}
+
+output "verify_discount_lambda_function_name" {
+  description = "Function name of the verify discount Lambda"
+  value       = aws_lambda_function.verify_discount.function_name
 }
 
 

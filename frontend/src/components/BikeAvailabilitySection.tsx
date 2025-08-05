@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { bikeInventoryService } from '../Services/bikeInventoryService';
 import type { BikeAvailabilityResponse } from '../Services/bikeInventoryService';
+import { BikeIcon } from './bike-details/BikeIcon';
 
 // Interface for individual bike data
 interface Bike {
@@ -72,35 +73,6 @@ const BikeAvailabilitySection: React.FC<BikeAvailabilitySectionProps> = ({
 
   const handleBikeClick = (bike: Bike) => {
     navigate(`/bike/${bike.bikeId}`, { state: { bike } });
-  };
-
-  const getBikeIcon = (bikeType: string) => {
-    switch (bikeType) {
-      case 'Gyroscooter':
-        return (
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-          </svg>
-        );
-      case 'eBikes':
-        return (
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-        );
-      case 'Segway':
-        return (
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
-          </svg>
-        );
-      default:
-        return (
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-          </svg>
-        );
-    }
   };
 
   const getBatteryColor = (batteryLife: number) => {
@@ -184,7 +156,7 @@ const BikeAvailabilitySection: React.FC<BikeAvailabilitySectionProps> = ({
                     <div className="flex items-center space-x-4">
                       <div className="bg-white bg-opacity-90 p-4 rounded-2xl shadow-lg">
                         <div className="text-amber-600">
-                          {getBikeIcon(bike.bikeType)}
+                          <BikeIcon bikeType={bike.bikeType} className="w-6 h-6" />
                         </div>
                       </div>
                       <div>

@@ -291,6 +291,51 @@ resource "aws_api_gateway_integration" "discount_code_delete_integration" {
 }
 
 # ================================
+# VERIFY DISCOUNT CODE ENDPOINT (PUBLIC)
+# ================================
+
+# API Gateway Resource for Verify Discount
+resource "aws_api_gateway_resource" "verify_discount" {
+  rest_api_id = aws_api_gateway_rest_api.dalscooter_apis.id
+  parent_id   = aws_api_gateway_rest_api.dalscooter_apis.root_resource_id
+  path_part   = "verify-discount"
+}
+
+# API Gateway Resource for specific discount code verification
+resource "aws_api_gateway_resource" "verify_discount_by_code" {
+  rest_api_id = aws_api_gateway_rest_api.dalscooter_apis.id
+  parent_id   = aws_api_gateway_resource.verify_discount.id
+  path_part   = "{code}"
+}
+
+# GET method for verifying discount codes (Public - No authentication required)
+resource "aws_api_gateway_method" "verify_discount_get" {
+  rest_api_id   = aws_api_gateway_rest_api.dalscooter_apis.id
+  resource_id   = aws_api_gateway_resource.verify_discount_by_code.id
+  http_method   = "GET"
+  authorization = "NONE"
+
+  request_parameters = {
+    "method.request.path.code" = true
+  }
+}
+
+# Integration for GET verify discount
+resource "aws_api_gateway_integration" "verify_discount_integration" {
+  rest_api_id = aws_api_gateway_rest_api.dalscooter_apis.id
+  resource_id = aws_api_gateway_resource.verify_discount_by_code.id
+  http_method = aws_api_gateway_method.verify_discount_get.http_method
+
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = var.verify_discount_lambda_invoke_arn
+
+  request_parameters = {
+    "integration.request.path.code" = "method.request.path.code"
+  }
+}
+
+# ================================
 # CORS SUPPORT
 # ================================
 
@@ -382,6 +427,25 @@ resource "aws_api_gateway_integration" "discount_code_by_id_options_integration"
   rest_api_id = aws_api_gateway_rest_api.dalscooter_apis.id
   resource_id = aws_api_gateway_resource.discount_code_by_id.id
   http_method = aws_api_gateway_method.discount_code_by_id_options.http_method
+  type        = "MOCK"
+
+  request_templates = {
+    "application/json" = "{\"statusCode\": 200}"
+  }
+}
+
+# OPTIONS method for verify discount
+resource "aws_api_gateway_method" "verify_discount_options" {
+  rest_api_id   = aws_api_gateway_rest_api.dalscooter_apis.id
+  resource_id   = aws_api_gateway_resource.verify_discount_by_code.id
+  http_method   = "OPTIONS"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "verify_discount_options_integration" {
+  rest_api_id = aws_api_gateway_rest_api.dalscooter_apis.id
+  resource_id = aws_api_gateway_resource.verify_discount_by_code.id
+  http_method = aws_api_gateway_method.verify_discount_options.http_method
   type        = "MOCK"
 
   request_templates = {
@@ -538,6 +602,35 @@ resource "aws_api_gateway_integration_response" "discount_code_by_id_options_int
   depends_on = [aws_api_gateway_integration.discount_code_by_id_options_integration]
 }
 
+# Method response for verify discount OPTIONS
+resource "aws_api_gateway_method_response" "verify_discount_options_response" {
+  rest_api_id = aws_api_gateway_rest_api.dalscooter_apis.id
+  resource_id = aws_api_gateway_resource.verify_discount_by_code.id
+  http_method = aws_api_gateway_method.verify_discount_options.http_method
+  status_code = "200"
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = true
+    "method.response.header.Access-Control-Allow-Methods" = true
+    "method.response.header.Access-Control-Allow-Origin"  = true
+  }
+}
+
+resource "aws_api_gateway_integration_response" "verify_discount_options_integration_response" {
+  rest_api_id = aws_api_gateway_rest_api.dalscooter_apis.id
+  resource_id = aws_api_gateway_resource.verify_discount_by_code.id
+  http_method = aws_api_gateway_method.verify_discount_options.http_method
+  status_code = aws_api_gateway_method_response.verify_discount_options_response.status_code
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+    "method.response.header.Access-Control-Allow-Methods" = "'GET,OPTIONS'"
+    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
+  }
+
+  depends_on = [aws_api_gateway_integration.verify_discount_options_integration]
+}
+
 # ================================
 # METHOD RESPONSES AND INTEGRATION RESPONSES
 # ================================
@@ -667,6 +760,31 @@ resource "aws_api_gateway_integration_response" "bike_delete_integration_respons
   depends_on = [aws_api_gateway_integration.bike_delete_integration]
 }
 
+# Method responses for verify discount GET
+resource "aws_api_gateway_method_response" "verify_discount_get_response" {
+  rest_api_id = aws_api_gateway_rest_api.dalscooter_apis.id
+  resource_id = aws_api_gateway_resource.verify_discount_by_code.id
+  http_method = aws_api_gateway_method.verify_discount_get.http_method
+  status_code = "200"
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Origin" = true
+  }
+}
+
+resource "aws_api_gateway_integration_response" "verify_discount_get_integration_response" {
+  rest_api_id = aws_api_gateway_rest_api.dalscooter_apis.id
+  resource_id = aws_api_gateway_resource.verify_discount_by_code.id
+  http_method = aws_api_gateway_method.verify_discount_get.http_method
+  status_code = aws_api_gateway_method_response.verify_discount_get_response.status_code
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Origin" = "'*'"
+  }
+
+  depends_on = [aws_api_gateway_integration.verify_discount_integration]
+}
+
 # ================================
 # LAMBDA PERMISSIONS
 # ================================
@@ -694,6 +812,15 @@ resource "aws_lambda_permission" "api_gateway_invoke_discount_management" {
   statement_id  = "AllowAPIGatewayInvokeDiscountManagement"
   action        = "lambda:InvokeFunction"
   function_name = var.discount_management_lambda_function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_api_gateway_rest_api.dalscooter_apis.execution_arn}/*/*"
+}
+
+# Lambda permission for verify discount
+resource "aws_lambda_permission" "api_gateway_invoke_verify_discount" {
+  statement_id  = "AllowAPIGatewayInvokeVerifyDiscount"
+  action        = "lambda:InvokeFunction"
+  function_name = var.verify_discount_lambda_function_name
   principal     = "apigateway.amazonaws.com"
   source_arn    = "${aws_api_gateway_rest_api.dalscooter_apis.execution_arn}/*/*"
 }
