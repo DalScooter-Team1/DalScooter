@@ -7,6 +7,7 @@
 variable "mysql_host" {
   description = "MySQL host endpoint"
   type        = string
+  default = "database-1.cnhorhvm8uch.us-east-1.rds.amazonaws.com"
 }
 
 variable "mysql_port" {
@@ -18,17 +19,20 @@ variable "mysql_port" {
 variable "mysql_database" {
   description = "MySQL database name"
   type        = string
+  default     = "dalscooter"
 }
 
 variable "mysql_username" {
   description = "MySQL username"
   type        = string
+  default     = "root"
 }
 
 variable "mysql_password" {
   description = "MySQL password"
   type        = string
   sensitive   = true
+  default     = "dalScooter123"
 }
 
 # IAM Role for Data Pipeline Lambda
