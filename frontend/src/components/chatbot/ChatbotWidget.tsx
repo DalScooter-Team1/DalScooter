@@ -9,13 +9,14 @@ const ChatbotWidget: React.FC = () => {
     // Check if user is on specific pages where chatbot should be positioned differently
     useEffect(() => {
         const checkVisibility = () => {
-            const currentPath = window.location.pathname;
-            // Show chatbot on all pages including admin pages
-            // No paths are excluded - chatbot available everywhere
-            setIsVisible(true);
+            // const currentPath = window.location.pathname;
+            // // Hide chatbot on admin-specific pages
+            // const adminPaths = ['/admin-dashboard'];
+            // const shouldHide = adminPaths.some(path => currentPath.includes(path));
+            // setIsVisible(!shouldHide);
         };
 
-        checkVisibility();
+        // checkVisibility();
 
         // Listen for route changes (for SPA navigation)
         const originalPushState = window.history.pushState;
@@ -23,17 +24,17 @@ const ChatbotWidget: React.FC = () => {
 
         window.history.pushState = function (...args) {
             originalPushState.apply(window.history, args);
-            setTimeout(checkVisibility, 0);
+            // setTimeout(checkVisibility, 0);
         };
 
         window.history.replaceState = function (...args) {
             originalReplaceState.apply(window.history, args);
-            setTimeout(checkVisibility, 0);
+            // setTimeout(checkVisibility, 0);
         };
 
         // Listen for popstate (back/forward buttons)
         const handlePopState = () => {
-            setTimeout(checkVisibility, 0);
+            // setTimeout(checkVisibility, 0);
         };
 
         window.addEventListener('popstate', handlePopState);
