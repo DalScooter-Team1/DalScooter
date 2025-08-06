@@ -94,12 +94,8 @@
 
 ### 🎭 **4-Module Architecture**
 
-> 📋 **Detailed Architecture Documentation**: Check out our comprehensive [System Architecture Guide](./Architecture/system_architecture.md) for in-depth technical diagrams and implementation details!
-
-> 🖼️ **Architecture Diagram**: View our detailed [System Architecture Diagram](./Architecture/diagram-export-7-4-2025-10_23_37-AM.png) for visual representation of the system components.
-
 <div align="center">
-<img src="./Architecture/diagram-export-7-4-2025-10_23_37-AM.png" width="200" alt="Chatbot Working"/>
+<img src="./Architecture/diagram-export-7-4-2025-10_23_37-AM.png" width="1000" alt="Chatbot Working"/>
 </div>
 
 ---
