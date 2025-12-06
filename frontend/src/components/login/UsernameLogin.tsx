@@ -239,11 +239,7 @@ const UsernameLogin: React.FC = () => {
                         </div>
                     </div>
                     
-                    <div className="flex justify-end">
-                        <a href="#" className="text-sm text-amber-600 hover:text-amber-800">
-                            Forgot password?
-                        </a>
-                    </div>
+                     
                     
                     {error && (
                         <div className="text-sm text-red-600 bg-red-50 p-3 rounded-md border border-red-200">
